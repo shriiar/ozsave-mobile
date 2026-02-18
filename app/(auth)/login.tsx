@@ -9,6 +9,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Login() {
+
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,17 +21,60 @@ export default function Login() {
     if (!email.trim() || !password) {
       return Alert.alert("Required", "Email and password are required.");
     }
+
+    const normalizedEmail = email.trim().toLowerCase(); // ✅ move here
+
     setBusy(true);
     setError("");
+
     try {
-      const normalizedEmail = email.trim().toLowerCase();
       await login(normalizedEmail, password);
       router.replace("/(user)/dashboard");
     } catch (err: any) {
-      setError(err?.message ?? "Login failed");
+      const msg = extractMsg(err);
+
+      // ✅ if user not verified -> go verify screen with email
+      if (isVerifyPending(err)) {
+        router.replace({
+          pathname: "/(auth)/verify",
+          params: { email: normalizedEmail },
+        });
+        return;
+      }
+
+      setError(msg || "Login failed");
     } finally {
       setBusy(false);
     }
+  }
+  function extractMsg(err: any): string {
+    const direct = err?.message;
+    if (typeof direct === "string" && direct.trim()) return direct;
+
+    const apiMsg = err?.response?.data?.message;
+    if (typeof apiMsg === "string" && apiMsg.trim()) return apiMsg;
+
+    const srcMsg =
+      err?.response?.data?.errorSource?.[0]?.message ??
+      err?.errorSource?.[0]?.message;
+    if (typeof srcMsg === "string" && srcMsg.trim()) return srcMsg;
+
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return String(err ?? "");
+    }
+  }
+
+  function isVerifyPending(err: any) {
+    const msg = extractMsg(err).toLowerCase();
+    return (
+      msg.includes("verification is pending") ||
+      msg.includes("please verify your account") ||
+      msg.includes("verify your account") ||
+      msg.includes("not verified") ||
+      msg.includes("account verification")
+    );
   }
 
   return (

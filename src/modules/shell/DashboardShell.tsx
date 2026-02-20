@@ -72,6 +72,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     if (!pathname) return;
 
     const redirect = (to: string) => {
+      if (pathname === to) return;              // ✅ avoid “fake navigation”
       if (lastRedirectRef.current === to) return;
       lastRedirectRef.current = to;
       router.replace(to as any);

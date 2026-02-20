@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+// src/context/AuthContext.tsx
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import { AuthApi } from "../modules/auth/api";
 import type { User } from "../modules/auth/types";
@@ -33,29 +34,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setTokenState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ prevents repeated /me calls
+  const bootedRef = useRef(false);
+  const fetchingMeRef = useRef(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   async function fetchUser() {
+    if (fetchingMeRef.current) return; // ✅ lock
+    fetchingMeRef.current = true;
+
     try {
-      const me = await AuthApi.me(); // must include token via api layer
+      const me = await AuthApi.me();
+      if (!mountedRef.current) return;
       setUser(me);
     } catch (err) {
+      if (!mountedRef.current) return;
       setUser(null);
       await removeToken();
       setTokenState(null);
     } finally {
-      setLoading(false);
+      fetchingMeRef.current = false;
+      if (mountedRef.current) setLoading(false);
     }
   }
 
   useEffect(() => {
+    // ✅ only bootstrap once per app run
+    if (bootedRef.current) return;
+    bootedRef.current = true;
+
     (async () => {
-      const saved = await getToken();
-      if (!saved) {
-        setLoading(false);
-        return;
+      try {
+        const saved = await getToken();
+        if (!mountedRef.current) return;
+
+        if (!saved) {
+          setLoading(false);
+          return;
+        }
+
+        setTokenState(saved);
+        await fetchUser();
+      } catch {
+        if (mountedRef.current) setLoading(false);
       }
-      setTokenState(saved);
-      await fetchUser();
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function signup(name: string, email: string, password: string) {
@@ -63,15 +94,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function login(email: string, password: string) {
+    setLoading(true);
     const normalized = email.trim().toLowerCase();
     const res = await AuthApi.login({ email: normalized, password });
+
     const accessToken = res.data.accessToken;
     await setToken(accessToken);
     setTokenState(accessToken);
+
     await fetchUser();
   }
 
   async function loginWithToken(t: string) {
+    setLoading(true);
     await setToken(t);
     setTokenState(t);
     await fetchUser();
@@ -81,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await removeToken();
     setTokenState(null);
     setUser(null);
+    setLoading(false);
   }
 
   async function refreshUser() {

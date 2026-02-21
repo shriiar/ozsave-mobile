@@ -29,17 +29,17 @@ export default function GetStarted() {
   const isDark = resolvedTheme === "dark";
 
   const queryClient = useQueryClient();
+  
+  // from hook:
+  const { refetch } = useHouseInvitations({ onAccepted: refreshUser });
+
   const [refreshing, setRefreshing] = useState(false);
 
   async function onPullRefresh() {
-    if (refreshing) return;
     setRefreshing(true);
     try {
-      // refetch the invites list
-      await queryClient.invalidateQueries({ queryKey: ["houseInvitations"] });
-
-      // refresh /user/profile as well (so house/role updates reflect instantly)
-      await refreshUser();
+      await refetch();
+      await refreshUser(); // optional if you want user state updated too
     } finally {
       setRefreshing(false);
     }

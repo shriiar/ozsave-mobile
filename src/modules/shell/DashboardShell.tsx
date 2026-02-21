@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { ThemeToggle } from "../../components/ThemeToggle";
@@ -37,7 +38,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [open, setOpen] = useState(false);
   const insets = useSafeAreaInsets();
 
-  // slide animation
+  // drawer slide
   const slideX = useRef(new Animated.Value(-280)).current;
 
   // prevent redirect loops
@@ -66,16 +67,19 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  // ===== Guards (layout-safe) =====
+  // ===== Guards (keep logic same) =====
   useEffect(() => {
     if (loading) return;
     if (!pathname) return;
 
     const redirect = (to: string) => {
-      if (pathname === to) return;              // ✅ avoid “fake navigation”
+      if (pathname === to) return;
       if (lastRedirectRef.current === to) return;
       lastRedirectRef.current = to;
-      router.replace(to as any);
+
+      requestAnimationFrame(() => {
+        router.replace(to as any);
+      });
     };
 
     if (!user) {
@@ -97,9 +101,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   }, [loading, user, hasHouse, isAdmin, pathname]);
 
   const navItems: NavItem[] = useMemo(() => {
-    if (!hasHouse) {
-      return [{ name: "Home", href: ROUTES.home, icon: "home-outline" }];
-    }
+    if (!hasHouse) return [{ name: "Home", href: ROUTES.home, icon: "home-outline" }];
     return [
       { name: "Home", href: ROUTES.home, icon: "home-outline" },
       { name: "Costs", href: ROUTES.cost, icon: "receipt-outline" },
@@ -113,12 +115,11 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     return [{ name: "Users & Invites", href: ROUTES.adminUsers, icon: "people-outline" }];
   }, [hasHouse, isAdmin]);
 
-  // EXACT same active logic as web
+  // same active logic as web
   function isActive(href: string) {
     return pathname === href || (href !== ROUTES.home && pathname.startsWith(href));
   }
 
-  // if already active -> close only (no navigation)
   function onNavPress(href: string) {
     if (isActive(href)) {
       closeDrawer();
@@ -136,11 +137,11 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }
   }
 
-  // ===== THEME TOKENS (mobile mirror of web tokens) =====
+  // ===== UI TOKENS: match WEB "clear glass" =====
   const TOKENS = useMemo(() => {
     const shellBg = isDark ? "#020617" : "#F5F7FB";
 
-    // sidebar glass base (matches web gradients)
+    // --- Drawer shell (web sidebarShell) ---
     const sidebarGrad = isDark
       ? ["rgba(15,23,42,0.45)", "rgba(15,23,42,0.30)", "rgba(15,23,42,0.20)"]
       : ["rgba(255,255,255,0.35)", "rgba(255,255,255,0.25)", "rgba(255,255,255,0.15)"];
@@ -151,62 +152,180 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
     const ring = isDark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.60)";
 
-    const shadow = isDark
-      ? { shadowColor: "#000", shadowOpacity: 0.65, shadowRadius: 40, shadowOffset: { width: 0, height: 20 }, elevation: 18 }
-      : { shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 8 };
+    const sidebarShadow = isDark
+      ? {
+          shadowColor: "#000",
+          shadowOpacity: 0.65,
+          shadowRadius: 40,
+          shadowOffset: { width: 0, height: 20 },
+          elevation: 18,
+        }
+      : {
+          shadowColor: "#000",
+          shadowOpacity: 0.12,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 8,
+        };
 
-    const textPrimary = isDark ? "rgba(255,255,255,0.92)" : "#111827";
-    const textMuted = isDark ? "rgba(148,163,184,0.95)" : "#6B7280";
+    const textPrimary = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
+    const textMuted = isDark ? "rgba(148,163,184,0.95)" : "#475569";
 
+    // --- Topbar shell (web topbarShell) ---
+    const topbarGrad = isDark
+      ? ["rgba(15,23,42,0.45)", "rgba(15,23,42,0.30)", "rgba(15,23,42,0.20)"]
+      : ["rgba(255,255,255,0.35)", "rgba(255,255,255,0.25)", "rgba(255,255,255,0.15)"];
+
+    const topbarShadow = isDark
+      ? {
+          shadowColor: "#000",
+          shadowOpacity: 0.55,
+          shadowRadius: 36,
+          shadowOffset: { width: 0, height: 18 },
+          elevation: 14,
+        }
+      : {
+          shadowColor: "#000",
+          shadowOpacity: 0.10,
+          shadowRadius: 22,
+          shadowOffset: { width: 0, height: 12 },
+          elevation: 10,
+        };
+
+    const topbarBtnBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
+    const topbarBtnBgHover = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
+
+    // --- Items (web itemIdle/itemActive + iconWrap) ---
     const itemIdleText = isDark ? "rgba(226,232,240,0.92)" : "#334155";
-    const itemHoverBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
+    const itemIdleBg = isDark ? "rgba(255,255,255,0.00)" : "rgba(0,0,0,0.00)";
+    const itemIdleBgPressed = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
 
     const activeBg = isDark ? "rgba(15,23,42,0.60)" : "rgba(255,255,255,0.65)";
     const activeRing = isDark ? "rgba(129,140,248,0.25)" : "rgba(99,102,241,0.30)";
     const activeText = isDark ? "rgba(199,210,254,0.95)" : "#4338CA";
-    const activeIconBg = isDark ? "rgba(129,140,248,0.18)" : "rgba(79,70,229,0.15)";
+    const activeShadow = isDark
+      ? {
+          shadowColor: "#000",
+          shadowOpacity: 0.45,
+          shadowRadius: 24,
+          shadowOffset: { width: 0, height: 12 },
+          elevation: 10,
+        }
+      : {
+          shadowColor: "#000",
+          shadowOpacity: 0.12,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 8,
+        };
 
     const iconIdleBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
-    const iconIdle = isDark ? "rgba(226,232,240,0.92)" : "#111827";
-    const iconActive = "#4F46E5";
+    const iconIdle = isDark ? "rgba(226,232,240,0.92)" : "#334155";
+
+    const iconActiveBg = isDark ? "rgba(129,140,248,0.18)" : "rgba(79,70,229,0.15)";
+    const iconActive = isDark ? "rgba(199,210,254,0.95)" : "#4F46E5";
+
+    // --- Header/User card (web user card) ---
+    const divider = isDark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.40)";
 
     const userCardBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.60)";
     const userCardBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.50)";
 
-    const divider = isDark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.40)";
+    // --- Light glows like web (only light mode) ---
+    const glowTop = ["rgba(99,102,241,0.30)", "rgba(191,219,254,0.20)", "rgba(0,0,0,0)"];
+    const glowBottom = ["rgba(192,132,252,0.20)", "rgba(199,210,254,0.15)", "rgba(0,0,0,0)"];
 
-    // glows (light only)
-    const glowTop = ["rgba(99,102,241,0.30)", "rgba(191,219,254,0.20)", "rgba(0,0,0,0)"]; // indigo -> blue -> transparent
-    const glowBottom = ["rgba(192,132,252,0.20)", "rgba(199,210,254,0.15)", "rgba(0,0,0,0)"]; // purple -> indigo -> transparent
+    // --- Theme toggle container (web footer theme card) ---
+    const themeCardGrad = isDark
+      ? ["rgba(15,23,42,0.80)", "rgba(15,23,42,0.60)", "rgba(15,23,42,0.40)"]
+      : ["rgba(255,255,255,0.90)", "rgba(255,255,255,0.70)", "rgba(255,255,255,0.50)"];
+
+    const themeCardBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
+
+    const themeCardShadow = isDark
+      ? {
+          shadowColor: "#000",
+          shadowOpacity: 0.6,
+          shadowRadius: 28,
+          shadowOffset: { width: 0, height: 16 },
+          elevation: 12,
+        }
+      : {
+          shadowColor: "#000",
+          shadowOpacity: 0.10,
+          shadowRadius: 18,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 8,
+        };
+
+    // --- Logout button (web red glass) ---
+    const logoutBg = isDark ? "rgba(239,68,68,0.10)" : "rgba(239,68,68,0.10)";
+    const logoutBorder = "rgba(239,68,68,0.25)";
+    const logoutText = isDark ? "rgba(254,202,202,0.95)" : "#B91C1C";
+    const logoutIconBg = "rgba(239,68,68,0.12)";
 
     return {
       shellBg,
+
+      // topbar
+      topbarGrad,
+      topbarShadow,
+      topbarBtnBg,
+      topbarBtnBgHover,
+
+      // drawer shell
       sidebarGrad,
       sidebarRefraction,
       ring,
-      shadow,
+      sidebarShadow,
+
+      // text
       textPrimary,
       textMuted,
+
+      // items
       itemIdleText,
-      itemHoverBg,
+      itemIdleBg,
+      itemIdleBgPressed,
       activeBg,
       activeRing,
       activeText,
-      activeIconBg,
+      activeShadow,
       iconIdleBg,
       iconIdle,
+      iconActiveBg,
       iconActive,
+
+      // dividers/cards
+      divider,
       userCardBg,
       userCardBorder,
-      divider,
+
+      // glows
       glowTop,
       glowBottom,
+
+      // footer cards
+      themeCardGrad,
+      themeCardBorder,
+      themeCardShadow,
+
+      // logout
+      logoutBg,
+      logoutBorder,
+      logoutText,
+      logoutIconBg,
     };
   }, [isDark]);
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.screen, { backgroundColor: TOKENS.shellBg, justifyContent: "center", alignItems: "center" }]}>
+      <SafeAreaView
+        style={[
+          styles.screen,
+          { backgroundColor: TOKENS.shellBg, justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <Text style={{ opacity: 0.6, color: TOKENS.textMuted }}>Loading dashboard...</Text>
       </SafeAreaView>
     );
@@ -214,7 +333,12 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   if (!user) {
     return (
-      <SafeAreaView style={[styles.screen, { backgroundColor: TOKENS.shellBg, justifyContent: "center", alignItems: "center" }]}>
+      <SafeAreaView
+        style={[
+          styles.screen,
+          { backgroundColor: TOKENS.shellBg, justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <Text style={{ opacity: 0.6, color: TOKENS.textMuted }}>Redirecting...</Text>
       </SafeAreaView>
     );
@@ -222,26 +346,65 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: TOKENS.shellBg }]}>
-      {/* Topbar */}
-      <View style={[styles.topbar, { borderBottomColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)" }]}>
-        <Pressable onPress={openDrawer} style={[styles.topbarBtn, { backgroundColor: TOKENS.iconIdleBg }]} hitSlop={10}>
-          <Ionicons name="menu" size={20} color={TOKENS.iconIdle} style={{ marginTop: -1 }} />
-        </Pressable>
+      {/* ===== Topbar (web-like glass shell) ===== */}
+      <View style={[styles.topbarWrap]}>
+        <View style={[styles.topbarShell, TOKENS.topbarShadow]}>
+          {/* layers */}
+          <BlurView
+            intensity={isDark ? 18 : 22} // clear glass (less blur than “milky”)
+            tint={isDark ? "dark" : "light"}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={TOKENS.topbarGrad as any}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={TOKENS.sidebarRefraction as any}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={[StyleSheet.absoluteFill, { opacity: isDark ? 0.10 : 0.30 }]}
+          />
 
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.topbarTitle, { color: TOKENS.textPrimary }]}>OzSave</Text>
-          <Text style={[styles.topbarSubtitle, { color: TOKENS.textMuted }]} numberOfLines={1}>
-            {hasHouse ? user.house?.name : "No house"}
-          </Text>
+          {/* ring */}
+          <View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              { borderWidth: StyleSheet.hairlineWidth, borderColor: TOKENS.ring, borderRadius: 18 },
+            ]}
+          />
+
+          <View style={styles.topbarInner}>
+            <Pressable
+              onPress={openDrawer}
+              hitSlop={10}
+              style={({ pressed }) => [
+                styles.topbarBtn,
+                { backgroundColor: pressed ? TOKENS.topbarBtnBgHover : TOKENS.topbarBtnBg },
+              ]}
+            >
+              <Ionicons name="menu" size={20} color={TOKENS.iconIdle} style={{ marginTop: -1 }} />
+            </Pressable>
+
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[styles.topbarTitle, { color: TOKENS.textPrimary }]}>OzSave</Text>
+              <Text style={[styles.topbarSubtitle, { color: TOKENS.textMuted }]} numberOfLines={1}>
+                {hasHouse ? user.house?.name : "No house"}
+              </Text>
+            </View>
+
+            <View style={{ width: 40 }} />
+          </View>
         </View>
-
-        <View style={{ width: 40 }} />
       </View>
 
       {/* Main */}
       <View style={styles.content}>{children}</View>
 
-      {/* Drawer */}
+      {/* ===== Drawer ===== */}
       <Modal visible={open} transparent animationType="none" onRequestClose={closeDrawer}>
         <View style={styles.modalRoot}>
           <Pressable style={styles.backdrop} onPress={closeDrawer} />
@@ -249,39 +412,56 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           <Animated.View
             style={[
               styles.drawer,
-              TOKENS.shadow,
+              TOKENS.sidebarShadow,
               {
                 paddingTop: insets.top + 12,
                 paddingBottom: insets.bottom + 14,
-                borderRightColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.12)",
                 transform: [{ translateX: slideX }],
               },
             ]}
           >
-            {/* GLASS LAYERS (blur + gradient + refraction) */}
-            <BlurView intensity={22} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
-            <LinearGradient colors={TOKENS.sidebarGrad as [string, string, ...string[]]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
+            {/* GLASS LAYERS */}
+            <BlurView
+              intensity={isDark ? 18 : 22} // clearer glass
+              tint={isDark ? "dark" : "light"}
+              style={StyleSheet.absoluteFill}
+            />
             <LinearGradient
-              colors={TOKENS.sidebarRefraction as [string, string]}
+              colors={TOKENS.sidebarGrad as any}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <LinearGradient
+              colors={TOKENS.sidebarRefraction as any}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={[StyleSheet.absoluteFill, { opacity: isDark ? 0.10 : 0.30 }]}
             />
 
-            {/* ring like web */}
-            <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: TOKENS.ring }]} />
+            {/* ring */}
+            <View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  borderRightWidth: StyleSheet.hairlineWidth,
+                  borderRightColor: TOKENS.ring,
+                },
+              ]}
+            />
 
-            {/* LIGHT MODE GLOWS (web has these) */}
+            {/* LIGHT MODE GLOWS (like web) */}
             {!isDark ? (
               <>
                 <LinearGradient
-                  colors={TOKENS.glowTop as [string, string, ...string[]]}
+                  colors={TOKENS.glowTop as any}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.glowTop}
                 />
                 <LinearGradient
-                  colors={TOKENS.glowBottom as [string, string, ...string[]]}
+                  colors={TOKENS.glowBottom as any}
                   start={{ x: 1, y: 1 }}
                   end={{ x: 0, y: 0 }}
                   style={styles.glowBottom}
@@ -291,21 +471,36 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
             {/* Header */}
             <View style={[styles.drawerHeader, { borderBottomColor: TOKENS.divider }]}>
-              <View style={{ flex: 1 }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={[styles.brand, { color: TOKENS.textPrimary }]}>OzSave</Text>
                 <Text style={[styles.house, { color: TOKENS.textMuted }]} numberOfLines={1}>
                   {hasHouse ? user.house?.name : "No house"}
                 </Text>
               </View>
 
-              <Pressable onPress={closeDrawer} style={[styles.closeBtn, { backgroundColor: TOKENS.iconIdleBg }]} hitSlop={10}>
+              <Pressable
+                onPress={closeDrawer}
+                hitSlop={10}
+                style={({ pressed }) => [
+                  styles.closeBtn,
+                  { backgroundColor: pressed ? TOKENS.topbarBtnBgHover : TOKENS.topbarBtnBg },
+                ]}
+              >
                 <Text style={{ fontSize: 16, color: TOKENS.textPrimary }}>✕</Text>
               </Pressable>
             </View>
 
-            {/* User card */}
-            <View style={[styles.userCard, { backgroundColor: TOKENS.userCardBg, borderColor: TOKENS.userCardBorder }]}>
-              <View style={[styles.avatar, { backgroundColor: TOKENS.activeIconBg, borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)" }]}>
+            {/* User card (web style) */}
+            <View
+              style={[
+                styles.userCard,
+                {
+                  backgroundColor: TOKENS.userCardBg,
+                  borderColor: TOKENS.userCardBorder,
+                },
+              ]}
+            >
+              <View style={[styles.avatar, { backgroundColor: TOKENS.iconActiveBg, borderColor: TOKENS.ring }]}>
                 <Text style={[styles.avatarText, { color: TOKENS.textPrimary }]}>
                   {String(user.name ?? "?")
                     .trim()
@@ -316,7 +511,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 </Text>
               </View>
 
-              <View style={{ flex: 1 }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={[styles.loggedAs, { color: TOKENS.textMuted }]}>Logged in as</Text>
                 <Text style={[styles.userName, { color: TOKENS.textPrimary }]} numberOfLines={1}>
                   {user.name}
@@ -332,21 +527,24 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                   <Pressable
                     key={it.href}
                     onPress={() => onNavPress(it.href)}
-                    style={[
+                    style={({ pressed }) => [
                       styles.navItem,
-                      { backgroundColor: "transparent" },
-                      active && {
-                        backgroundColor: TOKENS.activeBg,
-                        borderWidth: StyleSheet.hairlineWidth,
-                        borderColor: TOKENS.activeRing,
+                      {
+                        backgroundColor: active
+                          ? TOKENS.activeBg
+                          : pressed
+                          ? TOKENS.itemIdleBgPressed
+                          : TOKENS.itemIdleBg,
+                        borderWidth: active ? StyleSheet.hairlineWidth : 0,
+                        borderColor: active ? TOKENS.activeRing : "transparent",
                       },
+                      active ? TOKENS.activeShadow : null,
                     ]}
                   >
                     <View
                       style={[
                         styles.iconWrap,
-                        { backgroundColor: TOKENS.iconIdleBg },
-                        active && { backgroundColor: TOKENS.activeIconBg },
+                        { backgroundColor: active ? TOKENS.iconActiveBg : TOKENS.iconIdleBg },
                       ]}
                     >
                       <Ionicons
@@ -355,12 +553,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                         color={active ? TOKENS.iconActive : TOKENS.iconIdle}
                       />
                     </View>
+
                     <Text
                       style={[
                         styles.navText,
-                        { color: TOKENS.itemIdleText },
-                        active && { color: TOKENS.activeText },
+                        { color: active ? TOKENS.activeText : TOKENS.itemIdleText },
                       ]}
+                      numberOfLines={1}
                     >
                       {it.name}
                     </Text>
@@ -377,21 +576,24 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                       <Pressable
                         key={it.href}
                         onPress={() => onNavPress(it.href)}
-                        style={[
+                        style={({ pressed }) => [
                           styles.navItem,
-                          { backgroundColor: "transparent" },
-                          active && {
-                            backgroundColor: TOKENS.activeBg,
-                            borderWidth: StyleSheet.hairlineWidth,
-                            borderColor: TOKENS.activeRing,
+                          {
+                            backgroundColor: active
+                              ? TOKENS.activeBg
+                              : pressed
+                              ? TOKENS.itemIdleBgPressed
+                              : TOKENS.itemIdleBg,
+                            borderWidth: active ? StyleSheet.hairlineWidth : 0,
+                            borderColor: active ? TOKENS.activeRing : "transparent",
                           },
+                          active ? TOKENS.activeShadow : null,
                         ]}
                       >
                         <View
                           style={[
                             styles.iconWrap,
-                            { backgroundColor: TOKENS.iconIdleBg },
-                            active && { backgroundColor: TOKENS.activeIconBg },
+                            { backgroundColor: active ? TOKENS.iconActiveBg : TOKENS.iconIdleBg },
                           ]}
                         >
                           <Ionicons
@@ -400,12 +602,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                             color={active ? TOKENS.iconActive : TOKENS.iconIdle}
                           />
                         </View>
+
                         <Text
                           style={[
                             styles.navText,
-                            { color: TOKENS.itemIdleText },
-                            active && { color: TOKENS.activeText },
+                            { color: active ? TOKENS.activeText : TOKENS.itemIdleText },
                           ]}
+                          numberOfLines={1}
                         >
                           {it.name}
                         </Text>
@@ -416,24 +619,57 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               )}
             </View>
 
-            {/* Footer */}
+            {/* Footer (web-style theme card + logout glass) */}
             <View style={[styles.drawerFooter, { borderTopColor: TOKENS.divider }]}>
-              <ThemeToggle />
+              {/* Theme card */}
+              <View style={[styles.themeCardWrap, TOKENS.themeCardShadow]}>
+                <BlurView
+                  intensity={isDark ? 18 : 22}
+                  tint={isDark ? "dark" : "light"}
+                  style={StyleSheet.absoluteFill}
+                />
+                <LinearGradient
+                  colors={TOKENS.themeCardGrad as any}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <View
+                  pointerEvents="none"
+                  style={[
+                    StyleSheet.absoluteFill,
+                    {
+                      borderWidth: StyleSheet.hairlineWidth,
+                      borderColor: TOKENS.themeCardBorder,
+                      borderRadius: 18,
+                    },
+                  ]}
+                />
+                <View style={styles.themeCardInner}>
+                  <ThemeToggle />
+                </View>
+              </View>
 
+              {/* Logout (web red glass) */}
               <Pressable
                 onPress={handleLogout}
-                style={[
+                style={({ pressed }) => [
                   styles.logoutBtn,
                   {
-                    backgroundColor: isDark ? "rgba(239,68,68,0.10)" : "rgba(239,68,68,0.10)",
-                    borderColor: "rgba(239,68,68,0.25)",
+                    backgroundColor: TOKENS.logoutBg,
+                    borderColor: TOKENS.logoutBorder,
+                    opacity: pressed ? 0.95 : 1,
                   },
                 ]}
               >
-                <View style={[styles.logoutIcon, { backgroundColor: "rgba(239,68,68,0.12)" }]}>
-                  <Ionicons name="log-out-outline" size={18} color="#B91C1C" />
+                <View style={[styles.logoutIcon, { backgroundColor: TOKENS.logoutIconBg }]}>
+                  <Ionicons
+                    name="log-out-outline"
+                    size={18}
+                    color={isDark ? "rgba(254,202,202,0.95)" : "#B91C1C"}
+                  />
                 </View>
-                <Text style={styles.logoutText}>Logout</Text>
+                <Text style={[styles.logoutText, { color: TOKENS.logoutText }]}>Logout</Text>
               </Pressable>
             </View>
           </Animated.View>
@@ -446,16 +682,23 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 const styles = StyleSheet.create({
   screen: { flex: 1 },
 
-  topbar: {
+  // ===== Topbar glass shell =====
+  topbarWrap: {
     paddingHorizontal: 12,
-    minHeight: 52,
+    paddingBottom: 10,
+  },
+  topbarShell: {
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+  topbarInner: {
+    minHeight: 48,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-
   topbarBtn: {
     height: 40,
     width: 40,
@@ -463,18 +706,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  topbarTitle: { fontSize: 14, fontWeight: "700" },
+  topbarTitle: { fontSize: 14, fontWeight: "800" },
   topbarSubtitle: { fontSize: 12 },
   content: { flex: 1 },
 
+  // ===== Drawer =====
   modalRoot: { flex: 1 },
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.45)" },
 
   drawer: {
     width: 280,
     height: "100%",
-    borderRightWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 0,
     overflow: "hidden",
     borderTopRightRadius: 22,
     borderBottomRightRadius: 22,
@@ -506,6 +748,7 @@ const styles = StyleSheet.create({
   },
   brand: { fontSize: 16, fontWeight: "800" },
   house: { marginTop: 2, fontSize: 12 },
+
   closeBtn: {
     height: 34,
     width: 34,
@@ -532,9 +775,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
   },
-  avatarText: { fontWeight: "800", fontSize: 12 },
+  avatarText: { fontWeight: "900", fontSize: 12 },
   loggedAs: { fontSize: 11 },
-  userName: { fontSize: 14, fontWeight: "700" },
+  userName: { fontSize: 14, fontWeight: "800" },
 
   nav: { flex: 1, paddingHorizontal: 10, paddingTop: 12 },
   navItem: {
@@ -553,14 +796,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  navText: { fontSize: 13, fontWeight: "700" },
+  navText: { fontSize: 13, fontWeight: "800", flex: 1 },
 
   sectionLabel: {
     marginTop: 10,
     marginBottom: 8,
     paddingHorizontal: 10,
     fontSize: 11,
-    fontWeight: "800",
+    fontWeight: "900",
+    letterSpacing: 0.6,
   },
 
   drawerFooter: {
@@ -569,6 +813,16 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 
+  // Theme card wrapper (web-like)
+  themeCardWrap: {
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+  themeCardInner: {
+    padding: 12,
+  },
+
+  // Logout (web red glass)
   logoutBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -585,5 +839,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  logoutText: { fontSize: 13, fontWeight: "800", color: "#B91C1C" },
+  logoutText: { fontSize: 13, fontWeight: "900" },
 });

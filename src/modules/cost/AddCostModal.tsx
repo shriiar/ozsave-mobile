@@ -20,6 +20,7 @@ import { Picker } from "@react-native-picker/picker";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import { useAddCost } from "./hooks/useCostApi";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Member = { _id: string; name: string; email: string };
 
@@ -358,6 +359,8 @@ export default function AddCostModal({ open, onClose }: Props) {
     const isDark = resolvedTheme === "dark";
     const { user } = useAuth();
 
+    const insets = useSafeAreaInsets();
+
     const members: Member[] = useMemo(() => {
         return ((user as any)?.house?.members ?? []) as Member[];
     }, [user]);
@@ -521,20 +524,28 @@ export default function AddCostModal({ open, onClose }: Props) {
 
     return (
         <Modal visible={open} transparent animationType="fade" onRequestClose={() => !saving && onClose()}>
-            <View style={styles.root}>
+            {/* Backdrop */}
+            <Pressable style={StyleSheet.absoluteFill} onPress={() => !saving && onClose()}>
+                <View style={{ flex: 1, backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)" }} />
+            </Pressable>
+
+            {/* Fullscreen container that respects safe area */}
+            <View
+                style={[
+                    StyleSheet.absoluteFillObject,
+                    {
+                        paddingTop: insets.top + 8,
+                        paddingBottom: insets.bottom + 8,
+                        paddingHorizontal: 7,
+                    },
+                ]}
+            >
+                {/* Background blur */}
                 <BlurView
                     intensity={isDark ? 70 : 90}
                     tint={isDark ? "dark" : "light"}
                     style={StyleSheet.absoluteFill}
                 />
-                <Pressable style={StyleSheet.absoluteFill} onPress={() => !saving && onClose()}>
-                    <View
-                        style={{
-                            flex: 1,
-                            backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)",
-                        }}
-                    />
-                </Pressable>
 
                 <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.kav}>
                     <View style={styles.center}>
@@ -858,7 +869,7 @@ export default function AddCostModal({ open, onClose }: Props) {
                     </View>
                 </KeyboardAvoidingView>
             </View>
-        </Modal>
+        </Modal >
     );
 }
 
@@ -881,30 +892,22 @@ const styles = StyleSheet.create({
         width: "100%",
     },
 
-    // Full height modal (sheet style)
     center: {
         flex: 1,
         alignItems: "center",
         justifyContent: "flex-end",
-        padding: 7,
     },
-
     modalWrap: {
         width: "100%",
+        flex: 1,
+        borderRadius: 24,
         overflow: "hidden",
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
     },
-
     modal: {
-        borderWidth: StyleSheet.hairlineWidth,
+        flex: 1,
+        borderRadius: 24,
         overflow: "hidden",
-        maxHeight: "86%",
-
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        borderBottomLeftRadius: 24,
-        borderBottomRightRadius: 24,
+        borderWidth: StyleSheet.hairlineWidth,
     },
 
     glow: {

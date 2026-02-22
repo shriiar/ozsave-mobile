@@ -22,11 +22,12 @@ export function usePeriodDashboard(range: RangeKey, anchor?: string) {
   return useQuery<PeriodDashboardResponse>({
     queryKey: dashboardKeys.period(range, anchor ?? null),
     queryFn: () => DashboardApi.getPeriod({ range, anchor }),
+    placeholderData: (prev) => prev, // ✅ keep previous while fetching new key
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
-    enabled: !!range, // safety
+    enabled: !!range,
   });
 }
 
@@ -34,6 +35,7 @@ export function useDashboardBalances() {
   return useQuery<DashboardBalancesResponse>({
     queryKey: dashboardKeys.balances,
     queryFn: () => DashboardApi.getBalances(),
+    placeholderData: (prev) => prev,
     staleTime: 30 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,

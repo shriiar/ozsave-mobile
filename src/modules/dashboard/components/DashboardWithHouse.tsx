@@ -1,79 +1,255 @@
-// src/modules/dashboard/components/DashboardWithHouse.tsx
-import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
-import { useAuth } from "../../../context/AuthContext";
-import { router } from "expo-router";
+import React, { useMemo, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  Pressable,
+  Platform,
+  LayoutChangeEvent,
+  ActivityIndicator,
+} from "react-native";
+import { useTheme } from "../../../context/ThemeContext";
+import { DashboardHeader } from "./period/DashboardHeader";
+import type { RangeKey } from "./period/DashboardHeader";
+import { DashboardBarChart } from "./period/DashboardBarChart"; 
+import type { BarPoint } from "./period/DashboardBarChart";
+
+type HouseBase = { _id: string; name: string };
+type PeriodDashboard = any;
+type DashboardBalances = any;
+
+type Props = {
+  house: HouseBase | null;
+  period: PeriodDashboard | null;
+  balances: DashboardBalances | null;
+  error: string | null;
+
+  range: RangeKey;
+  anchor: string;
+  canGoForward: boolean;
+
+  isFetching?: boolean;
+  onRefresh: () => Promise<any> | void;
+  onPrev: () => void;
+  onNext: () => void;
+  onRangeChange: (r: RangeKey) => void;
+};
+
+function rangeMetaOf(range: RangeKey) {
+  const days = range === "7d" ? 7 : range === "14d" ? 14 : range === "30d" ? 30 : 90;
+  const label =
+    range === "7d"
+      ? "Last 7 days"
+      : range === "14d"
+      ? "Last 14 days"
+      : range === "30d"
+      ? "Last 30 days"
+      : "Last 90 days";
+  return { days, label };
+}
+
+// quick date label helper: "2026-02-23" -> "02/23"
+function shortLabel(ymd: string) {
+  if (!ymd || typeof ymd !== "string") return "";
+  const mm = ymd.slice(5, 7);
+  const dd = ymd.slice(8, 10);
+  return mm && dd ? `${mm}/${dd}` : ymd;
+}
 
 export default function DashboardWithHouse({
   house,
   period,
   balances,
   error,
-}: {
-  house: { _id: string; name: string };
-  period: any | null;
-  balances: any | null;
-  error: string | null;
-}) {
-  const { logout, user } = useAuth();
+  range,
+  anchor,
+  canGoForward,
+  isFetching,
+  onRefresh,
+  onPrev,
+  onNext,
+  onRangeChange,
+}: Props) {
+  // ✅ ALL HOOKS UP HERE. No hooks after early returns.
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
-  async function onLogout() {
-    await logout();
-    router.replace("/(auth)/login");
+  const T = useMemo(() => {
+    const bg = isDark ? "#050814" : "#F6F7FB";
+    const text = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
+    const muted = isDark ? "rgba(148,163,184,0.82)" : "#64748B";
+    const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
+    const danger = isDark ? "#FCA5A5" : "#B91C1C";
+    return { bg, text, muted, border, danger };
+  }, [isDark]);
+
+  const rangeMeta = useMemo(() => rangeMetaOf(range), [range]);
+
+  // ✅ subtitle always reserves height to prevent header jump
+  const subtitle = useMemo(() => {
+    if (period?.start && period?.end) return `${period.start} → ${period.end}`;
+    return " "; // reserve line height
+  }, [period?.start, period?.end]);
+
+  const refreshing = !!isFetching;
+
+  // ✅ keep pull-to-refresh working even with little content
+  const [viewportH, setViewportH] = useState(0);
+  const onLayout = (e: LayoutChangeEvent) => {
+    const h = e.nativeEvent.layout.height;
+    if (h && h !== viewportH) setViewportH(h);
+  };
+
+  // ✅ barData ALWAYS computed (safe even if period is null)
+  const barData: BarPoint[] = useMemo(() => {
+    const labels: string[] = period?.labels ?? [];
+    if (!labels.length) return [];
+
+    const cost: any[] = period?.series?.cost ?? [];
+    const manual: any[] = period?.series?.income?.manual ?? [];
+    const estimate: any[] = period?.series?.income?.estimate ?? [];
+
+    return labels.map((dayKey: string, i: number) => ({
+      dayKey,
+      dayLabel: shortLabel(dayKey),
+      cost: Number(cost[i] ?? 0),
+      manual: Number(manual[i] ?? 0),
+      estimate: Number(estimate[i] ?? 0),
+    }));
+  }, [period]);
+
+  // ------------------ EARLY RETURNS AFTER HOOKS ------------------
+
+  if (!house) {
+    return (
+      <View style={[styles.screen, { backgroundColor: T.bg }]}>
+        <Text style={{ color: T.muted, padding: 16 }}>No house data available.</Text>
+      </View>
+    );
   }
 
+  if (error) {
+    return (
+      <View style={[styles.screen, { backgroundColor: T.bg, padding: 16 }]}>
+        <Text style={{ color: T.text, fontWeight: "900", fontSize: 16 }}>Failed to load</Text>
+        <Text style={{ color: T.danger, marginTop: 6 }}>{error}</Text>
+
+        <Pressable
+          onPress={onRefresh}
+          style={({ pressed }) => [{ marginTop: 12, opacity: pressed ? 0.9 : 1 }]}
+        >
+          <View
+            style={{
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: T.border,
+              paddingVertical: 10,
+              paddingHorizontal: 12,
+              borderRadius: 12,
+            }}
+          >
+            <Text style={{ color: T.text, fontWeight: "900" }}>Retry</Text>
+          </View>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (!period) {
+    return (
+      <View style={[styles.screen, { backgroundColor: T.bg, padding: 16 }]}>
+        <Text style={{ color: T.text, fontWeight: "900", fontSize: 16 }}>Dashboard</Text>
+        <Text style={{ color: T.muted, marginTop: 6 }}>No analytics data yet.</Text>
+      </View>
+    );
+  }
+
+  // ------------------ MAIN RENDER ------------------
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Dashboard</Text>
+    <View style={[styles.screen, { backgroundColor: T.bg }]} onLayout={onLayout}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentInsetAdjustmentBehavior="always"
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        scrollEventThrottle={16}
+        alwaysBounceVertical
+        bounces
+        overScrollMode="always"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            progressViewOffset={Platform.OS === "ios" ? 16 : 0}
+          />
+        }
+        contentContainerStyle={[styles.container, { minHeight: viewportH || undefined }]}
+      >
+        <DashboardHeader
+          range={range}
+          onRangeChange={onRangeChange}
+          title={rangeMeta.label}
+          subtitle={subtitle}
+          canGoForward={canGoForward}
+          onPrev={onPrev}
+          onNext={onNext}
+        />
 
-      <Text style={styles.sub}>
-        House: {house.name} ({house._id})
-      </Text>
+        {/* ✅ Chart */}
+        <DashboardBarChart data={barData} />
 
-      <Text style={styles.sub}>User: {user?.email ?? "Unknown"}</Text>
+        <View style={{ flexGrow: 1 }} />
+      </ScrollView>
 
-      {error ? <Text style={styles.err}>{error}</Text> : null}
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Period data</Text>
-        <Text style={styles.mono}>{period ? JSON.stringify(period.summary, null, 2) : "No period data"}</Text>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Balances</Text>
-        <Text style={styles.mono}>{balances ? JSON.stringify(balances.totals, null, 2) : "No balances"}</Text>
-      </View>
-
-      <Pressable onPress={onLogout} style={styles.logoutBtn}>
-        <Text style={styles.logoutText}>Logout</Text>
-      </Pressable>
+      {/* ✅ Fetch overlay (no white flash, no layout jump) */}
+      {refreshing ? (
+        <View pointerEvents="none" style={styles.fetchOverlay}>
+          <View
+            style={[
+              styles.fetchPill,
+              {
+                borderColor: T.border,
+                backgroundColor: isDark ? "rgba(2,6,23,0.65)" : "rgba(255,255,255,0.75)",
+              },
+            ]}
+          >
+            <ActivityIndicator />
+            <Text style={{ marginLeft: 10, color: T.text, fontWeight: "800" }}>Updating…</Text>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, paddingTop: 28 },
-  title: { fontSize: 22, fontWeight: "700" },
-  sub: { marginTop: 6, opacity: 0.7 },
-  err: { marginTop: 10, color: "#DC2626", fontWeight: "600" },
-
-  card: {
-    marginTop: 14,
-    padding: 12,
+  screen: { flex: 1 },
+  container: {
+    padding: 16,
+    paddingBottom: 28,
+    gap: 12,
+    flexGrow: 1,
+  },
+  placeholderCard: {
+    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.08)",
-    backgroundColor: "rgba(255,255,255,0.8)",
+    padding: 14,
   },
-  cardTitle: { fontWeight: "700", marginBottom: 8 },
-  mono: { fontFamily: "Menlo", fontSize: 12, opacity: 0.85 },
-
-  logoutBtn: {
-    marginTop: 18,
-    borderRadius: 14,
-    paddingVertical: 12,
+  fetchOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 12,
     alignItems: "center",
-    backgroundColor: "#111827",
   },
-  logoutText: { color: "white", fontWeight: "700" },
+  fetchPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
 });

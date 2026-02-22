@@ -21,6 +21,37 @@ export type CostItemPayload = {
   notes?: string;
 };
 
+/**
+ * Shape of a populated single cost from getSingleCost()
+ */
+export type MemberSummary = {
+  _id: string;
+  name: string;
+  email: string;
+};
+
+export type FullCost = {
+  _id: string;
+  name: string;
+  category: string;
+  date: string; // ISO
+  amountCents: number;
+  amount: number; // dollars
+  userShare: number;
+
+  paidBy: MemberSummary;
+  addedBy: MemberSummary;
+  updatedBy: MemberSummary;
+  sharedBy: MemberSummary[];
+
+  files?: CostFilePayload[];
+  notes?: string | null;
+  house: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+
 export type AddCostPayload = {
   categorized: boolean;
   costs: CostItemPayload[];
@@ -94,6 +125,15 @@ export const CostApi = {
     const path = qs.toString() ? `/cost/costs?${qs.toString()}` : "/cost/costs";
     return apiRequest<ApiEnvelope<CostsCursorResponse>>("GET", path).then((r) => r.data);
   },
+
+    /**
+   * GET /cost/cost/:costId
+   * Used before opening Edit Cost modal
+   */
+    getSingleCost(costId: string) {
+      return apiRequest<ApiEnvelope<FullCost>>("GET", `/cost/cost/${costId}`)
+        .then((res) => res.data);
+    },
 
   /**
    * ✅ Create cost(s)

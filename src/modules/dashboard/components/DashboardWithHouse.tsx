@@ -202,24 +202,6 @@ export default function DashboardWithHouse({
 
         <View style={{ flexGrow: 1 }} />
       </ScrollView>
-
-      {/* ✅ Fetch overlay (no white flash, no layout jump) */}
-      {refreshing ? (
-        <View pointerEvents="none" style={styles.fetchOverlay}>
-          <View
-            style={[
-              styles.fetchPill,
-              {
-                borderColor: T.border,
-                backgroundColor: isDark ? "rgba(2,6,23,0.65)" : "rgba(255,255,255,0.75)",
-              },
-            ]}
-          >
-            <ActivityIndicator />
-            <Text style={{ marginLeft: 10, color: T.text, fontWeight: "800" }}>Updating…</Text>
-          </View>
-        </View>
-      ) : null}
     </View>
   );
 }

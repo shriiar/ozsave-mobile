@@ -31,6 +31,7 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-appearance": "^0.3.4",
+    "react-native-chart-kit": "^6.12.0",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-gifted-charts": "^1.4.74",
     "react-native-reanimated": "~4.1.1",
@@ -39,7 +40,8 @@
     "react-native-svg": "15.12.1",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.5.1",
-    "victory-native": "^41.20.2"
+    "victory": "^36.6.10",
+    "victory-native": "^36.6.10"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",

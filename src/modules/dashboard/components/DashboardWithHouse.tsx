@@ -17,6 +17,7 @@ import { DashboardBarChart } from "./period/DashboardBarChart";
 import type { BarPoint } from "./period/DashboardBarChart";
 import { CategoryInsights, CategoryPieItem, CategorySectionCard } from "./period/CategorySectionCard";
 import { PeriodSummaryCards } from "./period/PeriodSummaryCards";
+import DashboardBalancesCard from "./period/DashboardBalancesCard";
 
 type HouseBase = { _id: string; name: string };
 type PeriodDashboard = any;
@@ -241,6 +242,8 @@ export default function DashboardWithHouse({
         <DashboardBarChart data={barData} />
 
         <CategorySectionCard pie={categoryPie} categoryInsights={categoryInsights} />
+
+        <DashboardBalancesCard house={house} />
 
         <View style={{ flexGrow: 1 }} />
       </ScrollView>

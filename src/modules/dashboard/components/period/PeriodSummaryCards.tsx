@@ -41,7 +41,7 @@ export function PeriodSummaryCards(props: Props) {
 
     const ui = useMemo(() => {
         const text = isDark ? "rgba(226,232,240,0.92)" : "rgba(15,23,42,0.92)";
-        const sub = isDark ? "rgba(148,163,184,0.82)" : "rgba(100,116,139,0.92)";
+        const sub = isDark ? "rgba(148,163,184,0.82)" : "rgba(33, 35, 37, 0.92)";
         const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
 
         const cardGrad = isDark
@@ -66,9 +66,9 @@ export function PeriodSummaryCards(props: Props) {
                     <LinearGradient colors={ui.innerGrad as any} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
 
                     <View style={styles.grid}>
-                        <SummaryTile title="Cost" value={props.totalCost} valueColor={"#ef4444"} ui={ui} />
-                        <SummaryTile title="Manual" value={props.manualIncome} valueColor={"#10b981"} ui={ui} />
-                        <SummaryTile title="Estimate" value={props.estimatedIncome} valueColor={"#f59e0b"} ui={ui} />
+                        <SummaryTile title="Cost" value={props.totalCost} valueColor={isDark ? "#ff6b6b" : "#dc2626"} ui={ui} />
+                        <SummaryTile title="Manual" value={props.manualIncome} valueColor={isDark ? "#34d399" : "#059669"} ui={ui} />
+                        <SummaryTile title="Estimate" value={props.estimatedIncome} valueColor={isDark ? "#fbbf24" : "#d97706"} ui={ui} />
                     </View>
                 </View>
             </BlurView>

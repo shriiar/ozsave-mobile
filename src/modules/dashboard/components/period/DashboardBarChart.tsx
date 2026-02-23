@@ -346,7 +346,6 @@ const styles = StyleSheet.create({
         overflow: "hidden",
     },
     inner: {
-        margin: 12,
         borderRadius: 16,
         borderWidth: StyleSheet.hairlineWidth,
         paddingTop: 10,

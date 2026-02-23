@@ -13,8 +13,9 @@ import {
 import { useTheme } from "../../../context/ThemeContext";
 import { DashboardHeader } from "./period/DashboardHeader";
 import type { RangeKey } from "./period/DashboardHeader";
-import { DashboardBarChart } from "./period/DashboardBarChart"; 
+import { DashboardBarChart } from "./period/DashboardBarChart";
 import type { BarPoint } from "./period/DashboardBarChart";
+import { CategoryInsights, CategoryPieItem, CategorySectionCard } from "./period/CategorySectionCard";
 
 type HouseBase = { _id: string; name: string };
 type PeriodDashboard = any;
@@ -43,10 +44,10 @@ function rangeMetaOf(range: RangeKey) {
     range === "7d"
       ? "Last 7 days"
       : range === "14d"
-      ? "Last 14 days"
-      : range === "30d"
-      ? "Last 30 days"
-      : "Last 90 days";
+        ? "Last 14 days"
+        : range === "30d"
+          ? "Last 30 days"
+          : "Last 90 days";
   return { days, label };
 }
 
@@ -118,6 +119,26 @@ export default function DashboardWithHouse({
       manual: Number(manual[i] ?? 0),
       estimate: Number(estimate[i] ?? 0),
     }));
+  }, [period]);
+
+  // Pie chart
+  const categoryPie: CategoryPieItem[] = useMemo(() => {
+    const raw = period?.breakdown?.costByCategory ?? [];
+    if (!Array.isArray(raw)) return [];
+
+    return raw
+      .filter((x: any) => x && x.category != null)
+      .map((x: any) => ({
+        category: String(x.category),
+        amount: Number(x.amount ?? 0),
+        percent: Number(x.percent ?? 0),
+      }));
+  }, [period]);
+
+  const categoryInsights: CategoryInsights | undefined = useMemo(() => {
+    const ci = period?.categoryInsights;
+    if (!ci || typeof ci !== "object") return undefined;
+    return ci;
   }, [period]);
 
   // ------------------ EARLY RETURNS AFTER HOOKS ------------------
@@ -199,6 +220,8 @@ export default function DashboardWithHouse({
 
         {/* ✅ Chart */}
         <DashboardBarChart data={barData} />
+
+        <CategorySectionCard pie={categoryPie} categoryInsights={categoryInsights} />
 
         <View style={{ flexGrow: 1 }} />
       </ScrollView>

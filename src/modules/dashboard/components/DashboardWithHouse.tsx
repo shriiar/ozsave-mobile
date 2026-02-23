@@ -16,6 +16,7 @@ import type { RangeKey } from "./period/DashboardHeader";
 import { DashboardBarChart } from "./period/DashboardBarChart";
 import type { BarPoint } from "./period/DashboardBarChart";
 import { CategoryInsights, CategoryPieItem, CategorySectionCard } from "./period/CategorySectionCard";
+import { PeriodSummaryCards } from "./period/PeriodSummaryCards";
 
 type HouseBase = { _id: string; name: string };
 type PeriodDashboard = any;
@@ -141,6 +142,17 @@ export default function DashboardWithHouse({
     return ci;
   }, [period]);
 
+  // summary cards
+  const summary = useMemo(() => {
+
+    console.log(period?.summary.cost, period?.summary?.income?.manual, period?.summary?.income?.estimate);
+    return {
+      totalCost: Number(period?.summary?.cost ?? 0),
+      manualIncome: Number(period?.summary?.income?.manual ?? 0),
+      estimatedIncome: Number(period?.summary?.income?.estimate ?? 0),
+    };
+  }, [period]);
+
   // ------------------ EARLY RETURNS AFTER HOOKS ------------------
 
   if (!house) {
@@ -216,6 +228,13 @@ export default function DashboardWithHouse({
           canGoForward={canGoForward}
           onPrev={onPrev}
           onNext={onNext}
+        />
+
+        <PeriodSummaryCards
+          rangeLabel={rangeMeta.label}
+          totalCost={summary.totalCost}
+          manualIncome={summary.manualIncome}
+          estimatedIncome={summary.estimatedIncome}
         />
 
         {/* ✅ Chart */}

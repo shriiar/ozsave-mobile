@@ -19,6 +19,10 @@ import { CategoryInsights, CategoryPieItem, CategorySectionCard } from "./period
 import { PeriodSummaryCards } from "./period/PeriodSummaryCards";
 import DashboardBalancesCard from "./period/DashboardBalancesCard";
 import { TrendVsPreviousCard } from "./period/TrendVsPreviousCard";
+import { WidgetStack } from "./period/WidgetStack";
+import { SmartAlertsCard } from "./period/SmartAlertsCard";
+import { InsightsGridCard } from "./period/InsightsGridCard";
+import { IncomeInsightsCard } from "./period/IncomeInsightsCard";
 
 type HouseBase = { _id: string; name: string };
 type PeriodDashboard = any;
@@ -79,6 +83,9 @@ export default function DashboardWithHouse({
   // ✅ ALL HOOKS UP HERE. No hooks after early returns.
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  
+  const [stackInteracting, setStackInteracting] = useState(false);
+
 
   const T = useMemo(() => {
     const bg = isDark ? "#050814" : "#F6F7FB";
@@ -146,8 +153,6 @@ export default function DashboardWithHouse({
 
   // summary cards
   const summary = useMemo(() => {
-
-    console.log(period?.summary.cost, period?.summary?.income?.manual, period?.summary?.income?.estimate);
     return {
       totalCost: Number(period?.summary?.cost ?? 0),
       manualIncome: Number(period?.summary?.income?.manual ?? 0),
@@ -251,6 +256,14 @@ export default function DashboardWithHouse({
           summary={period.summary}
           comparison={period.comparison}
         />
+
+        <WidgetStack height={400}>
+
+          <SmartAlertsCard alerts={period.smartAlerts} />
+          <InsightsGridCard insights={period.insights} />
+          <IncomeInsightsCard data={period} />
+
+        </WidgetStack>
 
         <View style={{ flexGrow: 1 }} />
       </ScrollView>

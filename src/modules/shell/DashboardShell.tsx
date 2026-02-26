@@ -1,11 +1,12 @@
 // src/modules/shell/DashboardShell.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Modal, Pressable, StyleSheet, Text, View, ScrollView } from "react-native";
 import { router, usePathname } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
 
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -26,27 +27,27 @@ const ROUTES = {
   login: "/(auth)/login",
 } as const;
 
+const DRAWER_W = 280;
+const TOPBAR_H = 52; // visual height of the card contents (not including margins)
+
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, loading, logout } = useAuth();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const insets = useSafeAreaInsets();
 
   const hasHouse = !!user?.house;
   const isAdmin = user?.role === "admin";
 
   const [open, setOpen] = useState(false);
-  const insets = useSafeAreaInsets();
+  const slideX = useRef(new Animated.Value(DRAWER_W)).current;
 
-  // drawer slide
-  const slideX = useRef(new Animated.Value(-280)).current;
-
-  // prevent redirect loops
   const lastRedirectRef = useRef<string | null>(null);
 
   function closeDrawer() {
     Animated.timing(slideX, {
-      toValue: -280,
+      toValue: DRAWER_W,
       duration: 180,
       useNativeDriver: true,
     }).start(() => setOpen(false));
@@ -61,7 +62,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }).start();
   }
 
-  // close drawer on route change
   useEffect(() => {
     if (open) closeDrawer();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -115,7 +115,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     return [{ name: "Users & Invites", href: ROUTES.adminUsers, icon: "people-outline" }];
   }, [hasHouse, isAdmin]);
 
-  // same active logic as web
   function isActive(href: string) {
     return pathname === href || (href !== ROUTES.home && pathname.startsWith(href));
   }
@@ -137,129 +136,84 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }
   }
 
-  // ===== UI TOKENS: match WEB "clear glass" =====
+  // ===== TOKENS (NO BLUE ACCENT, NO GLOWS) =====
   const TOKENS = useMemo(() => {
     const shellBg = isDark ? "#020617" : "#F5F7FB";
 
-    // --- Drawer shell (web sidebarShell) ---
-    const sidebarGrad = isDark
-      ? ["rgba(15,23,42,0.45)", "rgba(15,23,42,0.30)", "rgba(15,23,42,0.20)"]
-      : ["rgba(255,255,255,0.35)", "rgba(255,255,255,0.25)", "rgba(255,255,255,0.15)"];
+    const glassGrad = isDark
+      ? ["rgba(15,23,42,0.25)", "rgba(15,23,42,0.18)", "rgba(15,23,42,0.12)"]
+      : ["rgba(255,255,255,0.22)", "rgba(255,255,255,0.16)", "rgba(255,255,255,0.10)"];
 
-    const sidebarRefraction = isDark
+    const glassRefraction = isDark
       ? ["rgba(255,255,255,0.10)", "rgba(255,255,255,0.00)"]
       : ["rgba(255,255,255,0.60)", "rgba(255,255,255,0.00)"];
 
-    const ring = isDark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.60)";
+    const ring = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
 
-    const sidebarShadow = isDark
+    const shadowHeavy = isDark
       ? {
-          shadowColor: "#000",
-          shadowOpacity: 0.65,
-          shadowRadius: 40,
-          shadowOffset: { width: 0, height: 20 },
-          elevation: 18,
-        }
+        shadowColor: "#000",
+        shadowOpacity: 0.65,
+        shadowRadius: 40,
+        shadowOffset: { width: 0, height: 20 },
+        elevation: 18,
+      }
       : {
-          shadowColor: "#000",
-          shadowOpacity: 0.12,
-          shadowRadius: 18,
-          shadowOffset: { width: 0, height: 10 },
-          elevation: 8,
-        };
+        shadowColor: "#000",
+        shadowOpacity: 0.12,
+        shadowRadius: 18,
+        shadowOffset: { width: 0, height: 10 },
+        elevation: 8,
+      };
+
+    const shadowMedium = isDark
+      ? {
+        shadowColor: "#000",
+        shadowOpacity: 0.55,
+        shadowRadius: 30,
+        shadowOffset: { width: 0, height: 16 },
+        elevation: 12,
+      }
+      : {
+        shadowColor: "#000",
+        shadowOpacity: 0.10,
+        shadowRadius: 18,
+        shadowOffset: { width: 0, height: 10 },
+        elevation: 10,
+      };
 
     const textPrimary = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
     const textMuted = isDark ? "rgba(148,163,184,0.95)" : "#475569";
 
-    // --- Topbar shell (web topbarShell) ---
-    const topbarGrad = isDark
-      ? ["rgba(15,23,42,0.45)", "rgba(15,23,42,0.30)", "rgba(15,23,42,0.20)"]
-      : ["rgba(255,255,255,0.35)", "rgba(255,255,255,0.25)", "rgba(255,255,255,0.15)"];
+    const btnBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
+    const btnBgHover = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
 
-    const topbarShadow = isDark
-      ? {
-          shadowColor: "#000",
-          shadowOpacity: 0.55,
-          shadowRadius: 36,
-          shadowOffset: { width: 0, height: 18 },
-          elevation: 14,
-        }
-      : {
-          shadowColor: "#000",
-          shadowOpacity: 0.10,
-          shadowRadius: 22,
-          shadowOffset: { width: 0, height: 12 },
-          elevation: 10,
-        };
-
-    const topbarBtnBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
-    const topbarBtnBgHover = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
-
-    // --- Items (web itemIdle/itemActive + iconWrap) ---
     const itemIdleText = isDark ? "rgba(226,232,240,0.92)" : "#334155";
-    const itemIdleBg = isDark ? "rgba(255,255,255,0.00)" : "rgba(0,0,0,0.00)";
-    const itemIdleBgPressed = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
+    const itemPressedBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
 
-    const activeBg = isDark ? "rgba(15,23,42,0.60)" : "rgba(255,255,255,0.65)";
-    const activeRing = isDark ? "rgba(129,140,248,0.25)" : "rgba(99,102,241,0.30)";
-    const activeText = isDark ? "rgba(199,210,254,0.95)" : "#4338CA";
-    const activeShadow = isDark
-      ? {
-          shadowColor: "#000",
-          shadowOpacity: 0.45,
-          shadowRadius: 24,
-          shadowOffset: { width: 0, height: 12 },
-          elevation: 10,
-        }
-      : {
-          shadowColor: "#000",
-          shadowOpacity: 0.12,
-          shadowRadius: 18,
-          shadowOffset: { width: 0, height: 10 },
-          elevation: 8,
-        };
+    // Active state: neutral, no blue
+    const activeBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.70)";
+    const activeRing = isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.10)";
+    const activeText = textPrimary;
 
     const iconIdleBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
     const iconIdle = isDark ? "rgba(226,232,240,0.92)" : "#334155";
 
-    const iconActiveBg = isDark ? "rgba(129,140,248,0.18)" : "rgba(79,70,229,0.15)";
-    const iconActive = isDark ? "rgba(199,210,254,0.95)" : "#4F46E5";
+    const iconActiveBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
+    const iconActive = textPrimary;
 
-    // --- Header/User card (web user card) ---
-    const divider = isDark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.40)";
+    const divider = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
 
-    const userCardBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.60)";
-    const userCardBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.50)";
+    const userCardBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.70)";
+    const userCardBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
 
-    // --- Light glows like web (only light mode) ---
-    const glowTop = ["rgba(99,102,241,0.30)", "rgba(191,219,254,0.20)", "rgba(0,0,0,0)"];
-    const glowBottom = ["rgba(192,132,252,0.20)", "rgba(199,210,254,0.15)", "rgba(0,0,0,0)"];
-
-    // --- Theme toggle container (web footer theme card) ---
     const themeCardGrad = isDark
       ? ["rgba(15,23,42,0.80)", "rgba(15,23,42,0.60)", "rgba(15,23,42,0.40)"]
       : ["rgba(255,255,255,0.90)", "rgba(255,255,255,0.70)", "rgba(255,255,255,0.50)"];
 
     const themeCardBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
 
-    const themeCardShadow = isDark
-      ? {
-          shadowColor: "#000",
-          shadowOpacity: 0.6,
-          shadowRadius: 28,
-          shadowOffset: { width: 0, height: 16 },
-          elevation: 12,
-        }
-      : {
-          shadowColor: "#000",
-          shadowOpacity: 0.10,
-          shadowRadius: 18,
-          shadowOffset: { width: 0, height: 10 },
-          elevation: 8,
-        };
-
-    // --- Logout button (web red glass) ---
-    const logoutBg = isDark ? "rgba(239,68,68,0.10)" : "rgba(239,68,68,0.10)";
+    const logoutBg = "rgba(239,68,68,0.10)";
     const logoutBorder = "rgba(239,68,68,0.25)";
     const logoutText = isDark ? "rgba(254,202,202,0.95)" : "#B91C1C";
     const logoutIconBg = "rgba(239,68,68,0.12)";
@@ -267,50 +221,38 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     return {
       shellBg,
 
-      // topbar
-      topbarGrad,
-      topbarShadow,
-      topbarBtnBg,
-      topbarBtnBgHover,
-
-      // drawer shell
-      sidebarGrad,
-      sidebarRefraction,
+      glassGrad,
+      glassRefraction,
       ring,
-      sidebarShadow,
 
-      // text
+      shadowHeavy,
+      shadowMedium,
+
       textPrimary,
       textMuted,
 
-      // items
+      btnBg,
+      btnBgHover,
+
       itemIdleText,
-      itemIdleBg,
-      itemIdleBgPressed,
+      itemPressedBg,
+
       activeBg,
       activeRing,
       activeText,
-      activeShadow,
+
       iconIdleBg,
       iconIdle,
       iconActiveBg,
       iconActive,
 
-      // dividers/cards
       divider,
       userCardBg,
       userCardBorder,
 
-      // glows
-      glowTop,
-      glowBottom,
-
-      // footer cards
       themeCardGrad,
       themeCardBorder,
-      themeCardShadow,
 
-      // logout
       logoutBg,
       logoutBorder,
       logoutText,
@@ -320,91 +262,88 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   if (loading) {
     return (
-      <SafeAreaView
-        style={[
-          styles.screen,
-          { backgroundColor: TOKENS.shellBg, justifyContent: "center", alignItems: "center" },
-        ]}
-      >
-        <Text style={{ opacity: 0.6, color: TOKENS.textMuted }}>Loading dashboard...</Text>
-      </SafeAreaView>
+      <View style={[styles.screen, { backgroundColor: TOKENS.shellBg, justifyContent: "center", alignItems: "center" }]}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <Text style={{ opacity: 0.7, color: TOKENS.textMuted }}>Loading dashboard...</Text>
+      </View>
     );
   }
 
   if (!user) {
     return (
-      <SafeAreaView
-        style={[
-          styles.screen,
-          { backgroundColor: TOKENS.shellBg, justifyContent: "center", alignItems: "center" },
-        ]}
-      >
-        <Text style={{ opacity: 0.6, color: TOKENS.textMuted }}>Redirecting...</Text>
-      </SafeAreaView>
+      <View style={[styles.screen, { backgroundColor: TOKENS.shellBg, justifyContent: "center", alignItems: "center" }]}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <Text style={{ opacity: 0.7, color: TOKENS.textMuted }}>Redirecting...</Text>
+      </View>
     );
   }
 
+  const BOTTOM_BAR_SPACE = TOPBAR_H + 12 + insets.bottom;
+
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: TOKENS.shellBg }]}>
-      {/* ===== Topbar (web-like glass shell) ===== */}
-      <View style={[styles.topbarWrap]}>
-        <View style={[styles.topbarShell, TOKENS.topbarShadow]}>
-          {/* layers */}
-          <BlurView
-            intensity={isDark ? 18 : 22} // clear glass (less blur than “milky”)
-            tint={isDark ? "dark" : "light"}
-            style={StyleSheet.absoluteFill}
-          />
-          <LinearGradient
-            colors={TOKENS.topbarGrad as any}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <LinearGradient
-            colors={TOKENS.sidebarRefraction as any}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={[StyleSheet.absoluteFill, { opacity: isDark ? 0.10 : 0.30 }]}
-          />
+    <View style={[styles.screen, { backgroundColor: TOKENS.shellBg }]}>
+      <StatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
 
-          {/* ring */}
-          <View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFill,
-              { borderWidth: StyleSheet.hairlineWidth, borderColor: TOKENS.ring, borderRadius: 18 },
-            ]}
-          />
+      <View style={styles.content}>
+        {children}
+      </View>
 
-          <View style={styles.topbarInner}>
-            <Pressable
-              onPress={openDrawer}
-              hitSlop={10}
-              style={({ pressed }) => [
-                styles.topbarBtn,
-                { backgroundColor: pressed ? TOKENS.topbarBtnBgHover : TOKENS.topbarBtnBg },
+      {/* Topbar overlay (transparent wrapper, only the glass card is visible) */}
+      <View pointerEvents="box-none" style={[styles.topbarOverlay, { paddingBottom: insets.bottom }]}>
+        <View style={[styles.topbarCardWrap, { paddingHorizontal: 12 }]}>
+          <View style={[styles.topbarCard, TOKENS.shadowMedium]}>
+            {/* glass */}
+            <BlurView
+              intensity={isDark ? 40 : 50}
+              tint={isDark ? "dark" : "light"}
+              style={StyleSheet.absoluteFill}
+            />
+            <LinearGradient
+              colors={TOKENS.glassGrad as any}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <LinearGradient
+              colors={TOKENS.glassRefraction as any}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={[StyleSheet.absoluteFill, { opacity: isDark ? 0.10 : 0.30 }]}
+            />
+            <View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFill,
+                { borderWidth: StyleSheet.hairlineWidth, borderColor: TOKENS.ring, borderRadius: 18 },
               ]}
-            >
-              <Ionicons name="menu" size={20} color={TOKENS.iconIdle} style={{ marginTop: -1 }} />
-            </Pressable>
+            />
 
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={[styles.topbarTitle, { color: TOKENS.textPrimary }]}>OzSave</Text>
-              <Text style={[styles.topbarSubtitle, { color: TOKENS.textMuted }]} numberOfLines={1}>
-                {hasHouse ? user.house?.name : "No house"}
-              </Text>
+            <View style={styles.topbarInner}>
+              <View style={{ width: 40 }} />
+
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={[styles.topbarTitle, { color: TOKENS.textPrimary }]}>OzSave</Text>
+                <Text style={[styles.topbarSubtitle, { color: TOKENS.textMuted }]} numberOfLines={1}>
+                  {hasHouse ? user.house?.name : "No house"}
+                </Text>
+              </View>
+
+              <Pressable
+                onPress={openDrawer}
+                hitSlop={10}
+                style={({ pressed }) => [
+                  styles.topbarBtn,
+                  { backgroundColor: pressed ? TOKENS.btnBgHover : TOKENS.btnBg },
+                ]}
+              >
+                <Ionicons name="menu" size={20} color={TOKENS.iconIdle} />
+              </Pressable>
             </View>
-
-            <View style={{ width: 40 }} />
           </View>
         </View>
       </View>
 
-      {/* Main */}
-      <View style={styles.content}>{children}</View>
-
-      {/* ===== Drawer ===== */}
+      {/* Drawer */}
       <Modal visible={open} transparent animationType="none" onRequestClose={closeDrawer}>
         <View style={styles.modalRoot}>
           <Pressable style={styles.backdrop} onPress={closeDrawer} />
@@ -412,7 +351,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           <Animated.View
             style={[
               styles.drawer,
-              TOKENS.sidebarShadow,
+              TOKENS.shadowHeavy,
               {
                 paddingTop: insets.top + 12,
                 paddingBottom: insets.bottom + 14,
@@ -420,54 +359,49 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               },
             ]}
           >
-            {/* GLASS LAYERS */}
+            {/* glass */}
+            {/* Strong blur (blurs content underneath) */}
             <BlurView
-              intensity={isDark ? 18 : 22} // clearer glass
+              intensity={isDark ? 55 : 75}
               tint={isDark ? "dark" : "light"}
               style={StyleSheet.absoluteFill}
             />
-            <LinearGradient
-              colors={TOKENS.sidebarGrad as any}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <LinearGradient
-              colors={TOKENS.sidebarRefraction as any}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={[StyleSheet.absoluteFill, { opacity: isDark ? 0.10 : 0.30 }]}
-            />
 
-            {/* ring */}
+            {/* Frost layer (this is what makes it look like frosted glass,not just blur) */}
             <View
               pointerEvents="none"
               style={[
                 StyleSheet.absoluteFill,
                 {
-                  borderRightWidth: StyleSheet.hairlineWidth,
-                  borderRightColor: TOKENS.ring,
+                  backgroundColor: isDark ? "rgba(2,6,23,0.35)" : "rgba(255,255,255,0.22)",
                 },
               ]}
             />
 
-            {/* LIGHT MODE GLOWS (like web) */}
-            {!isDark ? (
-              <>
-                <LinearGradient
-                  colors={TOKENS.glowTop as any}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.glowTop}
-                />
-                <LinearGradient
-                  colors={TOKENS.glowBottom as any}
-                  start={{ x: 1, y: 1 }}
-                  end={{ x: 0, y: 0 }}
-                  style={styles.glowBottom}
-                />
-              </>
-            ) : null}
+            {/* Optional: subtle gradient refraction (still neutral,no blue) */}
+            <LinearGradient
+              colors={
+                isDark
+                  ? ["rgba(255,255,255,0.06)", "rgba(255,255,255,0.00)"]
+                  : ["rgba(255,255,255,0.35)", "rgba(255,255,255,0.08)"]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+
+            {/* Ring/border */}
+            <View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.10)",
+                  borderRadius: 18,
+                },
+              ]}
+            />
 
             {/* Header */}
             <View style={[styles.drawerHeader, { borderBottomColor: TOKENS.divider }]}>
@@ -483,21 +417,18 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 hitSlop={10}
                 style={({ pressed }) => [
                   styles.closeBtn,
-                  { backgroundColor: pressed ? TOKENS.topbarBtnBgHover : TOKENS.topbarBtnBg },
+                  { backgroundColor: pressed ? TOKENS.btnBgHover : TOKENS.btnBg },
                 ]}
               >
                 <Text style={{ fontSize: 16, color: TOKENS.textPrimary }}>✕</Text>
               </Pressable>
             </View>
 
-            {/* User card (web style) */}
+            {/* User card */}
             <View
               style={[
                 styles.userCard,
-                {
-                  backgroundColor: TOKENS.userCardBg,
-                  borderColor: TOKENS.userCardBorder,
-                },
+                { backgroundColor: TOKENS.userCardBg, borderColor: TOKENS.userCardBorder },
               ]}
             >
               <View style={[styles.avatar, { backgroundColor: TOKENS.iconActiveBg, borderColor: TOKENS.ring }]}>
@@ -530,15 +461,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                     style={({ pressed }) => [
                       styles.navItem,
                       {
-                        backgroundColor: active
-                          ? TOKENS.activeBg
-                          : pressed
-                          ? TOKENS.itemIdleBgPressed
-                          : TOKENS.itemIdleBg,
+                        backgroundColor: active ? TOKENS.activeBg : pressed ? TOKENS.itemPressedBg : "transparent",
                         borderWidth: active ? StyleSheet.hairlineWidth : 0,
                         borderColor: active ? TOKENS.activeRing : "transparent",
                       },
-                      active ? TOKENS.activeShadow : null,
                     ]}
                   >
                     <View
@@ -579,15 +505,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                         style={({ pressed }) => [
                           styles.navItem,
                           {
-                            backgroundColor: active
-                              ? TOKENS.activeBg
-                              : pressed
-                              ? TOKENS.itemIdleBgPressed
-                              : TOKENS.itemIdleBg,
+                            backgroundColor: active ? TOKENS.activeBg : pressed ? TOKENS.itemPressedBg : "transparent",
                             borderWidth: active ? StyleSheet.hairlineWidth : 0,
                             borderColor: active ? TOKENS.activeRing : "transparent",
                           },
-                          active ? TOKENS.activeShadow : null,
                         ]}
                       >
                         <View
@@ -619,10 +540,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               )}
             </View>
 
-            {/* Footer (web-style theme card + logout glass) */}
+            {/* Footer */}
             <View style={[styles.drawerFooter, { borderTopColor: TOKENS.divider }]}>
-              {/* Theme card */}
-              <View style={[styles.themeCardWrap, TOKENS.themeCardShadow]}>
+              <View style={[styles.themeCardWrap, TOKENS.shadowMedium]}>
                 <BlurView
                   intensity={isDark ? 18 : 22}
                   tint={isDark ? "dark" : "light"}
@@ -650,7 +570,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 </View>
               </View>
 
-              {/* Logout (web red glass) */}
               <Pressable
                 onPress={handleLogout}
                 style={({ pressed }) => [
@@ -675,24 +594,33 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </Animated.View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  flex: { flex: 1 },
+  content: { flex: 1 },
 
-  // ===== Topbar glass shell =====
-  topbarWrap: {
-    paddingHorizontal: 12,
-    paddingBottom: 10,
+  // Topbar overlay is transparent: only the card shows
+  topbarOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 50,
+    pointerEvents: "box-none",
   },
-  topbarShell: {
+  topbarCardWrap: {
+    // keeps the card aligned and allows touch
+  },
+  topbarCard: {
     borderRadius: 18,
     overflow: "hidden",
   },
   topbarInner: {
-    minHeight: 48,
+    height: TOPBAR_H,
     paddingHorizontal: 10,
     paddingVertical: 10,
     flexDirection: "row",
@@ -708,35 +636,19 @@ const styles = StyleSheet.create({
   },
   topbarTitle: { fontSize: 14, fontWeight: "800" },
   topbarSubtitle: { fontSize: 12 },
-  content: { flex: 1 },
 
-  // ===== Drawer =====
+  // Drawer
   modalRoot: { flex: 1 },
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.45)" },
-
   drawer: {
-    width: 280,
+    width: DRAWER_W,
     height: "100%",
     overflow: "hidden",
     borderTopRightRadius: 22,
     borderBottomRightRadius: 22,
-  },
-
-  glowTop: {
     position: "absolute",
-    top: -96,
-    left: -96,
-    height: 288,
-    width: 288,
-    opacity: 0.9,
-  },
-  glowBottom: {
-    position: "absolute",
-    bottom: -128,
-    right: -96,
-    height: 288,
-    width: 288,
-    opacity: 0.9,
+    right: 0,
+    top: 0,
   },
 
   drawerHeader: {
@@ -813,7 +725,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 
-  // Theme card wrapper (web-like)
   themeCardWrap: {
     borderRadius: 18,
     overflow: "hidden",
@@ -822,7 +733,6 @@ const styles = StyleSheet.create({
     padding: 12,
   },
 
-  // Logout (web red glass)
   logoutBtn: {
     flexDirection: "row",
     alignItems: "center",

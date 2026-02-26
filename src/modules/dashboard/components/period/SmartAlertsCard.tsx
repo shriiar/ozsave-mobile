@@ -152,13 +152,10 @@ const styles = StyleSheet.create({
   },
 
   badge: {
-    minWidth: 34,
-    height: 28,
-    paddingHorizontal: 10,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
-    alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
 
   body: {

@@ -10,6 +10,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { useTheme } from "../../../../context/ThemeContext";
 
 type Props = {
   children: React.ReactNode | React.ReactNode[];
@@ -28,7 +29,7 @@ const STACK_SCALE = 0.965;
 const CARD_INSET = 20;
 
 const EXPAND = {
-  duration: 425,
+  duration: 500,
   easing: Easing.out(Easing.cubic),
 };
 
@@ -61,6 +62,9 @@ export function WidgetStack({
   dotsOffset = 12,
   style,
 }: Props) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
   const items = useMemo(() => React.Children.toArray(children).filter(Boolean), [children]);
   const total = items.length;
   if (!total) return null;
@@ -103,7 +107,7 @@ export function WidgetStack({
   const commitMoveUI = (dir: 1 | -1) => {
     "worklet";
     activeSV.value = wrap(activeSV.value + dir, total);
-    startExpandUI(); // <-- smooth “take full space” after swipe completes
+    startExpandUI(); // smooth “take full space” after swipe completes
   };
 
   const gesture = Gesture.Pan()
@@ -138,10 +142,8 @@ export function WidgetStack({
         y.value = withSpring(-snapDist, { ...SPRING, overshootClamping: true }, (finished) => {
           if (!finished) return;
 
-          // commit + expand on UI thread, then reset drag
           commitMoveUI(1);
           y.value = 0;
-
           animating.value = false;
         });
         return;
@@ -154,7 +156,6 @@ export function WidgetStack({
 
           commitMoveUI(-1);
           y.value = 0;
-
           animating.value = false;
         });
         return;
@@ -165,16 +166,21 @@ export function WidgetStack({
 
   return (
     <View style={[styles.root, { height }, style]}>
-      <View style={styles.surface} onLayout={onLayout}>
+      <View
+        style={[
+          styles.surface,
+          // ✅ theme-aware widget background
+          { backgroundColor: isDark ? "rgba(2,6,23,0.58)" : "rgba(237,237,237,1)" },
+        ]}
+        onLayout={onLayout}
+      >
         {items.map((node, i) => {
           const cardStyle = useAnimatedStyle(() => {
             const hh = h.value || 1;
             const t = Math.min(1, Math.abs(y.value) / hh);
 
-            // relative position to active (circular)
             const d = circularDelta(activeSV.value, i, total);
 
-            // only animate prev/current/next. others fully hidden.
             if (d < -1 || d > 1) {
               return {
                 opacity: 0,
@@ -184,10 +190,8 @@ export function WidgetStack({
 
             const isActive = d === 0;
 
-            // base positions (stack)
             const baseY = isActive ? 0 : d === 1 ? hh - STACK_GAP : -hh + STACK_GAP;
 
-            // only show prev when dragging down, next when dragging up
             const show = isActive
               ? 1
               : d === 1
@@ -198,8 +202,6 @@ export function WidgetStack({
               ? 1 - t * 0.04
               : STACK_SCALE + t * (1 - STACK_SCALE);
 
-            // ---- KEY FIX: animate inset + radius for active card ----
-            // when active just changed, expand goes 0->1 (inset->full)
             const inset = isActive ? CARD_INSET * (1 - expand.value) : CARD_INSET;
             const radiusUnder = 18;
             const radiusTop = 24;
@@ -231,7 +233,6 @@ export function WidgetStack({
           );
         })}
 
-        {/* Gesture layer */}
         <GestureDetector gesture={gesture}>
           <Animated.View style={StyleSheet.absoluteFillObject} />
         </GestureDetector>
@@ -250,11 +251,18 @@ export function WidgetStack({
                   activeSV.value = i;
                   y.value = 0;
 
-                  // smooth expand on dot jump too
                   expand.value = 0;
                   expand.value = withTiming(1, EXPAND);
                 }}
-                style={[styles.dot, activeDot ? styles.dotActive : styles.dotInactive]}
+                style={[
+                  styles.dot,
+                  activeDot ? styles.dotActive : styles.dotInactive,
+                  {
+                    backgroundColor: activeDot
+                      ? (isDark ? "rgba(255,255,255,0.95)" : "rgba(15,23,42,0.92)")
+                      : (isDark ? "rgba(148,163,184,0.35)" : "rgba(100,116,139,0.35)"),
+                  },
+                ]}
               />
             );
           })}
@@ -271,10 +279,9 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 24,
     overflow: "hidden",
-    backgroundColor: "rgba(237,237,237,1)",
+    // backgroundColor set dynamically
   },
 
-  // base for every card, we animate top/left/right/bottom/borderRadius
   cardBase: {
     position: "absolute",
     top: CARD_INSET,
@@ -296,11 +303,7 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 999 },
 
   dotActive: {
-    backgroundColor: "rgba(15,23,42,0.92)",
     transform: [{ scale: 1.12 }],
   },
-
-  dotInactive: {
-    backgroundColor: "rgba(100,116,139,0.35)",
-  },
+  dotInactive: {},
 });

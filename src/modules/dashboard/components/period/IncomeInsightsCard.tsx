@@ -1,37 +1,16 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../../../../context/ThemeContext";
 import type { PeriodDashboard, Insight } from "./types";
+import { severityTone } from "./formatters";
 
 type Props = { data: PeriodDashboard };
-
-function severityDotColor(sev?: "good" | "warn" | "bad") {
-  if (sev === "good") return "#34D399";
-  if (sev === "bad") return "#F87171";
-  return "#FBBF24";
-}
 
 export function IncomeInsightsCard({ data }: Props) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-
-  const T = useMemo(() => {
-    // Match your design intent: clean glass-ish, no shadows
-    const bg = isDark ? "rgba(2,6,23,0.60)" : "rgba(237,237,237,1)";
-    const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
-
-    const title = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
-    const sub = isDark ? "rgba(148,163,184,0.82)" : "#475569";
-    const detail = isDark ? "rgba(148,163,184,0.88)" : "#64748B";
-
-    const badgeBg = isDark ? "rgba(15,23,42,0.35)" : "rgba(237,237,237,1)";
-    const badgeBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
-
-    const tileBg = isDark ? "rgba(15,23,42,0.35)" : "rgba(237,237,237,1)";
-    const tileBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
-
-    return { bg, border, title, sub, detail, badgeBg, badgeBorder, tileBg, tileBorder };
-  }, [isDark]);
 
   const m: any = (data as any)?.incomeMetrics;
 
@@ -79,165 +58,188 @@ export function IncomeInsightsCard({ data }: Props) {
     return out;
   }, [m]);
 
+  const ui = useMemo(() => {
+    // EXACTLY matching InsightsGridCard UI tokens
+    const text = isDark ? "rgba(226,232,240,0.92)" : "rgba(15,23,42,0.92)";
+    const sub = isDark ? "rgba(148,163,184,0.82)" : "rgba(100,116,139,0.92)";
+    const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
+
+    const cardGrad = isDark
+      ? ["rgba(2,6,23,0.58)", "rgba(15,23,42,0.46)", "rgba(2,6,23,0.38)"]
+      : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.62)", "rgba(255,255,255,0.52)"];
+
+    const innerGrad = isDark
+      ? ["rgba(15,23,42,0.35)", "rgba(2,6,23,0.20)"]
+      : ["rgba(237,237,237,0.90)", "rgba(255,255,255,0.65)"];
+
+    // same as InsightsGridCard (this is the big mismatch you had)
+    const tileBg = isDark ? "rgba(15,23,42,0.70)" : "rgba(237,237,237,0.95)";
+
+    return { text, sub, border, cardGrad, innerGrad, tileBg };
+  }, [isDark]);
+
   const headline =
     points.find((p) => p.severity === "bad")?.title ??
     points.find((p) => p.severity === "warn")?.title ??
     "Quick takeaways for income this period.";
 
-  if (!m) {
-    return (
-      <View style={[styles.outer, { backgroundColor: T.bg, borderColor: T.border }]}>
-        <Text style={[styles.title, { color: T.title }]}>Income insights</Text>
-        <Text style={[styles.subtitle, { color: T.sub }]}>
-          Backend hasn’t sent incomeMetrics yet.
-        </Text>
-        <View style={{ flex: 1 }} />
-      </View>
-    );
-  }
-
   return (
-    <View style={[styles.outer, { backgroundColor: T.bg, borderColor: T.border }]}>
-      {/* Header */}
-      <View style={styles.headerRow}>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={[styles.title, { color: T.title }]}>Income insights</Text>
-          <Text style={[styles.subtitle, { color: T.sub }]} numberOfLines={2}>
-            {headline}
-          </Text>
-        </View>
+    <View style={[styles.wrap, { borderColor: ui.border }]}>
+      <BlurView intensity={isDark ? 26 : 40} tint={isDark ? "dark" : "light"} style={styles.card}>
+        <LinearGradient
+          colors={ui.cardGrad as any}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
 
-        {points.length ? (
-          <View
-            style={[
-              styles.badge,
-              { backgroundColor: T.badgeBg, borderColor: T.badgeBorder },
-            ]}
-          >
-            <Text style={[styles.badgeText, { color: T.title }]}>{points.length}</Text>
-          </View>
-        ) : null}
-      </View>
+        <View style={[styles.inner, { borderColor: ui.border }]}>
+          <LinearGradient
+            colors={ui.innerGrad as any}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
 
-      {/* Body */}
-      <View style={styles.body}>
-        {points.length ? (
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {points.map((p, idx) => (
-              <View
-                key={`${p.title}-${idx}`}
-                style={[
-                  styles.tile,
-                  { backgroundColor: T.tileBg, borderColor: T.tileBorder },
-                ]}
-              >
-                <View style={styles.tileRow}>
-                  <View style={[styles.dot, { backgroundColor: severityDotColor(p.severity) }]} />
+          {/* HEADER */}
+          <View style={styles.headerRow}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[styles.title, { color: ui.text }]}>Income insights</Text>
+              <Text style={[styles.subtitle, { color: ui.sub }]} numberOfLines={2}>
+                {m ? headline : "Backend hasn’t sent incomeMetrics yet."}
+              </Text>
+            </View>
 
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={[styles.tileTitle, { color: T.title }]} numberOfLines={1}>
-                      {p.title}
-                    </Text>
-                    <Text style={[styles.tileDetail, { color: T.detail }]} numberOfLines={1}>
-                      {p.detail || " "}
-                    </Text>
-                  </View>
-                </View>
+            {m && points.length ? (
+              <View style={[styles.badge, { borderColor: ui.border, backgroundColor: ui.tileBg }]}>
+                <Text style={{ color: ui.text, fontWeight: "700", fontSize: 11 }}>
+                  {points.length}
+                </Text>
               </View>
-            ))}
-          </ScrollView>
-        ) : (
-          <Text style={[styles.empty, { color: T.sub }]}>No income insights.</Text>
-        )}
-      </View>
+            ) : null}
+          </View>
+
+          {/* BODY */}
+          <View style={styles.body}>
+            {!m ? (
+              <View style={{ flex: 1 }} />
+            ) : points.length ? (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {points.map((p, idx) => {
+                  const { dotColor } = severityTone(p.severity);
+
+                  return (
+                    <View
+                      key={`${p.title}-${idx}`}
+                      style={[
+                        styles.tile,
+                        { borderColor: ui.border, backgroundColor: ui.tileBg },
+                      ]}
+                    >
+                      <View style={[styles.dot, { backgroundColor: dotColor }]} />
+
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text numberOfLines={1} style={[styles.tileTitle, { color: ui.text }]}>
+                          {p.title}
+                        </Text>
+                        <Text numberOfLines={1} style={[styles.tileSub, { color: ui.sub }]}>
+                          {p.detail || " "}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+            ) : (
+              <Text style={{ color: ui.sub, fontWeight: "700", fontSize: 13 }}>
+                No income insights.
+              </Text>
+            )}
+          </View>
+        </View>
+      </BlurView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  outer: {
+  wrap: {
     flex: 1,
-    borderRadius: 18,
-    padding: 14,
+    borderRadius: 20,
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
+  },
+
+  card: {
+    flex: 1,
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+
+  inner: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 12,
+    overflow: "hidden",
   },
 
   headerRow: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: 10,
+    gap: 12,
   },
 
   title: {
     fontSize: 14,
-    fontWeight: "800",
+    fontWeight: "700",
   },
 
   subtitle: {
-    marginTop: 2,
     fontSize: 13,
+    fontWeight: "600",
+    marginTop: 4,
   },
 
   badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
-  },
-
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "900",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
 
   body: {
-    marginTop: 10,
     flex: 1,
-    overflow: "hidden",
-  },
-
-  listContent: {
-    paddingBottom: 6,
-    gap: 8,
+    marginTop: 10,
   },
 
   tile: {
-    height: 68,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    justifyContent: "center",
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-
-  tileRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    marginBottom: 8,
+    minHeight: 60,
   },
 
   dot: {
     width: 8,
     height: 8,
-    borderRadius: 999,
+    borderRadius: 6,
+    marginRight: 10,
   },
 
   tileTitle: {
     fontSize: 13,
-    fontWeight: "800",
+    fontWeight: "700",
   },
 
-  tileDetail: {
+  tileSub: {
     marginTop: 2,
-    fontSize: 13,
-  },
-
-  empty: {
-    fontSize: 13,
+    fontSize: 12,
+    fontWeight: "600",
   },
 });

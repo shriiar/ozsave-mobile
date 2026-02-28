@@ -17,7 +17,7 @@ import { Swipeable } from "react-native-gesture-handler";
 
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
-import DashboardShell from "../../src/modules/shell/DashboardShell";
+import DashboardShell, { TOPBAR_H } from "../../src/modules/shell/DashboardShell";
 
 import CostFilterModal, { CostFiltersDraft } from "@/src/modules/cost/CostFilterModal";
 import AddCostModal from "@/src/modules/cost/AddCostModal";
@@ -25,6 +25,7 @@ import EditCostModal from "@/src/modules/cost/EditCostModal";
 import DeleteCostModal from "@/src/modules/cost/DeleteCostModal";
 import type { CostRow } from "../../src/modules/cost/api";
 import { useInfiniteCosts } from "../../src/modules/cost/hooks/useCostApi";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function money(n: number) {
     if (!Number.isFinite(n)) return "$0.00";
@@ -235,6 +236,9 @@ export default function CostScreen() {
 
     const [filtersOpen, setFiltersOpen] = useState(false);
 
+    const insets = useSafeAreaInsets();
+    const bottomSpace = TOPBAR_H + insets.bottom + 16;
+
     // draft filters (UI)
     const [draft, setDraft] = useState<CostFiltersDraft>({
         paidBy: "all",
@@ -333,8 +337,8 @@ export default function CostScreen() {
 
     return (
         <DashboardShell>
-            <View style={[styles.screen, { paddingTop: 12 }]}>
-                <View style={styles.headerRow}>
+            <View style={[styles.screen, { paddingTop: insets.top + 20 }]}>
+                <View style={[styles.headerRow, { marginBottom: 10 }]}>
                     <View style={{ flex: 1 }}>
                         <Text style={[styles.h1, { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" }]}>
                             Costs
@@ -375,7 +379,7 @@ export default function CostScreen() {
                         keyExtractor={(item) => item._id}
 
                         // ✅ this makes the empty area belong to the scroll view
-                        contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
+                        contentContainerStyle={{ paddingBottom: bottomSpace, flexGrow: 1 }}
 
                         // ✅ allow pull-to-refresh even when content is short
                         alwaysBounceVertical
@@ -611,6 +615,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 14,
-      },
-      filterBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+    },
+    filterBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 });

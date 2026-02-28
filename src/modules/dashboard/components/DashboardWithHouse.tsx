@@ -23,6 +23,8 @@ import { WidgetStack } from "./period/WidgetStack";
 import { SmartAlertsCard } from "./period/SmartAlertsCard";
 import { InsightsGridCard } from "./period/InsightsGridCard";
 import { IncomeInsightsCard } from "./period/IncomeInsightsCard";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TOPBAR_H } from "@/src/modules/shell/DashboardShell";
 
 type HouseBase = { _id: string; name: string };
 type PeriodDashboard = any;
@@ -83,9 +85,11 @@ export default function DashboardWithHouse({
   // ✅ ALL HOOKS UP HERE. No hooks after early returns.
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-  
+
   const [stackInteracting, setStackInteracting] = useState(false);
 
+  const insets = useSafeAreaInsets();
+  const bottomSpace = TOPBAR_H + insets.bottom + 16;
 
   const T = useMemo(() => {
     const bg = isDark ? "#050814" : "#F6F7FB";
@@ -225,7 +229,10 @@ export default function DashboardWithHouse({
             progressViewOffset={Platform.OS === "ios" ? 16 : 0}
           />
         }
-        contentContainerStyle={[styles.container, { minHeight: viewportH || undefined }]}
+        contentContainerStyle={[
+          styles.container,
+          { minHeight: viewportH || undefined, paddingBottom: bottomSpace },
+        ]}
       >
         <DashboardHeader
           range={range}
@@ -275,7 +282,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   container: {
     padding: 16,
-    paddingBottom: 28,
     gap: 12,
     flexGrow: 1,
   },

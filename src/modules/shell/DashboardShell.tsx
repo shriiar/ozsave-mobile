@@ -28,7 +28,7 @@ const ROUTES = {
 } as const;
 
 const DRAWER_W = 280;
-const TOPBAR_H = 52; // visual height of the card contents (not including margins)
+export const TOPBAR_H = 52; // visual height of the card contents (not including margins)
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -278,8 +278,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     );
   }
 
-  const BOTTOM_BAR_SPACE = TOPBAR_H + 12 + insets.bottom;
-
   return (
     <View style={[styles.screen, { backgroundColor: TOKENS.shellBg }]}>
       <StatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
@@ -289,8 +287,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       </View>
 
       {/* Topbar overlay (transparent wrapper, only the glass card is visible) */}
-      <View pointerEvents="box-none" style={[styles.topbarOverlay, { paddingBottom: insets.bottom }]}>
-        <View style={[styles.topbarCardWrap, { paddingHorizontal: 12 }]}>
+      <View pointerEvents="box-none" style={styles.topbarOverlay}>
+        <View
+          style={[
+            styles.topbarCardWrap,
+            { paddingHorizontal: 12, paddingBottom: insets.bottom + 8 },
+          ]}
+        >
           <View style={[styles.topbarCard, TOKENS.shadowMedium]}>
             {/* glass */}
             <BlurView

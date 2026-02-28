@@ -335,6 +335,26 @@ export default function CostScreen() {
         if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
     }
 
+    function ListFooter() {
+        // Nothing to load
+        if (!q.hasNextPage) return <View style={{ height: 10 }} />;
+
+        // Show spinner while fetching next page
+        if (q.isFetchingNextPage) {
+            return (
+                <View style={{ paddingTop: 12, paddingBottom: bottomSpace }}>
+                    <ActivityIndicator />
+                    <Text style={{ marginTop: 8, opacity: 0.7, textAlign: "center" }}>
+                        Loading more...
+                    </Text>
+                </View>
+            );
+        }
+
+        // Not currently loading, but reserve a little space
+        return <View style={{ height: 12 }} />;
+    }
+
     return (
         <DashboardShell>
             <View style={[styles.screen, { paddingTop: insets.top + 20 }]}>
@@ -377,14 +397,9 @@ export default function CostScreen() {
                         style={{ flex: 1 }}
                         data={rows}
                         keyExtractor={(item) => item._id}
-
-                        // ✅ this makes the empty area belong to the scroll view
                         contentContainerStyle={{ paddingBottom: bottomSpace, flexGrow: 1 }}
-
-                        // ✅ allow pull-to-refresh even when content is short
                         alwaysBounceVertical
                         bounces
-
                         renderItem={({ item }) => (
                             <CostCard
                                 item={item}
@@ -396,21 +411,15 @@ export default function CostScreen() {
                                 onSwipeClose={onSwipeClose}
                             />
                         )}
-
                         refreshControl={
                             <RefreshControl
                                 refreshing={refreshing || q.isRefetching}
                                 onRefresh={onRefresh}
                             />
                         }
-
                         onEndReached={onEndReached}
-                        onEndReachedThreshold={0.35}
-                        ListEmptyComponent={
-                            <View style={styles.empty}>
-                                <Text style={{ opacity: 0.7 }}>No costs yet.</Text>
-                            </View>
-                        }
+                        onEndReachedThreshold={0.6}
+                        ListFooterComponent={<ListFooter />}
                     />
                 )}
 

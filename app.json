@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "OzSave",
-    "slug": "ozsave",
+    "slug": "ozsave-mobile",
     "scheme": "ozsave",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,7 +17,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.shriiar.ozsave",
       "infoPlist": {
-        "CFBundleDisplayName": "OzSave"
+        "CFBundleDisplayName": "OzSave",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -47,6 +48,7 @@
       "eas": {
         "projectId": "3ab698e0-60a6-4498-b59f-4e5f365e0dc9"
       }
-    }
+    },
+    "owner": "shriiar"
   }
 }

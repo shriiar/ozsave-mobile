@@ -263,6 +263,9 @@ export default function CostScreen() {
     const isDark = resolvedTheme === "dark";
     const { refreshing, refreshUser } = useAuth();
 
+    const spinner = isDark ? "rgba(255,255,255,0.92)" : "rgba(15,23,42,0.85)";
+    const androidBg = isDark ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.95)";    
+
     const [limit] = useState(10);
     const [addOpen, setAddOpen] = useState(false);
 
@@ -343,10 +346,7 @@ export default function CostScreen() {
         if (q.isFetchingNextPage) {
             return (
                 <View style={{ paddingTop: 12, paddingBottom: bottomSpace }}>
-                    <ActivityIndicator />
-                    <Text style={{ marginTop: 8, opacity: 0.7, textAlign: "center" }}>
-                        Loading more...
-                    </Text>
+                    <ActivityIndicator color={spinner} />
                 </View>
             );
         }
@@ -413,10 +413,13 @@ export default function CostScreen() {
                         )}
                         refreshControl={
                             <RefreshControl
-                                refreshing={refreshing || q.isRefetching}
-                                onRefresh={onRefresh}
+                              refreshing={refreshing || q.isRefetching}
+                              onRefresh={onRefresh}
+                              tintColor={spinner}                 // iOS
+                              colors={[spinner]}                  // Android
+                              progressBackgroundColor={androidBg} // Android
                             />
-                        }
+                          }
                         onEndReached={onEndReached}
                         onEndReachedThreshold={0.6}
                         ListFooterComponent={<ListFooter />}

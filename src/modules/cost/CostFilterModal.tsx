@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
         gap: 10,
         paddingBottom: 10,
     },
-    title: { fontSize: 16, fontWeight: "900" },
+    title: { fontSize: 16, fontWeight: "700" },
     subtitle: { marginTop: 2, fontSize: 12.5, fontWeight: "700" },
 
     iconBtn: {
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
         gap: 10,
     },
 
-    switchTitle: { fontSize: 13.5, fontWeight: "900" },
+    switchTitle: { fontSize: 13.5, fontWeight: "700" },
     switchSub: { marginTop: 2, fontSize: 12, fontWeight: "700" },
 
     input: {
@@ -472,11 +472,11 @@ const styles = StyleSheet.create({
     },
     pickerTitle: {
         fontSize: 12.5,
-        fontWeight: "900",
+        fontWeight: "700",
     },
     pickerDone: {
         fontSize: 12.5,
-        fontWeight: "900",
+        fontWeight: "700",
     },
 
     sortDirBtn: {
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    sortDirText: { fontSize: 16, fontWeight: "900" },
+    sortDirText: { fontSize: 16, fontWeight: "700" },
 
     errorBox: {
         borderRadius: 16,
@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    btnGhostText: { fontSize: 13, fontWeight: "900" },
+    btnGhostText: { fontSize: 13, fontWeight: "700" },
 
     btnPrimary: {
         flex: 1,
@@ -523,5 +523,5 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    btnPrimaryText: { color: "#fff", fontSize: 13, fontWeight: "900" },
+    btnPrimaryText: { color: "#fff", fontSize: 13, fontWeight: "700" },
 });

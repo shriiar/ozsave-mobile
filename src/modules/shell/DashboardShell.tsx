@@ -288,7 +288,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           {/* glass layers must NOT steal touches */}
           <BlurView
             pointerEvents="none"
-            intensity={isDark ? 42 : 25}
+            intensity={isDark ? 60 : 25}
             tint={isDark ? "dark" : "light"}
             style={StyleSheet.absoluteFill}
           />

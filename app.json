@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "ozsave-mobile",
-    "slug": "ozsave-mobile",
+    "name": "Ozsave",
+    "slug": "Ozsave",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,7 +15,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.shriiar.ozsave-mobile"
+      "bundleIdentifier": "com.shriiar.ozsave-mobile",
+      "icon": "./assets/images/wallet.png"
     },
     "android": {
       "adaptiveIcon": {

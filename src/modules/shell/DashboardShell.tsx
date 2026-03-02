@@ -45,8 +45,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   const hasHouse = !!user?.house;
   const isAdmin = user?.role === "admin";
-  const FLOAT_GAP = insets.bottom + 10;
-  const SHEET_OVERLAP = 14
+  const FLOAT_GAP = insets.bottom - 10;
 
   // ===== Guards (same logic) =====
   const lastRedirectRef = useRef<string | null>(null);
@@ -214,7 +213,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     const btnBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
     const btnBgHover = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
 
-    const activeBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.75)";
+    const activeBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
     const activeRing = isDark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)";
 
     const itemBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
@@ -289,7 +288,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           {/* glass layers must NOT steal touches */}
           <BlurView
             pointerEvents="none"
-            intensity={isDark ? 42 : 55}
+            intensity={isDark ? 42 : 25}
             tint={isDark ? "dark" : "light"}
             style={StyleSheet.absoluteFill}
           />
@@ -412,7 +411,15 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                   onPress={() => go(it.href)}
                   style={({ pressed }) => [
                     styles.tabBtn,
-                    { backgroundColor: pressed ? TOKENS.btnBgHover : "transparent" },
+                    {
+                      backgroundColor: active
+                        ? TOKENS.activeBg
+                        : pressed
+                          ? TOKENS.btnBgHover
+                          : "transparent",
+                      borderWidth: active ? StyleSheet.hairlineWidth : 0,
+                      borderColor: active ? TOKENS.activeRing : "transparent",
+                    },
                   ]}
                 >
                   <Ionicons

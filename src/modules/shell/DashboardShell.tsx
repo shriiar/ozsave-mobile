@@ -45,7 +45,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   const hasHouse = !!user?.house;
   const isAdmin = user?.role === "admin";
-  const FLOAT_GAP = insets.bottom - 10;
+  const FLOAT_GAP = insets.bottom - 15;
 
   // ===== Guards (same logic) =====
   const lastRedirectRef = useRef<string | null>(null);
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
   },
 
   pill: {
-    width: "94%",
+    width: "90%",
     borderRadius: 22,
     overflow: "hidden",
     position: "relative", // IMPORTANT

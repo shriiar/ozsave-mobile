@@ -1,6 +1,13 @@
 // src/modules/shell/DashboardShell.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Modal, Pressable, StyleSheet, Text, View, ScrollView } from "react-native";
+import {
+  Animated,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  Dimensions,
+} from "react-native";
 import { router, usePathname } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -27,8 +34,7 @@ const ROUTES = {
   login: "/(auth)/login",
 } as const;
 
-const DRAWER_W = 280;
-export const TOPBAR_H = 52; // visual height of the card contents (not including margins)
+export const PILL_H = 58;
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -40,34 +46,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const hasHouse = !!user?.house;
   const isAdmin = user?.role === "admin";
 
-  const [open, setOpen] = useState(false);
-  const slideX = useRef(new Animated.Value(DRAWER_W)).current;
-
+  // ===== Guards (same logic) =====
   const lastRedirectRef = useRef<string | null>(null);
-
-  function closeDrawer() {
-    Animated.timing(slideX, {
-      toValue: DRAWER_W,
-      duration: 180,
-      useNativeDriver: true,
-    }).start(() => setOpen(false));
-  }
-
-  function openDrawer() {
-    setOpen(true);
-    Animated.timing(slideX, {
-      toValue: 0,
-      duration: 220,
-      useNativeDriver: true,
-    }).start();
-  }
-
-  useEffect(() => {
-    if (open) closeDrawer();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
-
-  // ===== Guards (keep logic same) =====
   useEffect(() => {
     if (loading) return;
     if (!pathname) return;
@@ -76,37 +56,32 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       if (pathname === to) return;
       if (lastRedirectRef.current === to) return;
       lastRedirectRef.current = to;
-
-      requestAnimationFrame(() => {
-        router.replace(to as any);
-      });
+      requestAnimationFrame(() => router.replace(to as any));
     };
 
     if (!user) {
       redirect(ROUTES.login);
       return;
     }
-
     if (!hasHouse && pathname !== ROUTES.home) {
       redirect(ROUTES.home);
       return;
     }
-
     if (!isAdmin && pathname.startsWith("/admin")) {
       redirect(ROUTES.home);
       return;
     }
-
     lastRedirectRef.current = null;
   }, [loading, user, hasHouse, isAdmin, pathname]);
 
+  // ===== Nav items =====
   const navItems: NavItem[] = useMemo(() => {
     if (!hasHouse) return [{ name: "Home", href: ROUTES.home, icon: "home-outline" }];
     return [
       { name: "Home", href: ROUTES.home, icon: "home-outline" },
       { name: "Costs", href: ROUTES.cost, icon: "receipt-outline" },
-      { name: "Billing", href: ROUTES.billing, icon: "card-outline" },
       { name: "Income", href: ROUTES.income, icon: "wallet-outline" },
+      { name: "Billing", href: ROUTES.billing, icon: "card-outline" },
     ];
   }, [hasHouse]);
 
@@ -119,12 +94,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     return pathname === href || (href !== ROUTES.home && pathname.startsWith(href));
   }
 
-  function onNavPress(href: string) {
-    if (isActive(href)) {
-      closeDrawer();
-      return;
-    }
-    closeDrawer();
+  function go(href: string) {
+    if (isActive(href)) return;
     router.push(href as any);
   }
 
@@ -136,37 +107,123 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }
   }
 
-  // ===== TOKENS (NO BLUE ACCENT, NO GLOWS) =====
+  // ===== Bottom sheet expansion (CLEAN VERSION) =====
+  const [open, setOpen] = useState(false);       // user intent: expanded or not
+  const [visible, setVisible] = useState(false); // render expanded content while animating
+
+  const hAnim = useRef(new Animated.Value(PILL_H)).current;
+
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const contentY = useRef(new Animated.Value(10)).current; // small slide
+
+  // screen-based target height (stable, no measuring)
+  const SCREEN_H = Dimensions.get("window").height;
+  const MAX_OPEN = Math.round(SCREEN_H * 0.82);
+
+  // butter spring
+  function springTo(to: number, velocity = 0, onEnd?: () => void) {
+    Animated.spring(hAnim, {
+      toValue: to,
+      velocity,
+      damping: 22,      // smoother
+      stiffness: 160,   // less edgy
+      mass: 0.95,
+      overshootClamping: true, // prevents iOS bouncy rubber look
+      useNativeDriver: false,  // height anim
+    }).start(({ finished }) => {
+      if (finished) onEnd?.();
+    });
+  }
+
+  function openSheet() {
+    if (open) return;
+
+    setVisible(true);
+    setOpen(true);
+
+    // reset content anim state (important)
+    contentOpacity.setValue(0);
+    contentY.setValue(10);
+
+    // 1) expand height, 2) then reveal content
+    Animated.sequence([
+      Animated.spring(hAnim, {
+        toValue: MAX_OPEN,
+        damping: 22,
+        stiffness: 160,
+        mass: 0.95,
+        overshootClamping: true,
+        useNativeDriver: false,
+      }),
+      Animated.parallel([
+        Animated.timing(contentOpacity, {
+          toValue: 1,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+        Animated.timing(contentY, {
+          toValue: 0,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }
+
+  function closeSheet() {
+    if (!open) return;
+
+    setOpen(false);
+
+    // 1) hide content first (so no squish), 2) then collapse height
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(contentOpacity, {
+          toValue: 0,
+          duration: 90,
+          useNativeDriver: true,
+        }),
+        Animated.timing(contentY, {
+          toValue: 10,
+          duration: 90,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.spring(hAnim, {
+        toValue: PILL_H,
+        velocity: 2,
+        damping: 22,
+        stiffness: 160,
+        mass: 0.95,
+        overshootClamping: true,
+        useNativeDriver: false,
+      }),
+    ]).start(({ finished }) => {
+      if (finished) setVisible(false);
+    });
+  }
+
+  // close on route change
+  useEffect(() => {
+    if (open) closeSheet();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  // ===== TOKENS =====
   const TOKENS = useMemo(() => {
     const shellBg = isDark ? "#020617" : "#F5F7FB";
 
     const glassGrad = isDark
-      ? ["rgba(15,23,42,0.25)", "rgba(15,23,42,0.18)", "rgba(15,23,42,0.12)"]
+      ? ["rgba(15,23,42,0.26)", "rgba(15,23,42,0.18)", "rgba(15,23,42,0.12)"]
       : ["rgba(255,255,255,0.22)", "rgba(255,255,255,0.16)", "rgba(255,255,255,0.10)"];
 
     const glassRefraction = isDark
       ? ["rgba(255,255,255,0.10)", "rgba(255,255,255,0.00)"]
       : ["rgba(255,255,255,0.60)", "rgba(255,255,255,0.00)"];
 
-    const ring = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
+    const ring = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)";
 
-    const shadowHeavy = isDark
-      ? {
-        shadowColor: "#000",
-        shadowOpacity: 0.65,
-        shadowRadius: 40,
-        shadowOffset: { width: 0, height: 20 },
-        elevation: 18,
-      }
-      : {
-        shadowColor: "#000",
-        shadowOpacity: 0.12,
-        shadowRadius: 18,
-        shadowOffset: { width: 0, height: 10 },
-        elevation: 8,
-      };
-
-    const shadowMedium = isDark
+    const shadow = isDark
       ? {
         shadowColor: "#000",
         shadowOpacity: 0.55,
@@ -185,78 +242,36 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     const textPrimary = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
     const textMuted = isDark ? "rgba(148,163,184,0.95)" : "#475569";
 
-    const btnBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
-    const btnBgHover = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
+    const btnBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
+    const btnBgHover = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
 
-    const itemIdleText = isDark ? "rgba(226,232,240,0.92)" : "#334155";
-    const itemPressedBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
+    const activeBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.75)";
+    const activeRing = isDark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)";
 
-    // Active state: neutral, no blue
-    const activeBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.70)";
-    const activeRing = isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.10)";
-    const activeText = textPrimary;
-
-    const iconIdleBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
-    const iconIdle = isDark ? "rgba(226,232,240,0.92)" : "#334155";
-
-    const iconActiveBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
-    const iconActive = textPrimary;
-
+    const itemBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
     const divider = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
 
-    const userCardBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.70)";
-    const userCardBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
-
-    const themeCardGrad = isDark
-      ? ["rgba(15,23,42,0.80)", "rgba(15,23,42,0.60)", "rgba(15,23,42,0.40)"]
-      : ["rgba(255,255,255,0.90)", "rgba(255,255,255,0.70)", "rgba(255,255,255,0.50)"];
-
-    const themeCardBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
-
-    const logoutBg = "rgba(239,68,68,0.10)";
-    const logoutBorder = "rgba(239,68,68,0.25)";
-    const logoutText = isDark ? "rgba(254,202,202,0.95)" : "#B91C1C";
-    const logoutIconBg = "rgba(239,68,68,0.12)";
+    const dangerText = isDark ? "rgba(254,202,202,0.95)" : "#B91C1C";
+    const dangerBg = "rgba(239,68,68,0.10)";
+    const dangerBorder = "rgba(239,68,68,0.25)";
 
     return {
       shellBg,
-
       glassGrad,
       glassRefraction,
       ring,
-
-      shadowHeavy,
-      shadowMedium,
-
+      shadow,
       textPrimary,
       textMuted,
-
       btnBg,
       btnBgHover,
-
-      itemIdleText,
-      itemPressedBg,
-
       activeBg,
       activeRing,
-      activeText,
-
-      iconIdleBg,
-      iconIdle,
-      iconActiveBg,
-      iconActive,
-
+      itemBg,
       divider,
-      userCardBg,
-      userCardBorder,
-
-      themeCardGrad,
-      themeCardBorder,
-
-      logoutBg,
-      logoutBorder,
-      logoutText,
-      logoutIconBg,
+      dangerText,
+      dangerBg,
+      dangerBorder,
     };
   }, [isDark]);
 
@@ -264,7 +279,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     return (
       <View style={[styles.screen, { backgroundColor: TOKENS.shellBg, justifyContent: "center", alignItems: "center" }]}>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <Text style={{ opacity: 0.7, color: TOKENS.textMuted }}>Loading dashboard...</Text>
+        <Text style={{ color: TOKENS.textMuted }}>Loading...</Text>
       </View>
     );
   }
@@ -273,398 +288,246 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     return (
       <View style={[styles.screen, { backgroundColor: TOKENS.shellBg, justifyContent: "center", alignItems: "center" }]}>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <Text style={{ opacity: 0.7, color: TOKENS.textMuted }}>Redirecting...</Text>
+        <Text style={{ color: TOKENS.textMuted }}>Redirecting...</Text>
       </View>
     );
   }
+
+  // Bottom padding so screens can scroll above pill
+  const bottomPad = PILL_H + insets.bottom + 14;
 
   return (
     <View style={[styles.screen, { backgroundColor: TOKENS.shellBg }]}>
       <StatusBar style={isDark ? "light" : "dark"} translucent backgroundColor="transparent" />
 
-      <View style={styles.content}>
+      <View style={[styles.content]}>
         {children}
       </View>
 
-      {/* Topbar overlay (transparent wrapper, only the glass card is visible) */}
-      <View pointerEvents="box-none" style={styles.topbarOverlay}>
-        <View
+      {visible && <Pressable onPress={closeSheet} style={styles.backdrop} />}
+
+      {/* Bottom pill / expanding sheet */}
+      <View pointerEvents="box-none" style={styles.bottomOverlay}
+      >
+        <Animated.View
           style={[
-            styles.topbarCardWrap,
-            { paddingHorizontal: 12, paddingBottom: insets.bottom + 8 },
+            styles.pill,
+            TOKENS.shadow,
+            {
+              height: hAnim,
+              marginBottom: insets.bottom + 8, // <-- move it here (like prev)
+            },
           ]}
         >
-          <View style={[styles.topbarCard, TOKENS.shadowMedium]}>
-            {/* glass */}
-            <BlurView
-              intensity={isDark ? 40 : 50}
-              tint={isDark ? "dark" : "light"}
-              style={StyleSheet.absoluteFill}
-            />
-            <LinearGradient
-              colors={TOKENS.glassGrad as any}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <LinearGradient
-              colors={TOKENS.glassRefraction as any}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={[StyleSheet.absoluteFill, { opacity: isDark ? 0.10 : 0.30 }]}
-            />
-            <View
-              pointerEvents="none"
-              style={[
-                StyleSheet.absoluteFill,
-                { borderWidth: StyleSheet.hairlineWidth, borderColor: TOKENS.ring, borderRadius: 18 },
-              ]}
-            />
-
-            <View style={styles.topbarInner}>
-              <View style={{ width: 40 }} />
-
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={[styles.topbarTitle, { color: TOKENS.textPrimary }]}>OzSave</Text>
-                <Text style={[styles.topbarSubtitle, { color: TOKENS.textMuted }]} numberOfLines={1}>
-                  {hasHouse ? user.house?.name : "No house"}
-                </Text>
-              </View>
-
-              <Pressable
-                onPress={openDrawer}
-                hitSlop={10}
-                style={({ pressed }) => [
-                  styles.topbarBtn,
-                  { backgroundColor: pressed ? TOKENS.btnBgHover : TOKENS.btnBg },
-                ]}
-              >
-                <Ionicons name="menu" size={20} color={TOKENS.iconIdle} />
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </View>
-
-      {/* Drawer */}
-      <Modal visible={open} transparent animationType="none" onRequestClose={closeDrawer}>
-        <View style={styles.modalRoot}>
-          <Pressable style={styles.backdrop} onPress={closeDrawer} />
-
-          <Animated.View
+          {/* glass layers must NOT steal touches */}
+          <BlurView
+            pointerEvents="none"
+            intensity={isDark ? 42 : 55}
+            tint={isDark ? "dark" : "light"}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            pointerEvents="none"
+            colors={TOKENS.glassGrad as any}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            pointerEvents="none"
+            colors={TOKENS.glassRefraction as any}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={[StyleSheet.absoluteFill, { opacity: isDark ? 0.10 : 0.30 }]}
+          />
+          <View
+            pointerEvents="none"
             style={[
-              styles.drawer,
-              TOKENS.shadowHeavy,
-              {
-                paddingTop: insets.top + 12,
-                paddingBottom: insets.bottom + 14,
-                transform: [{ translateX: slideX }],
-              },
+              StyleSheet.absoluteFill,
+              { borderWidth: StyleSheet.hairlineWidth, borderColor: TOKENS.ring, borderRadius: 22 },
             ]}
-          >
-            {/* glass */}
-            {/* Strong blur (blurs content underneath) */}
-            <BlurView
-              intensity={isDark ? 55 : 75}
-              tint={isDark ? "dark" : "light"}
-              style={StyleSheet.absoluteFill}
-            />
+          />
 
-            {/* Frost layer (this is what makes it look like frosted glass,not just blur) */}
-            <View
-              pointerEvents="none"
+          {/* Expanded content */}
+          {visible && (
+              <Animated.View
               style={[
-                StyleSheet.absoluteFill,
+                styles.menuWrap,
                 {
-                  backgroundColor: isDark ? "rgba(2,6,23,0.35)" : "rgba(255,255,255,0.22)",
+                  opacity: contentOpacity,
+                  transform: [{ translateY: contentY }],
                 },
               ]}
-            />
-
-            {/* Optional: subtle gradient refraction (still neutral,no blue) */}
-            <LinearGradient
-              colors={
-                isDark
-                  ? ["rgba(255,255,255,0.06)", "rgba(255,255,255,0.00)"]
-                  : ["rgba(255,255,255,0.35)", "rgba(255,255,255,0.08)"]
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-
-            {/* Ring/border */}
-            <View
-              pointerEvents="none"
-              style={[
-                StyleSheet.absoluteFill,
-                {
-                  borderWidth: StyleSheet.hairlineWidth,
-                  borderColor: isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.10)",
-                  borderRadius: 18,
-                },
-              ]}
-            />
-
-            {/* Header */}
-            <View style={[styles.drawerHeader, { borderBottomColor: TOKENS.divider }]}>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={[styles.brand, { color: TOKENS.textPrimary }]}>OzSave</Text>
-                <Text style={[styles.house, { color: TOKENS.textMuted }]} numberOfLines={1}>
-                  {hasHouse ? user.house?.name : "No house"}
-                </Text>
-              </View>
-
-              <Pressable
-                onPress={closeDrawer}
-                hitSlop={10}
-                style={({ pressed }) => [
-                  styles.closeBtn,
-                  { backgroundColor: pressed ? TOKENS.btnBgHover : TOKENS.btnBg },
-                ]}
-              >
-                <Text style={{ fontSize: 16, color: TOKENS.textPrimary }}>✕</Text>
-              </Pressable>
-            </View>
-
-            {/* User card */}
-            <View
-              style={[
-                styles.userCard,
-                { backgroundColor: TOKENS.userCardBg, borderColor: TOKENS.userCardBorder },
-              ]}
+              pointerEvents={open ? "auto" : "none"}
             >
-              <View style={[styles.avatar, { backgroundColor: TOKENS.iconActiveBg, borderColor: TOKENS.ring }]}>
-                <Text style={[styles.avatarText, { color: TOKENS.textPrimary }]}>
-                  {String(user.name ?? "?")
-                    .trim()
-                    .split(/\s+/)
-                    .slice(0, 2)
-                    .map((p) => p[0]?.toUpperCase())
-                    .join("") || "?"}
-                </Text>
+              {/* Header (fixed) */}
+              <View style={[styles.menuHeader, { borderBottomColor: TOKENS.divider }]}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={[styles.brand, { color: TOKENS.textPrimary }]}>OzSave</Text>
+                  <Text style={[styles.sub, { color: TOKENS.textMuted }]} numberOfLines={1}>
+                    {hasHouse ? user.house?.name : "No house"}
+                  </Text>
+                </View>
+
+                <Pressable
+                  onPress={closeSheet}
+                  hitSlop={10}
+                  style={({ pressed }) => [
+                    styles.smallBtn,
+                    { backgroundColor: pressed ? TOKENS.btnBgHover : TOKENS.btnBg },
+                  ]}
+                >
+                  <Ionicons name="chevron-down" size={20} color={TOKENS.textPrimary} />
+                </Pressable>
               </View>
 
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={[styles.loggedAs, { color: TOKENS.textMuted }]}>Logged in as</Text>
-                <Text style={[styles.userName, { color: TOKENS.textPrimary }]} numberOfLines={1}>
-                  {user.name}
-                </Text>
-              </View>
-            </View>
-
-            {/* Nav */}
-            <View style={styles.nav}>
-              {navItems.map((it) => {
-                const active = isActive(it.href);
-                return (
-                  <Pressable
-                    key={it.href}
-                    onPress={() => onNavPress(it.href)}
-                    style={({ pressed }) => [
-                      styles.navItem,
-                      {
-                        backgroundColor: active ? TOKENS.activeBg : pressed ? TOKENS.itemPressedBg : "transparent",
-                        borderWidth: active ? StyleSheet.hairlineWidth : 0,
-                        borderColor: active ? TOKENS.activeRing : "transparent",
-                      },
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.iconWrap,
-                        { backgroundColor: active ? TOKENS.iconActiveBg : TOKENS.iconIdleBg },
-                      ]}
-                    >
-                      <Ionicons
-                        name={it.icon}
-                        size={18}
-                        color={active ? TOKENS.iconActive : TOKENS.iconIdle}
-                      />
-                    </View>
-
-                    <Text
-                      style={[
-                        styles.navText,
-                        { color: active ? TOKENS.activeText : TOKENS.itemIdleText },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {it.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-
-              {adminItems.length > 0 && (
-                <>
-                  <Text style={[styles.sectionLabel, { color: TOKENS.textMuted }]}>ADMIN</Text>
-                  {adminItems.map((it) => {
+              <View style={styles.listWrap}>
+                <Animated.ScrollView
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{ paddingTop: 10, paddingBottom: 10 }}
+                >
+                  {[...navItems, ...adminItems].map((it) => {
                     const active = isActive(it.href);
                     return (
                       <Pressable
                         key={it.href}
-                        onPress={() => onNavPress(it.href)}
+                        onPress={() => {
+                          closeSheet();
+                          go(it.href);
+                        }}
                         style={({ pressed }) => [
-                          styles.navItem,
+                          styles.listItem,
                           {
-                            backgroundColor: active ? TOKENS.activeBg : pressed ? TOKENS.itemPressedBg : "transparent",
+                            backgroundColor: active ? TOKENS.activeBg : pressed ? TOKENS.itemBg : "transparent",
                             borderWidth: active ? StyleSheet.hairlineWidth : 0,
                             borderColor: active ? TOKENS.activeRing : "transparent",
                           },
                         ]}
                       >
-                        <View
-                          style={[
-                            styles.iconWrap,
-                            { backgroundColor: active ? TOKENS.iconActiveBg : TOKENS.iconIdleBg },
-                          ]}
-                        >
-                          <Ionicons
-                            name={it.icon}
-                            size={18}
-                            color={active ? TOKENS.iconActive : TOKENS.iconIdle}
-                          />
+                        <View style={[styles.listIcon, { backgroundColor: TOKENS.btnBg }]}>
+                          <Ionicons name={it.icon} size={18} color={TOKENS.textPrimary} />
                         </View>
-
-                        <Text
-                          style={[
-                            styles.navText,
-                            { color: active ? TOKENS.activeText : TOKENS.itemIdleText },
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {it.name}
-                        </Text>
+                        <Text style={[styles.listText, { color: TOKENS.textPrimary }]}>{it.name}</Text>
                       </Pressable>
                     );
                   })}
-                </>
-              )}
-            </View>
-
-            {/* Footer */}
-            <View style={[styles.drawerFooter, { borderTopColor: TOKENS.divider }]}>
-              <View style={[styles.themeCardWrap, TOKENS.shadowMedium]}>
-                <BlurView
-                  intensity={isDark ? 18 : 22}
-                  tint={isDark ? "dark" : "light"}
-                  style={StyleSheet.absoluteFill}
-                />
-                <LinearGradient
-                  colors={TOKENS.themeCardGrad as any}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                <View
-                  pointerEvents="none"
-                  style={[
-                    StyleSheet.absoluteFill,
-                    {
-                      borderWidth: StyleSheet.hairlineWidth,
-                      borderColor: TOKENS.themeCardBorder,
-                      borderRadius: 18,
-                    },
-                  ]}
-                />
-                <View style={styles.themeCardInner}>
-                  <ThemeToggle />
-                </View>
+                </Animated.ScrollView>
               </View>
 
-              <Pressable
-                onPress={handleLogout}
-                style={({ pressed }) => [
-                  styles.logoutBtn,
-                  {
-                    backgroundColor: TOKENS.logoutBg,
-                    borderColor: TOKENS.logoutBorder,
-                    opacity: pressed ? 0.95 : 1,
-                  },
-                ]}
-              >
-                <View style={[styles.logoutIcon, { backgroundColor: TOKENS.logoutIconBg }]}>
+              {/* Footer (fixed) */}
+              <View style={[styles.footer, { borderTopColor: TOKENS.divider }]}>
+                <ThemeToggle />
+
+                <Pressable
+                  onPress={handleLogout}
+                  style={({ pressed }) => [
+                    styles.logoutBtn,
+                    {
+                      backgroundColor: TOKENS.dangerBg,
+                      borderColor: TOKENS.dangerBorder,
+                      opacity: pressed ? 0.95 : 1,
+                    },
+                  ]}
+                >
+                  <Ionicons name="log-out-outline" size={18} color={TOKENS.dangerText} />
+                  <Text style={[styles.logoutText, { color: TOKENS.dangerText }]}>Logout</Text>
+                </Pressable>
+              </View>
+            </Animated.View>
+          )}
+
+          <View style={styles.row}>
+            {navItems.slice(0, 4).map((it) => {
+              const active = isActive(it.href);
+              return (
+                <Pressable
+                  key={it.href}
+                  onPress={() => go(it.href)}
+                  style={({ pressed }) => [
+                    styles.tabBtn,
+                    { backgroundColor: pressed ? TOKENS.btnBgHover : "transparent" },
+                  ]}
+                >
                   <Ionicons
-                    name="log-out-outline"
-                    size={18}
-                    color={isDark ? "rgba(254,202,202,0.95)" : "#B91C1C"}
+                    name={it.icon}
+                    size={22}
+                    color={active ? TOKENS.textPrimary : TOKENS.textMuted}
                   />
-                </View>
-                <Text style={[styles.logoutText, { color: TOKENS.logoutText }]}>Logout</Text>
-              </Pressable>
-            </View>
-          </Animated.View>
-        </View>
-      </Modal>
+                </Pressable>
+              );
+            })}
+
+            <Pressable
+              onPress={() => (open ? closeSheet() : openSheet())}
+              style={({ pressed }) => [
+                styles.menuBtn,
+                { backgroundColor: pressed ? TOKENS.btnBgHover : TOKENS.btnBg },
+              ]}
+            >
+              <Ionicons name={open ? "chevron-down" : "menu"} size={22} color={TOKENS.textPrimary} />
+            </Pressable>
+          </View>
+        </Animated.View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  flex: { flex: 1 },
   content: { flex: 1 },
 
-  // Topbar overlay is transparent: only the card shows
-  topbarOverlay: {
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    zIndex: 40,
+  },
+
+  bottomOverlay: {
     position: "absolute",
-    bottom: 0,
     left: 0,
     right: 0,
+    bottom: 0,
     zIndex: 50,
+    alignItems: "center",
     pointerEvents: "box-none",
   },
-  topbarCardWrap: {
-    // keeps the card aligned and allows touch
-  },
-  topbarCard: {
-    borderRadius: 18,
-    overflow: "hidden",
-  },
-  topbarInner: {
-    height: TOPBAR_H,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  topbarBtn: {
-    height: 40,
-    width: 40,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topbarTitle: { fontSize: 14, fontWeight: "800" },
-  topbarSubtitle: { fontSize: 12 },
 
-  // Drawer
-  modalRoot: { flex: 1 },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.45)" },
-  drawer: {
-    width: DRAWER_W,
-    height: "100%",
+  pill: {
+    width: "94%",
+    borderRadius: 22,
     overflow: "hidden",
-    borderTopRightRadius: 22,
-    borderBottomRightRadius: 22,
+    position: "relative", // IMPORTANT
+  },
+
+  // expanded content sits above the icon row
+  menuWrap: {
     position: "absolute",
+    left: 0,
     right: 0,
     top: 0,
+    bottom: PILL_H, // IMPORTANT: leaves space for the pinned row
+    paddingTop: 12,
+    paddingHorizontal: 12,
+    paddingBottom: 10,
   },
 
-  drawerHeader: {
-    paddingHorizontal: 14,
-    paddingBottom: 12,
+  listWrap: {
+    flex: 1,
+    minHeight: 0,
+  },
+
+  menuHeader: {
     flexDirection: "row",
     alignItems: "flex-start",
+    gap: 10,
+    paddingBottom: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  brand: { fontSize: 16, fontWeight: "800" },
-  house: { marginTop: 2, fontSize: 12 },
+  brand: { fontSize: 16, fontWeight: "900" },
+  sub: { marginTop: 2, fontSize: 12, opacity: 0.9 },
 
-  closeBtn: {
+  smallBtn: {
     height: 34,
     width: 34,
     borderRadius: 12,
@@ -672,68 +535,29 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  userCard: {
-    marginTop: 12,
-    marginHorizontal: 14,
-    padding: 12,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  avatar: {
-    height: 42,
-    width: 42,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  avatarText: { fontWeight: "900", fontSize: 12 },
-  loggedAs: { fontSize: 11 },
-  userName: { fontSize: 14, fontWeight: "800" },
-
-  nav: { flex: 1, paddingHorizontal: 10, paddingTop: 12 },
-  navItem: {
+  listItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderRadius: 14,
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  iconWrap: {
+  listIcon: {
     height: 34,
     width: 34,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
-  navText: { fontSize: 13, fontWeight: "800", flex: 1 },
+  listText: { fontSize: 13, fontWeight: "800" },
 
-  sectionLabel: {
+  footer: {
     marginTop: 10,
-    marginBottom: 8,
-    paddingHorizontal: 10,
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 0.6,
-  },
-
-  drawerFooter: {
-    padding: 14,
+    paddingTop: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
     gap: 10,
-  },
-
-  themeCardWrap: {
-    borderRadius: 18,
-    overflow: "hidden",
-  },
-  themeCardInner: {
-    padding: 12,
   },
 
   logoutBtn: {
@@ -745,12 +569,33 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  logoutIcon: {
-    height: 34,
-    width: 34,
-    borderRadius: 12,
+  logoutText: { fontSize: 13, fontWeight: "900" },
+
+  // bottom tabs row
+  row: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: PILL_H,
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 6,
+  },
+  tabBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
-  logoutText: { fontSize: 13, fontWeight: "900" },
+  menuBtn: {
+    height: 44,
+    width: 54,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

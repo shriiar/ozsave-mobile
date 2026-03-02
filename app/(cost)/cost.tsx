@@ -17,7 +17,7 @@ import { Swipeable } from "react-native-gesture-handler";
 
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
-import DashboardShell, { TOPBAR_H } from "../../src/modules/shell/DashboardShell";
+import DashboardShell from "../../src/modules/shell/DashboardShell";
 
 import CostFilterModal, { CostFiltersDraft } from "@/src/modules/cost/CostFilterModal";
 import AddCostModal from "@/src/modules/cost/AddCostModal";
@@ -237,6 +237,7 @@ export default function CostScreen() {
     const [filtersOpen, setFiltersOpen] = useState(false);
 
     const insets = useSafeAreaInsets();
+    const TOPBAR_H = 52;
     const bottomSpace = TOPBAR_H + insets.bottom + 16;
 
     // draft filters (UI)

@@ -24,7 +24,6 @@ import { SmartAlertsCard } from "./period/SmartAlertsCard";
 import { InsightsGridCard } from "./period/InsightsGridCard";
 import { IncomeInsightsCard } from "./period/IncomeInsightsCard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TOPBAR_H } from "@/src/modules/shell/DashboardShell";
 
 type HouseBase = { _id: string; name: string };
 type PeriodDashboard = any;
@@ -89,6 +88,7 @@ export default function DashboardWithHouse({
   const [stackInteracting, setStackInteracting] = useState(false);
 
   const insets = useSafeAreaInsets();
+  const TOPBAR_H = 52;
   const bottomSpace = TOPBAR_H + insets.bottom + 16;
 
   const T = useMemo(() => {

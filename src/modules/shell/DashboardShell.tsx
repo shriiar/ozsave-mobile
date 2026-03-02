@@ -45,6 +45,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   const hasHouse = !!user?.house;
   const isAdmin = user?.role === "admin";
+  const FLOAT_GAP = insets.bottom + 10;
+  const SHEET_OVERLAP = 14
 
   // ===== Guards (same logic) =====
   const lastRedirectRef = useRef<string | null>(null);
@@ -111,29 +113,15 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [open, setOpen] = useState(false);       // user intent: expanded or not
   const [visible, setVisible] = useState(false); // render expanded content while animating
 
-  const hAnim = useRef(new Animated.Value(PILL_H)).current;
 
   const contentOpacity = useRef(new Animated.Value(0)).current;
   const contentY = useRef(new Animated.Value(10)).current; // small slide
 
-  // screen-based target height (stable, no measuring)
+  // translateY sheet (keeps layout the same). CLOSED = 0, OPEN = -OPEN_OFFSET
   const SCREEN_H = Dimensions.get("window").height;
   const MAX_OPEN = Math.round(SCREEN_H * 0.82);
+  const sheetH = useRef(new Animated.Value(PILL_H)).current; // start collapsed height
 
-  // butter spring
-  function springTo(to: number, velocity = 0, onEnd?: () => void) {
-    Animated.spring(hAnim, {
-      toValue: to,
-      velocity,
-      damping: 22,      // smoother
-      stiffness: 160,   // less edgy
-      mass: 0.95,
-      overshootClamping: true, // prevents iOS bouncy rubber look
-      useNativeDriver: false,  // height anim
-    }).start(({ finished }) => {
-      if (finished) onEnd?.();
-    });
-  }
 
   function openSheet() {
     if (open) return;
@@ -141,31 +129,21 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     setVisible(true);
     setOpen(true);
 
-    // reset content anim state (important)
     contentOpacity.setValue(0);
     contentY.setValue(10);
 
-    // 1) expand height, 2) then reveal content
     Animated.sequence([
-      Animated.spring(hAnim, {
+      Animated.spring(sheetH, {
         toValue: MAX_OPEN,
         damping: 22,
         stiffness: 160,
         mass: 0.95,
         overshootClamping: true,
-        useNativeDriver: false,
+        useNativeDriver: false, // HEIGHT ANIMATION
       }),
       Animated.parallel([
-        Animated.timing(contentOpacity, {
-          toValue: 1,
-          duration: 120,
-          useNativeDriver: true,
-        }),
-        Animated.timing(contentY, {
-          toValue: 0,
-          duration: 120,
-          useNativeDriver: true,
-        }),
+        Animated.timing(contentOpacity, { toValue: 1, duration: 120, useNativeDriver: true }),
+        Animated.timing(contentY, { toValue: 0, duration: 120, useNativeDriver: true }),
       ]),
     ]).start();
   }
@@ -175,28 +153,19 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
     setOpen(false);
 
-    // 1) hide content first (so no squish), 2) then collapse height
     Animated.sequence([
       Animated.parallel([
-        Animated.timing(contentOpacity, {
-          toValue: 0,
-          duration: 90,
-          useNativeDriver: true,
-        }),
-        Animated.timing(contentY, {
-          toValue: 10,
-          duration: 90,
-          useNativeDriver: true,
-        }),
+        Animated.timing(contentOpacity, { toValue: 0, duration: 90, useNativeDriver: true }),
+        Animated.timing(contentY, { toValue: 10, duration: 90, useNativeDriver: true }),
       ]),
-      Animated.spring(hAnim, {
+      Animated.spring(sheetH, {
         toValue: PILL_H,
         velocity: 2,
         damping: 22,
         stiffness: 160,
         mass: 0.95,
         overshootClamping: true,
-        useNativeDriver: false,
+        useNativeDriver: false, // HEIGHT ANIMATION
       }),
     ]).start(({ finished }) => {
       if (finished) setVisible(false);
@@ -304,19 +273,17 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         {children}
       </View>
 
-      {visible && <Pressable onPress={closeSheet} style={styles.backdrop} />}
+      {visible && <Pressable onPress={closeSheet} style={StyleSheet.absoluteFillObject} />}
 
       {/* Bottom pill / expanding sheet */}
-      <View pointerEvents="box-none" style={styles.bottomOverlay}
-      >
+      <View pointerEvents="box-none" style={[styles.bottomOverlay, { bottom: FLOAT_GAP }]}>
         <Animated.View
           style={[
             styles.pill,
             TOKENS.shadow,
             {
-              height: hAnim,
-              marginBottom: insets.bottom + 8, // <-- move it here (like prev)
-            },
+              height: sheetH, // animated height
+            }
           ]}
         >
           {/* glass layers must NOT steal touches */}
@@ -350,7 +317,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
           {/* Expanded content */}
           {visible && (
-              <Animated.View
+            <Animated.View
               style={[
                 styles.menuWrap,
                 {
@@ -436,7 +403,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             </Animated.View>
           )}
 
-          <View style={styles.row}>
+          <Animated.View style={styles.row}>
             {navItems.slice(0, 4).map((it) => {
               const active = isActive(it.href);
               return (
@@ -466,7 +433,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             >
               <Ionicons name={open ? "chevron-down" : "menu"} size={22} color={TOKENS.textPrimary} />
             </Pressable>
-          </View>
+          </Animated.View>
         </Animated.View>
       </View>
     </View>
@@ -524,7 +491,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  brand: { fontSize: 16, fontWeight: "900" },
+  brand: { fontSize: 16, fontWeight: "700" },
   sub: { marginTop: 2, fontSize: 12, opacity: 0.9 },
 
   smallBtn: {
@@ -551,7 +518,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  listText: { fontSize: 13, fontWeight: "800" },
+  listText: { fontSize: 13, fontWeight: "700" },
 
   footer: {
     marginTop: 10,
@@ -569,7 +536,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  logoutText: { fontSize: 13, fontWeight: "900" },
+  logoutText: { fontSize: 13, fontWeight: "700" },
 
   // bottom tabs row
   row: {

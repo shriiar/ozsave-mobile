@@ -218,7 +218,7 @@ function CostCard({
                                     { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)" },
                                 ]}
                             >
-                                <Text style={[styles.badgeTop, { color: T.text }]}>AUD</Text>
+                                <Text style={[styles.badgeTop, { color: T.text }]}>Total</Text>
                                 <Text style={[styles.badgeBottom, { color: T.muted }]}>{money(item.amount)}</Text>
                             </View>
                         </View>
@@ -239,6 +239,8 @@ export default function CostScreen() {
     const insets = useSafeAreaInsets();
     const TOPBAR_H = 52;
     const bottomSpace = TOPBAR_H + insets.bottom + 16;
+
+    const swipeRefs = useRef<Record<string, () => void>>({});
 
     // draft filters (UI)
     const [draft, setDraft] = useState<CostFiltersDraft>({
@@ -265,7 +267,7 @@ export default function CostScreen() {
     const { refreshing, refreshUser } = useAuth();
 
     const spinner = isDark ? "rgba(255,255,255,0.92)" : "rgba(15,23,42,0.85)";
-    const androidBg = isDark ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.95)";    
+    const androidBg = isDark ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.95)";
 
     const [limit] = useState(10);
     const [addOpen, setAddOpen] = useState(false);
@@ -284,16 +286,25 @@ export default function CostScreen() {
         openSwipe.current = null;
     }
 
+    function closeAllSwipes() {
+        Object.values(swipeRefs.current).forEach((close) => close());
+        swipeRefs.current = {};
+    }
+
     function onSwipeStart(nextId: string) {
         if (openSwipe.current && openSwipe.current.id !== nextId) closeOpenSwipe();
     }
 
     function onSwipeOpen(id: string, closeFn: () => void) {
-        openSwipe.current = { id, close: closeFn };
+        Object.entries(swipeRefs.current).forEach(([key, close]) => {
+            if (key !== id) close();
+        });
+
+        swipeRefs.current[id] = closeFn;
     }
 
     function onSwipeClose(id: string) {
-        if (openSwipe.current?.id === id) openSwipe.current = null;
+        delete swipeRefs.current[id];
     }
 
     function openEdit(id: string) {
@@ -401,6 +412,8 @@ export default function CostScreen() {
                         contentContainerStyle={{ paddingBottom: bottomSpace, flexGrow: 1 }}
                         alwaysBounceVertical
                         bounces
+                        onScrollBeginDrag={closeAllSwipes}
+                        onMomentumScrollBegin={closeAllSwipes}
                         renderItem={({ item }) => (
                             <CostCard
                                 item={item}
@@ -414,13 +427,13 @@ export default function CostScreen() {
                         )}
                         refreshControl={
                             <RefreshControl
-                              refreshing={refreshing || q.isRefetching}
-                              onRefresh={onRefresh}
-                              tintColor={spinner}                 // iOS
-                              colors={[spinner]}                  // Android
-                              progressBackgroundColor={androidBg} // Android
+                                refreshing={refreshing || q.isRefetching}
+                                onRefresh={onRefresh}
+                                tintColor={spinner}                 // iOS
+                                colors={[spinner]}                  // Android
+                                progressBackgroundColor={androidBg} // Android
                             />
-                          }
+                        }
                         onEndReached={onEndReached}
                         onEndReachedThreshold={0.6}
                         ListFooterComponent={<ListFooter />}
@@ -481,8 +494,6 @@ const styles = StyleSheet.create({
         alignItems: "flex-start",
         gap: 10,
         paddingBottom: 10,
-        // paddingLeft: 4,
-        // paddingRight: 2,
     },
     h1: { fontSize: 18, fontWeight: "700" },
     h2: { marginTop: 2, fontSize: 13, lineHeight: 18 },
@@ -561,7 +572,7 @@ const styles = StyleSheet.create({
     },
 
     TextHero: {
-        fontSize: 20,
+        fontSize: 16,
         fontWeight: "700",
     },
 

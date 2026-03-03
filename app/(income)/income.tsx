@@ -25,6 +25,8 @@ import { useInfiniteIncomes } from "@/src/modules/income/hooks/useIncomeApi";
 
 import IncomeFilterModal, { IncomeFiltersDraft } from "@/src/modules/income/IncomeFilterModal";
 import AddIncomeModal from "@/src/modules/income/AddIncomeModal";
+import EditIncomeModal from "@/src/modules/income/EditIncomeModal";
+import DeleteIncomeModal from "@/src/modules/income/DeleteIncomeModal";
 
 const PAGE_SIZE = 10;
 
@@ -251,20 +253,25 @@ export default function IncomeScreen() {
         openSwipe.current?.close?.();
         openSwipe.current = null;
     }
+
     function closeAllSwipes() {
         Object.values(swipeRefs.current).forEach((close) => close());
         swipeRefs.current = {};
     }
+
     function onSwipeStart(nextId: string) {
         if (openSwipe.current && openSwipe.current.id !== nextId) closeOpenSwipe();
     }
+
     function onSwipeOpen(id: string, closeFn: () => void) {
         Object.entries(swipeRefs.current).forEach(([key, close]) => {
             if (key !== id) close();
         });
+
         swipeRefs.current[id] = closeFn;
         openSwipe.current = { id, close: closeFn };
     }
+
     function onSwipeClose(id: string) {
         delete swipeRefs.current[id];
         if (openSwipe.current?.id === id) openSwipe.current = null;
@@ -291,14 +298,11 @@ export default function IncomeScreen() {
     });
 
     const rows = q.items;
-
-    const amounts = q.data?.pages?.[0]?.amounts; // page-1 amount summary (your backend is per page)
-
     const isInitialLoading = q.isLoading && rows.length === 0;
 
     async function onRefresh() {
         await refreshUser();
-        await q.refetch(); // ✅ resets pages + refetch (like cost)
+        await q.refetch();
     }
 
     function onEndReached() {
@@ -307,6 +311,7 @@ export default function IncomeScreen() {
 
     function ListFooter() {
         if (!q.hasNextPage) return <View style={{ height: 10 }} />;
+
         if (q.isFetchingNextPage) {
             return (
                 <View style={{ paddingTop: 12, paddingBottom: bottomSpace }}>
@@ -314,6 +319,7 @@ export default function IncomeScreen() {
                 </View>
             );
         }
+
         return <View style={{ height: 12 }} />;
     }
 
@@ -355,7 +361,7 @@ export default function IncomeScreen() {
                     <FlatList
                         style={{ flex: 1 }}
                         data={rows}
-                        keyExtractor={(item) => String(item._id)}
+                        keyExtractor={(item) => item._id}
                         contentContainerStyle={{ paddingBottom: bottomSpace, flexGrow: 1 }}
                         alwaysBounceVertical
                         bounces
@@ -383,11 +389,6 @@ export default function IncomeScreen() {
                         }
                         onEndReached={onEndReached}
                         onEndReachedThreshold={0.6}
-                        ListEmptyComponent={
-                            <View style={styles.empty}>
-                                <Text style={{ opacity: 0.7 }}>No income yet. Tap Add.</Text>
-                            </View>
-                        }
                         ListFooterComponent={<ListFooter />}
                     />
                 )}
@@ -399,29 +400,34 @@ export default function IncomeScreen() {
                     onClose={() => setFiltersOpen(false)}
                     onClear={() => {
                         const cleared: IncomeFiltersDraft = {
-                            name: "",
-                            source: "all",
-                            from: "",
-                            to: "",
-                            sortBy: "date",
-                            sortOrder: -1,
+                          name: "",
+                          source: "all",
+                          from: "",
+                          to: "",
+                          sortBy: "date",
+                          sortOrder: -1,
                         };
                         setDraft(cleared);
                         setApplied(cleared);
                         setFiltersOpen(false);
-                        q.refreshTop();
-                    }}
-                    onApply={() => {
+                        q.refetch();
+                      }}
+                      onApply={() => {
                         setApplied(draft);
                         setFiltersOpen(false);
-                        q.refreshTop();
-                    }}
+                        q.refetch();
+                      }}
                 />
 
                 {/* keep your modals same as cost pattern */}
                 <AddIncomeModal open={addOpen} onClose={() => setAddOpen(false)} />
-                {/* <EditIncomeModal incomeId={editingId} open={!!editingId} onClose={() => setEditingId(null)} /> */}
-                {/* <DeleteIncomeModal ... onDeleted={() => q.refreshTop()} /> */}
+                <EditIncomeModal incomeId={editingId} open={!!editingId} onClose={() => setEditingId(null)} />
+                <DeleteIncomeModal
+                    open={!!deleting}
+                    incomeId={deleting?.id ?? null}
+                    incomeName={deleting?.name ?? ""}
+                    onClose={() => setDeleting(null)}
+                />
             </View>
         </DashboardShell>
     );

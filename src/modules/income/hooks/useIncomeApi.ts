@@ -14,9 +14,7 @@ import {
 } from "../api";
 
 /** keep your existing useIncomes/useIncome if you still want them */
-export function useInfiniteIncomes(
-  params: Omit<GetIncomesCursorParams, "cursor">
-) {
+export function useInfiniteIncomes(params: Omit<GetIncomesCursorParams, "cursor">) {
   const queryClient = useQueryClient();
   const { isActiveScreen } = useScreenActive();
 
@@ -51,10 +49,8 @@ export function useInfiniteIncomes(
         cursor: pageParam,
       }),
 
-    getNextPageParam: (lastPage) =>
-      lastPage?.hasMore
-        ? lastPage.nextCursor ?? undefined
-        : undefined,
+    getNextPageParam: (lastPage: any) =>
+      lastPage?.hasMore ? lastPage.nextCursor ?? undefined : undefined,
 
     refetchInterval: false,
     refetchIntervalInBackground: false,
@@ -73,16 +69,20 @@ export function useInfiniteIncomes(
     });
 
     query.refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActiveScreen, queryClient, keyParams]);
 
+  // Flatten pages -> items (AND DEDUPE like you did in screen)
   const items = useMemo(() => {
     const pages = query.data?.pages ?? [];
-    return pages.flatMap((p) => p?.data ?? []);
+    const all = pages.flatMap((p: any) => p?.data ?? []);
+
+    const map = new Map<string, any>();
+    for (const r of all) map.set(String(r._id), r);
+    return Array.from(map.values());
   }, [query.data?.pages]);
 
-  const lastPage =
-    query.data?.pages?.[query.data.pages.length - 1];
-
+  const lastPage = query.data?.pages?.[query.data.pages.length - 1];
   const nextCursor = lastPage?.nextCursor ?? null;
   const hasMore = lastPage?.hasMore ?? false;
 

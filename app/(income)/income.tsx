@@ -179,13 +179,13 @@ function IncomeCard({
                                 </Text>
 
                                 <Text style={[styles.subText, { color: T.muted }]} numberOfLines={1}>
-                                    {formatDate(item.date)} • {item.source}
+                                    {formatDate(item.date)}
                                 </Text>
 
                                 <View style={styles.miniStatsRow}>
                                     <View style={[styles.miniPill, { backgroundColor: T.chipBg }]}>
                                         <Text style={[styles.miniPillText, { color: T.muted }]} numberOfLines={1}>
-                                            {item.source}
+                                            {item.source.charAt(0).toUpperCase() + item.source.slice(1)}
                                         </Text>
                                     </View>
                                 </View>

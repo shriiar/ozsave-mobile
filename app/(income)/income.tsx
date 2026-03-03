@@ -1,4 +1,4 @@
-// app/cost.tsx
+// app/income.tsx
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useMemo, useRef, useState } from "react";
@@ -14,18 +14,19 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler";
-
-import { useAuth } from "../../src/context/AuthContext";
-import { useTheme } from "../../src/context/ThemeContext";
-import DashboardShell from "../../src/modules/shell/DashboardShell";
-
-import CostFilterModal, { CostFiltersDraft } from "@/src/modules/cost/CostFilterModal";
-import AddCostModal from "@/src/modules/cost/AddCostModal";
-import EditCostModal from "@/src/modules/cost/EditCostModal";
-import DeleteCostModal from "@/src/modules/cost/DeleteCostModal";
-import type { CostRow } from "../../src/modules/cost/api";
-import { useInfiniteCosts } from "../../src/modules/cost/hooks/useCostApi";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import DashboardShell from "@/src/modules/shell/DashboardShell";
+import { useTheme } from "@/src/context/ThemeContext";
+import { useAuth } from "@/src/context/AuthContext";
+
+import type { IncomeRow, IncomeSource } from "@/src/modules/income/api";
+import { useInfiniteIncomes } from "@/src/modules/income/hooks/useIncomeApi";
+
+import IncomeFilterModal, { IncomeFiltersDraft } from "@/src/modules/income/IncomeFilterModal";
+import AddIncomeModal from "@/src/modules/income/AddIncomeModal";
+
+const PAGE_SIZE = 10;
 
 function money(n: number) {
     if (!Number.isFinite(n)) return "$0.00";
@@ -40,7 +41,7 @@ function formatDate(iso: string) {
     }
 }
 
-function CostCard({
+function IncomeCard({
     item,
     isDark,
     onPress,
@@ -49,7 +50,7 @@ function CostCard({
     onSwipeOpen,
     onSwipeClose,
 }: {
-    item: CostRow;
+    item: IncomeRow;
     isDark: boolean;
     onPress: (id: string) => void;
     onDelete: (id: string, name: string) => void;
@@ -69,22 +70,6 @@ function CostCard({
         const text = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
         const muted = isDark ? "rgba(148,163,184,0.95)" : "rgba(42,45,49,0.95)";
         const chipBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(24,24,24,0.04)";
-
-        // const shadow = isDark
-        //     ? {
-        //         shadowColor: "#000",
-        //         shadowOpacity: 0.55,
-        //         shadowRadius: 26,
-        //         shadowOffset: { width: 0, height: 14 },
-        //         elevation: 14,
-        //     }
-        //     : {
-        //         shadowColor: "#000",
-        //         shadowOpacity: 0.12,
-        //         shadowRadius: 18,
-        //         shadowOffset: { width: 0, height: 10 },
-        //         elevation: 9,
-        //     };
 
         return { cardGrad, ring, text, muted, chipBg };
     }, [isDark]);
@@ -116,7 +101,6 @@ function CostCard({
                 <Animated.View style={[styles.deleteAction, { opacity, transform: [{ translateX }, { scale }] }]}>
                     <Pressable
                         onPress={() => {
-                            // close swipe first so it doesn't look broken under modal
                             swipeRef.current?.close();
                             onDelete(item._id, item.name);
                         }}
@@ -157,7 +141,6 @@ function CostCard({
                         tint={isDark ? "dark" : "light"}
                         style={[styles.card, { borderColor: T.ring }]}
                     >
-                        {/* base glass gradient */}
                         <LinearGradient
                             colors={T.cardGrad as any}
                             start={{ x: 0, y: 0 }}
@@ -165,7 +148,6 @@ function CostCard({
                             style={StyleSheet.absoluteFill}
                         />
 
-                        {/* subtle right bubble like your reference */}
                         <View
                             pointerEvents="none"
                             style={[
@@ -175,7 +157,6 @@ function CostCard({
                         />
 
                         <View style={styles.row}>
-                            {/* Avatar */}
                             <View
                                 style={[
                                     styles.avatar,
@@ -186,39 +167,37 @@ function CostCard({
                                 ]}
                             >
                                 <Ionicons
-                                    name="receipt-outline"
+                                    name="cash-outline"
                                     size={18}
                                     color={isDark ? "rgba(255,255,255,0.88)" : "rgba(15,23,42,0.85)"}
                                 />
                             </View>
 
-                            {/* Middle content */}
                             <View style={styles.mid}>
                                 <Text style={[styles.TextHero, { color: T.text }]} numberOfLines={1}>
                                     {item.name}
                                 </Text>
 
                                 <Text style={[styles.subText, { color: T.muted }]} numberOfLines={1}>
-                                    {formatDate(item.date)}
+                                    {formatDate(item.date)} • {item.source}
                                 </Text>
 
                                 <View style={styles.miniStatsRow}>
                                     <View style={[styles.miniPill, { backgroundColor: T.chipBg }]}>
                                         <Text style={[styles.miniPillText, { color: T.muted }]} numberOfLines={1}>
-                                            Your share: {money(item.userShare)}
+                                            {item.source}
                                         </Text>
                                     </View>
                                 </View>
                             </View>
 
-                            {/* Right badge */}
                             <View
                                 style={[
                                     styles.rightBadge,
                                     { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)" },
                                 ]}
                             >
-                                <Text style={[styles.badgeTop, { color: T.text }]}>Total</Text>
+                                <Text style={[styles.badgeTop, { color: T.text }]}>Amount</Text>
                                 <Text style={[styles.badgeBottom, { color: T.muted }]}>{money(item.amount)}</Text>
                             </View>
                         </View>
@@ -229,125 +208,97 @@ function CostCard({
     );
 }
 
-export default function CostScreen() {
-
-    const { user } = useAuth();
-    const members = useMemo(() => ((user as any)?.house?.members ?? []), [user]);
-
-    const [filtersOpen, setFiltersOpen] = useState(false);
+export default function IncomeScreen() {
+    const { resolvedTheme } = useTheme();
+    const isDark = resolvedTheme === "dark";
+    const { refreshing, refreshUser } = useAuth();
 
     const insets = useSafeAreaInsets();
     const TOPBAR_H = 52;
     const bottomSpace = TOPBAR_H + insets.bottom + 16;
 
-    const swipeRefs = useRef<Record<string, () => void>>({});
-
-    // draft filters (UI)
-    const [draft, setDraft] = useState<CostFiltersDraft>({
-        paidBy: "all",
-        onlyMine: false,
-        from: "",
-        to: "",
-        sortBy: "date",
-        sortOrder: -1,
-    });
-
-    // applied filters (used for query)
-    const [applied, setApplied] = useState<CostFiltersDraft>({
-        paidBy: "all",
-        onlyMine: false,
-        from: "",
-        to: "",
-        sortBy: "date",
-        sortOrder: -1,
-    });
-
-    const { resolvedTheme } = useTheme();
-    const isDark = resolvedTheme === "dark";
-    const { refreshing, refreshUser } = useAuth();
-
     const spinner = isDark ? "rgba(255,255,255,0.92)" : "rgba(15,23,42,0.85)";
     const androidBg = isDark ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.95)";
 
-    const [limit] = useState(10);
+    const [filtersOpen, setFiltersOpen] = useState(false);
     const [addOpen, setAddOpen] = useState(false);
 
-    // edit modal
-    const [editingCostId, setEditingCostId] = useState<string | null>(null);
-
-    // delete modal
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
 
-    // keep only one swipe open
+    const [draft, setDraft] = useState<IncomeFiltersDraft>({
+        name: "",
+        source: "all",
+        from: "",
+        to: "",
+        sortBy: "date",
+        sortOrder: -1,
+    });
+
+    const [applied, setApplied] = useState<IncomeFiltersDraft>({
+        name: "",
+        source: "all",
+        from: "",
+        to: "",
+        sortBy: "date",
+        sortOrder: -1,
+    });
+
+    const swipeRefs = useRef<Record<string, () => void>>({});
     const openSwipe = useRef<{ id: string; close: () => void } | null>(null);
 
     function closeOpenSwipe() {
         openSwipe.current?.close?.();
         openSwipe.current = null;
     }
-
     function closeAllSwipes() {
         Object.values(swipeRefs.current).forEach((close) => close());
         swipeRefs.current = {};
     }
-
     function onSwipeStart(nextId: string) {
         if (openSwipe.current && openSwipe.current.id !== nextId) closeOpenSwipe();
     }
-
     function onSwipeOpen(id: string, closeFn: () => void) {
         Object.entries(swipeRefs.current).forEach(([key, close]) => {
             if (key !== id) close();
         });
-
         swipeRefs.current[id] = closeFn;
+        openSwipe.current = { id, close: closeFn };
     }
-
     function onSwipeClose(id: string) {
         delete swipeRefs.current[id];
+        if (openSwipe.current?.id === id) openSwipe.current = null;
     }
 
     function openEdit(id: string) {
         closeOpenSwipe();
-        setEditingCostId(id);
+        setEditingId(id);
     }
-
-    function closeEdit() {
-        setEditingCostId(null);
-    }
-
     function openDelete(id: string, name: string) {
         closeOpenSwipe();
         setDeleting({ id, name });
     }
 
-    function closeDelete() {
-        setDeleting(null);
-    }
-    const q = useInfiniteCosts({
-        limit,
-        paidBy: applied.paidBy === "all" ? undefined : applied.paidBy,
-        isOnlyUserCost: applied.onlyMine ? true : undefined,
+    // ✅ infinite query (like cost)
+    const q = useInfiniteIncomes({
+        limit: PAGE_SIZE,
+        name: applied.name?.trim() ? applied.name.trim() : undefined,
+        source: applied.source === "all" ? undefined : (applied.source as IncomeSource),
         from: applied.from || undefined,
         to: applied.to || undefined,
         sortBy: applied.sortBy,
         sortOrder: applied.sortOrder,
-    } as any);
+    });
 
-    const rows: CostRow[] = useMemo(() => {
-        const pages = q.data?.pages ?? [];
-        const all = pages.flatMap((p: any) => p.data ?? []);
-      
-        const map = new Map<string, CostRow>();
-        for (const r of all) map.set(String(r._id), r); // later wins
-        return Array.from(map.values());
-      }, [q.data]);
+    const rows = q.items;
+
+    const amounts = q.data?.pages?.[0]?.amounts; // page-1 amount summary (your backend is per page)
 
     const isInitialLoading = q.isLoading && rows.length === 0;
 
     async function onRefresh() {
         await refreshUser();
-        await q.refetch();
+        await q.refetch(); // ✅ resets pages + refetch (like cost)
     }
 
     function onEndReached() {
@@ -355,10 +306,7 @@ export default function CostScreen() {
     }
 
     function ListFooter() {
-        // Nothing to load
         if (!q.hasNextPage) return <View style={{ height: 10 }} />;
-
-        // Show spinner while fetching next page
         if (q.isFetchingNextPage) {
             return (
                 <View style={{ paddingTop: 12, paddingBottom: bottomSpace }}>
@@ -366,8 +314,6 @@ export default function CostScreen() {
                 </View>
             );
         }
-
-        // Not currently loading, but reserve a little space
         return <View style={{ height: 12 }} />;
     }
 
@@ -377,18 +323,15 @@ export default function CostScreen() {
                 <View style={[styles.headerRow, { marginBottom: 10 }]}>
                     <View style={{ flex: 1 }}>
                         <Text style={[styles.h1, { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" }]}>
-                            Costs
+                            Income
                         </Text>
                         <Text style={[styles.h2, { color: isDark ? "rgba(148,163,184,0.95)" : "#64748B" }]}>
-                            Track shared costs for this house.
+                            Track income for this house.
                         </Text>
                     </View>
 
                     <Pressable
-                        style={({ pressed }) => [
-                            styles.filterBtn,
-                            { opacity: pressed ? 0.92 : 1 },
-                        ]}
+                        style={({ pressed }) => [styles.filterBtn, { opacity: pressed ? 0.92 : 1 }]}
                         onPress={() => setFiltersOpen(true)}
                     >
                         <Ionicons name="options-outline" size={16} color="#fff" />
@@ -406,20 +349,20 @@ export default function CostScreen() {
                 {isInitialLoading ? (
                     <View style={styles.center}>
                         <ActivityIndicator />
-                        <Text style={{ marginTop: 10, opacity: 0.7 }}>Loading costs...</Text>
+                        <Text style={{ marginTop: 10, opacity: 0.7 }}>Loading income...</Text>
                     </View>
                 ) : (
                     <FlatList
                         style={{ flex: 1 }}
                         data={rows}
-                        keyExtractor={(item) => item._id}
+                        keyExtractor={(item) => String(item._id)}
                         contentContainerStyle={{ paddingBottom: bottomSpace, flexGrow: 1 }}
                         alwaysBounceVertical
                         bounces
                         onScrollBeginDrag={closeAllSwipes}
                         onMomentumScrollBegin={closeAllSwipes}
                         renderItem={({ item }) => (
-                            <CostCard
+                            <IncomeCard
                                 item={item}
                                 isDark={isDark}
                                 onPress={openEdit}
@@ -433,27 +376,31 @@ export default function CostScreen() {
                             <RefreshControl
                                 refreshing={refreshing || q.isRefetching}
                                 onRefresh={onRefresh}
-                                tintColor={spinner}                 // iOS
-                                colors={[spinner]}                  // Android
-                                progressBackgroundColor={androidBg} // Android
+                                tintColor={spinner}
+                                colors={[spinner]}
+                                progressBackgroundColor={androidBg}
                             />
                         }
                         onEndReached={onEndReached}
                         onEndReachedThreshold={0.6}
+                        ListEmptyComponent={
+                            <View style={styles.empty}>
+                                <Text style={{ opacity: 0.7 }}>No income yet. Tap Add.</Text>
+                            </View>
+                        }
                         ListFooterComponent={<ListFooter />}
                     />
                 )}
 
-                <CostFilterModal
+                <IncomeFilterModal
                     open={filtersOpen}
-                    members={members}
                     draft={draft}
                     setDraft={setDraft}
                     onClose={() => setFiltersOpen(false)}
                     onClear={() => {
-                        const cleared: CostFiltersDraft = {
-                            paidBy: "all",
-                            onlyMine: false,
+                        const cleared: IncomeFiltersDraft = {
+                            name: "",
+                            source: "all",
                             from: "",
                             to: "",
                             sortBy: "date",
@@ -462,30 +409,19 @@ export default function CostScreen() {
                         setDraft(cleared);
                         setApplied(cleared);
                         setFiltersOpen(false);
-                        q.refetch();
+                        q.refreshTop();
                     }}
                     onApply={() => {
-                        // basic range validation already inside modal disables Apply
                         setApplied(draft);
                         setFiltersOpen(false);
-                        q.refetch();
+                        q.refreshTop();
                     }}
                 />
 
-                <AddCostModal open={addOpen} onClose={() => setAddOpen(false)} />
-
-                <EditCostModal open={!!editingCostId} costId={editingCostId} onClose={closeEdit} />
-
-                <DeleteCostModal
-                    open={!!deleting}
-                    costId={deleting?.id ?? null}
-                    costName={deleting?.name ?? ""}
-                    onClose={closeDelete}
-                    onDeleted={() => {
-                        // simplest and correct for infinite cursor list
-                        q.refetch();
-                    }}
-                />
+                {/* keep your modals same as cost pattern */}
+                <AddIncomeModal open={addOpen} onClose={() => setAddOpen(false)} />
+                {/* <EditIncomeModal incomeId={editingId} open={!!editingId} onClose={() => setEditingId(null)} /> */}
+                {/* <DeleteIncomeModal ... onDeleted={() => q.refreshTop()} /> */}
             </View>
         </DashboardShell>
     );
@@ -493,12 +429,14 @@ export default function CostScreen() {
 
 const styles = StyleSheet.create({
     screen: { flex: 1, paddingHorizontal: 14 },
+
     headerRow: {
         flexDirection: "row",
         alignItems: "flex-start",
         gap: 10,
         paddingBottom: 10,
     },
+
     h1: { fontSize: 18, fontWeight: "700" },
     h2: { marginTop: 2, fontSize: 13, lineHeight: 18 },
 
@@ -509,6 +447,17 @@ const styles = StyleSheet.create({
         borderRadius: 14,
     },
     addBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+
+    filterBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        backgroundColor: "#4F46E5",
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 14,
+    },
+    filterBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 
     center: { flex: 1, justifyContent: "center", alignItems: "center" },
     empty: { paddingVertical: 28, alignItems: "center" },
@@ -523,29 +472,13 @@ const styles = StyleSheet.create({
         position: "relative",
     },
 
-    cardTopRow: { flexDirection: "row", alignItems: "flex-start" },
-    cardTitle: { fontSize: 16, fontWeight: "800", letterSpacing: -0.1 },
-    chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
-    chipText: { fontSize: 12, fontWeight: "700" },
-
-    cardBottomRow: {
-        marginTop: 12,
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "baseline",
-    },
-    amount: { fontSize: 18, fontWeight: "700", letterSpacing: -0.3 },
-
     swipeActionsWrap: {
         width: 86,
         marginBottom: 12,
         justifyContent: "center",
         alignItems: "center",
     },
-    deleteAction: {
-        justifyContent: "center",
-        alignItems: "center",
-    },
+    deleteAction: { justifyContent: "center", alignItems: "center" },
     deleteBtn: {
         height: 56,
         width: 56,
@@ -555,11 +488,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
 
-    row: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 12,
-    },
+    row: { flexDirection: "row", alignItems: "center", gap: 12 },
 
     avatar: {
         height: 44,
@@ -570,42 +499,17 @@ const styles = StyleSheet.create({
         borderWidth: StyleSheet.hairlineWidth,
     },
 
-    mid: {
-        flex: 1,
-        minWidth: 0,
-    },
+    mid: { flex: 1, minWidth: 0 },
 
-    TextHero: {
-        fontSize: 16,
-        fontWeight: "700",
-    },
+    TextHero: { fontSize: 16, fontWeight: "700" },
+    subText: { marginTop: 3, fontSize: 12.5, fontWeight: "700" },
 
-    subText: {
-        marginTop: 3,
-        fontSize: 12.5,
-        fontWeight: "700",
-    },
-
-    miniStatsRow: {
-        marginTop: 10,
-        flexDirection: "row",
-        gap: 8,
-        flexWrap: "wrap",
-    },
-
-    miniPill: {
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 999,
-    },
-
-    miniPillText: {
-        fontSize: 12,
-        fontWeight: "800",
-    },
+    miniStatsRow: { marginTop: 10, flexDirection: "row", gap: 8, flexWrap: "wrap" },
+    miniPill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+    miniPillText: { fontSize: 12, fontWeight: "800" },
 
     rightBadge: {
-        width: 88,
+        width: 92,
         borderRadius: 18,
         paddingVertical: 10,
         paddingHorizontal: 10,
@@ -613,17 +517,8 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
 
-    badgeTop: {
-        fontSize: 11,
-        fontWeight: "900",
-        opacity: 0.9,
-    },
-
-    badgeBottom: {
-        marginTop: 4,
-        fontSize: 12,
-        fontWeight: "800",
-    },
+    badgeTop: { fontSize: 11, fontWeight: "900", opacity: 0.9 },
+    badgeBottom: { marginTop: 4, fontSize: 12, fontWeight: "800" },
 
     rightBubble: {
         position: "absolute",
@@ -634,15 +529,4 @@ const styles = StyleSheet.create({
         borderRadius: 999,
         transform: [{ rotate: "18deg" }],
     },
-
-    filterBtn: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        backgroundColor: "#4F46E5",
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        borderRadius: 14,
-    },
-    filterBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 });

@@ -90,58 +90,69 @@ export default function Login() {
       />
 
       <View style={styles.card}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.heading}>Welcome back</Text>
-            <Text style={styles.subheading}>Sign in to manage your shared costs in OzSave.</Text>
-          </View>
-          {/* Optional logo */}
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>OS</Text>
-          </View>
-        </View>
+        <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
+
+        <LinearGradient
+          pointerEvents="none"
+          colors={["rgba(255,255,255,0.72)", "rgba(255,255,255,0.45)", "rgba(255,255,255,0.25)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+
+        <View pointerEvents="none" style={styles.cardRing} />
 
         {/* Form */}
         <View style={styles.form}>
           {/* Email */}
-          <View style={{ marginBottom: 12 }}>
+          <View style={{ marginBottom: 14 }}>
             <Text style={styles.label}>Email</Text>
-            <BlurView intensity={25} tint="light" style={styles.inputRow}>
-              <Ionicons name="mail-outline" size={16} color="#667085" style={{ marginRight: 6 }} />
+
+            <View style={styles.inputWrap}>
+              <View style={styles.inputIcon}>
+                <Ionicons name="mail-outline" size={16} color="#64748B" />
+              </View>
+
               <TextInput
                 style={styles.input}
                 placeholder="you@example.com"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#94A3B8"
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
+                autoCorrect={false}
               />
-            </BlurView>
+            </View>
           </View>
 
           {/* Password */}
-          <View style={{ marginBottom: 12 }}>
+          <View style={{ marginBottom: 10 }}>
             <Text style={styles.label}>Password</Text>
-            <BlurView intensity={25} tint="light" style={styles.inputRow}>
-              <Ionicons name="lock-closed-outline" size={16} color="#667085" style={{ marginRight: 6 }} />
+
+            <View style={styles.inputWrap}>
+              <View style={styles.inputIcon}>
+                <Ionicons name="lock-closed-outline" size={16} color="#64748B" />
+              </View>
+
               <TextInput
                 style={styles.input}
                 placeholder="••••••••"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#94A3B8"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPw}
+                autoCorrect={false}
               />
-              <Pressable onPress={() => setShowPw(p => !p)} style={{ padding: 6 }}>
+
+              <Pressable onPress={() => setShowPw(p => !p)} hitSlop={10} style={styles.eyeBtn}>
                 <Ionicons
                   name={showPw ? "eye-off-outline" : "eye-outline"}
-                  size={16}
-                  color="#6B7280"
+                  size={18}
+                  color="#64748B"
                 />
               </Pressable>
-            </BlurView>
+            </View>
           </View>
 
           {error ? (
@@ -173,8 +184,6 @@ export default function Login() {
           </Text>
         </View>
       </View>
-
-      <Text style={styles.subfooter}>OzSave • Secure sign-in</Text>
     </View>
   );
 }
@@ -192,13 +201,13 @@ const styles = StyleSheet.create({
     borderRadius: 230,
     transform: [{ rotate: "45deg" }],
   },
-  card: {
-    width: "100%",
-    maxWidth: 380,
-    borderRadius: 24,
-    overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.75)",
-  },
+  // card: {
+  //   width: "100%",
+  //   maxWidth: 380,
+  //   borderRadius: 24,
+  //   overflow: "hidden",
+  //   backgroundColor: "rgba(255,255,255,0.75)",
+  // },
   header: {
     flexDirection: "row",
     paddingTop: 20,
@@ -253,11 +262,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(0,0,0,0.1)",
     backgroundColor: "rgba(255,255,255,0.55)",
   },
-  input: {
-    flex: 1,
-    fontSize: 14,
-    color: "#1F2937",
-  },
   errorText: {
     color: "#DC2626",
     marginTop: 8,
@@ -304,5 +308,65 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.5,
+  },
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    height: 48,
+
+    backgroundColor: "rgba(255,255,255,0.85)",
+    borderWidth: 1,
+    borderColor: "rgba(15,23,42,0.10)",
+
+    shadowColor: "rgba(15,23,42,0.10)",
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+  },
+
+  inputIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(99,102,241,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(99,102,241,0.18)",
+    marginRight: 10,
+  },
+
+  input: {
+    flex: 1,
+    fontSize: 14,
+    color: "#0F172A",
+    paddingVertical: 0, // prevents weird vertical drift on Android
+  },
+
+  eyeBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(2,6,23,0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(15,23,42,0.08)",
+  },
+
+  card: {
+    width: "100%",
+    maxWidth: 380,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
+
+  cardRing: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(15,23,42,0.10)",
   },
 });

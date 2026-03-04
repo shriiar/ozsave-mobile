@@ -362,6 +362,8 @@ export default function IncomeScreen() {
                         style={{ flex: 1 }}
                         data={rows}
                         keyExtractor={(item) => item._id}
+                        showsVerticalScrollIndicator={false}
+                        showsHorizontalScrollIndicator={false}
                         contentContainerStyle={{ paddingBottom: bottomSpace, flexGrow: 1 }}
                         alwaysBounceVertical
                         bounces

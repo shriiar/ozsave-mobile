@@ -337,11 +337,11 @@ export default function CostScreen() {
     const rows: CostRow[] = useMemo(() => {
         const pages = q.data?.pages ?? [];
         const all = pages.flatMap((p: any) => p.data ?? []);
-      
+
         const map = new Map<string, CostRow>();
         for (const r of all) map.set(String(r._id), r); // later wins
         return Array.from(map.values());
-      }, [q.data]);
+    }, [q.data]);
 
     const isInitialLoading = q.isLoading && rows.length === 0;
 
@@ -413,6 +413,8 @@ export default function CostScreen() {
                         style={{ flex: 1 }}
                         data={rows}
                         keyExtractor={(item) => item._id}
+                        showsVerticalScrollIndicator={false}
+                        showsHorizontalScrollIndicator={false}
                         contentContainerStyle={{ paddingBottom: bottomSpace, flexGrow: 1 }}
                         alwaysBounceVertical
                         bounces
@@ -433,9 +435,9 @@ export default function CostScreen() {
                             <RefreshControl
                                 refreshing={refreshing || q.isRefetching}
                                 onRefresh={onRefresh}
-                                tintColor={spinner}                 // iOS
-                                colors={[spinner]}                  // Android
-                                progressBackgroundColor={androidBg} // Android
+                                tintColor={spinner}
+                                colors={[spinner]}
+                                progressBackgroundColor={androidBg}
                             />
                         }
                         onEndReached={onEndReached}

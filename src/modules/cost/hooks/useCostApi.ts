@@ -87,19 +87,21 @@ export function useInfiniteCosts(params: Omit<GetCostsCursorParams, "cursor">) {
    *
    * In v5: NO query.remove(). Use queryClient.removeQueries().
    */
+  const STALE_MS = 5 * 60_000;
+
   useEffect(() => {
     if (!isActiveScreen) return;
 
-    // Reset pages so we re-load from the top
-    queryClient.removeQueries({
-      queryKey: ["costs-infinite", keyParams],
-      exact: true,
-    });
+    // ✅ First time screen opens: let the normal initial fetch happen
+    if (!query.data) return;
 
-    // Fetch fresh first page
-    query.refetch();
+    // ✅ Only refetch if cache is older than 5 minutes
+    const age = Date.now() - (query.dataUpdatedAt ?? 0);
+    if (age >= STALE_MS) {
+      query.refetch();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActiveScreen, queryClient, keyParams]);
+  }, [isActiveScreen]);
 
   // Flatten pages -> items
   const items = useMemo(() => {

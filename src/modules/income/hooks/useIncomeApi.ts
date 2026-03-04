@@ -60,17 +60,21 @@ export function useInfiniteIncomes(params: Omit<GetIncomesCursorParams, "cursor"
     gcTime: 30 * 60_000,
   });
 
+  const STALE_MS = 5 * 60_000;
+
   useEffect(() => {
     if (!isActiveScreen) return;
 
-    queryClient.removeQueries({
-      queryKey: ["incomes-infinite", keyParams],
-      exact: true,
-    });
+    // first entry: let initial fetch happen naturally
+    if (!query.data) return;
 
-    query.refetch();
+    // only refetch if older than 5 minutes
+    const age = Date.now() - (query.dataUpdatedAt ?? 0);
+    if (age >= STALE_MS) {
+      query.refetch();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActiveScreen, queryClient, keyParams]);
+  }, [isActiveScreen]);
 
   // Flatten pages -> items (AND DEDUPE like you did in screen)
   const items = useMemo(() => {

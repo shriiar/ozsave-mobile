@@ -25,7 +25,7 @@ function resolveTheme(theme: Theme, systemScheme: ColorSchemeName): "light" | "d
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [theme, setThemeState] = useState<Theme>("system");
-  const [systemScheme, setSystemScheme] = useState<ColorSchemeName>(Appearance.getColorScheme());
+  const [systemScheme, setSystemScheme] = useState<ColorSchemeName>(Appearance.getColorScheme() ?? "light");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
 
   // init from storage

@@ -28,7 +28,7 @@ function GlassBackdrop({ theme }: { theme: "light" | "dark" }) {
   );
 }
 
-export function ThemeTransitionOverlay() {
+export default function ThemeTransitionOverlay() {
   const { resolvedTheme, mounted } = useTheme();
   const current = (resolvedTheme ?? "light") as "light" | "dark";
 

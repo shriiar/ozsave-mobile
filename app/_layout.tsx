@@ -2,7 +2,7 @@
 import "react-native-gesture-handler";
 
 import React from "react";
-import { Stack } from "expo-router";
+import { Stack } from "expo-router/stack";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { View, StyleSheet } from "react-native";
 
@@ -10,7 +10,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "../src/context/AuthContext";
 import { ThemeProvider } from "../src/context/ThemeContext";
 
-import { ThemeTransitionOverlay } from "../src/components/ThemeTransitionOverlay";
+import ThemeTransitionOverlay from "../src/components/ThemeTransitionOverlay";
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -1,5 +1,4 @@
 import React, { useCallback, useMemo, useState } from "react";
-import DashboardSkeleton from "./DashboardSkeleton";
 import DashboardWithHouse from "./DashboardWithHouse";
 import { usePeriodDashboard, useDashboardBalances } from "../hooks/hook";
 import type { RangeKey } from "./period/DashboardHeader";
@@ -32,7 +31,6 @@ export default function DashboardProvider({ house }: { house: House }) {
   const [range, setRange] = useState<RangeKey>("7d");
   const [anchor, setAnchor] = useState(todayKey());
 
-  // ✅ lock "today" for this render (prevents midnight edge weirdness)
   const today = useMemo(() => todayKey(), []);
   const canGoForward = anchor < today;
 
@@ -41,10 +39,6 @@ export default function DashboardProvider({ house }: { house: House }) {
 
   const isError = period.isError || balances.isError;
   const isFetching = period.isFetching || balances.isFetching;
-
-  // ✅ Skeleton only when we truly have nothing yet
-  const hasAnyData = !!period.data || !!balances.data;
-  const showSkeleton = !hasAnyData && (period.isLoading || balances.isLoading);
 
   const onRefresh = useCallback(async () => {
     await Promise.all([period.refetch(), balances.refetch()]);
@@ -57,7 +51,7 @@ export default function DashboardProvider({ house }: { house: House }) {
   const onNext = useCallback(() => {
     setAnchor((prev) => {
       const next = shiftDate(prev, +rangeDays(range));
-      return next > today ? today : next; // clamp
+      return next > today ? today : next;
     });
   }, [range, today]);
 
@@ -65,8 +59,6 @@ export default function DashboardProvider({ house }: { house: House }) {
     setRange(next);
     setAnchor(todayKey());
   }, []);
-
-  if (showSkeleton) return <DashboardSkeleton />;
 
   return (
     <DashboardWithHouse

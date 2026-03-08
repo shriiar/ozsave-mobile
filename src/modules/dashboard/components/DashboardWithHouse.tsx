@@ -1,21 +1,24 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
+import Toast from "react-native-toast-message";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   RefreshControl,
-  Pressable,
   Platform,
   LayoutChangeEvent,
-  ActivityIndicator,
 } from "react-native";
 import { useTheme } from "../../../context/ThemeContext";
 import { DashboardHeader } from "./period/DashboardHeader";
 import type { RangeKey } from "./period/DashboardHeader";
 import { DashboardBarChart } from "./period/DashboardBarChart";
 import type { BarPoint } from "./period/DashboardBarChart";
-import { CategoryInsights, CategoryPieItem, CategorySectionCard } from "./period/CategorySectionCard";
+import {
+  CategoryInsights,
+  CategoryPieItem,
+  CategorySectionCard,
+} from "./period/CategorySectionCard";
 import { PeriodSummaryCards } from "./period/PeriodSummaryCards";
 import DashboardBalancesCard from "./period/DashboardBalancesCard";
 import { TrendVsPreviousCard } from "./period/TrendVsPreviousCard";
@@ -47,19 +50,18 @@ type Props = {
 };
 
 function rangeMetaOf(range: RangeKey) {
-  const days = range === "7d" ? 7 : range === "14d" ? 14 : range === "30d" ? 30 : 90;
   const label =
     range === "7d"
       ? "Last 7 days"
       : range === "14d"
-        ? "Last 14 days"
-        : range === "30d"
-          ? "Last 30 days"
-          : "Last 90 days";
-  return { days, label };
+      ? "Last 14 days"
+      : range === "30d"
+      ? "Last 30 days"
+      : "Last 90 days";
+
+  return { label };
 }
 
-// quick date label helper: "2026-02-23" -> "02/23"
 function shortLabel(ymd: string) {
   if (!ymd || typeof ymd !== "string") return "";
   const mm = ymd.slice(5, 7);
@@ -81,11 +83,30 @@ export default function DashboardWithHouse({
   onNext,
   onRangeChange,
 }: Props) {
-  // ✅ ALL HOOKS UP HERE. No hooks after early returns.
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
-  const [stackInteracting, setStackInteracting] = useState(false);
+  const shownErrorRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!error) {
+      shownErrorRef.current = null;
+      return;
+    }
+
+    if (shownErrorRef.current === error) return;
+
+    shownErrorRef.current = error;
+
+    Toast.show({
+      type: "error",
+      text1: "Something went wrong",
+      text2: error,
+      position: "top",
+      autoHide: false,
+      onPress: () => Toast.hide(),
+    });
+  }, [error]);
 
   const insets = useSafeAreaInsets();
   const TOPBAR_H = 52;
@@ -95,29 +116,24 @@ export default function DashboardWithHouse({
     const bg = isDark ? "#050814" : "#F6F7FB";
     const text = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
     const muted = isDark ? "rgba(148,163,184,0.82)" : "#64748B";
-    const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
-    const danger = isDark ? "#FCA5A5" : "#B91C1C";
-    return { bg, text, muted, border, danger };
+    return { bg, text, muted };
   }, [isDark]);
 
   const rangeMeta = useMemo(() => rangeMetaOf(range), [range]);
 
-  // ✅ subtitle always reserves height to prevent header jump
   const subtitle = useMemo(() => {
     if (period?.start && period?.end) return `${period.start} → ${period.end}`;
-    return " "; // reserve line height
+    return " ";
   }, [period?.start, period?.end]);
 
   const refreshing = !!isFetching;
 
-  // ✅ keep pull-to-refresh working even with little content
   const [viewportH, setViewportH] = useState(0);
   const onLayout = (e: LayoutChangeEvent) => {
     const h = e.nativeEvent.layout.height;
     if (h && h !== viewportH) setViewportH(h);
   };
 
-  // ✅ barData ALWAYS computed (safe even if period is null)
   const barData: BarPoint[] = useMemo(() => {
     const labels: string[] = period?.labels ?? [];
     if (!labels.length) return [];
@@ -135,7 +151,6 @@ export default function DashboardWithHouse({
     }));
   }, [period]);
 
-  // Pie chart
   const categoryPie: CategoryPieItem[] = useMemo(() => {
     const raw = period?.breakdown?.costByCategory ?? [];
     if (!Array.isArray(raw)) return [];
@@ -155,7 +170,6 @@ export default function DashboardWithHouse({
     return ci;
   }, [period]);
 
-  // summary cards
   const summary = useMemo(() => {
     return {
       totalCost: Number(period?.summary?.cost ?? 0),
@@ -164,8 +178,6 @@ export default function DashboardWithHouse({
     };
   }, [period]);
 
-  // ------------------ EARLY RETURNS AFTER HOOKS ------------------
-
   if (!house) {
     return (
       <View style={[styles.screen, { backgroundColor: T.bg }]}>
@@ -173,43 +185,6 @@ export default function DashboardWithHouse({
       </View>
     );
   }
-
-  if (error) {
-    return (
-      <View style={[styles.screen, { backgroundColor: T.bg, padding: 16 }]}>
-        <Text style={{ color: T.text, fontWeight: "900", fontSize: 16 }}>Failed to load</Text>
-        <Text style={{ color: T.danger, marginTop: 6 }}>{error}</Text>
-
-        <Pressable
-          onPress={onRefresh}
-          style={({ pressed }) => [{ marginTop: 12, opacity: pressed ? 0.9 : 1 }]}
-        >
-          <View
-            style={{
-              borderWidth: StyleSheet.hairlineWidth,
-              borderColor: T.border,
-              paddingVertical: 10,
-              paddingHorizontal: 12,
-              borderRadius: 12,
-            }}
-          >
-            <Text style={{ color: T.text, fontWeight: "900" }}>Retry</Text>
-          </View>
-        </Pressable>
-      </View>
-    );
-  }
-
-  if (!period) {
-    return (
-      <View style={[styles.screen, { backgroundColor: T.bg, padding: 16 }]}>
-        <Text style={{ color: T.text, fontWeight: "900", fontSize: 16 }}>Dashboard</Text>
-        <Text style={{ color: T.muted, marginTop: 6 }}>No analytics data yet.</Text>
-      </View>
-    );
-  }
-
-  // ------------------ MAIN RENDER ------------------
 
   return (
     <View style={[styles.screen, { backgroundColor: T.bg }]} onLayout={onLayout}>
@@ -251,26 +226,40 @@ export default function DashboardWithHouse({
           estimatedIncome={summary.estimatedIncome}
         />
 
-        {/* ✅ Chart */}
         <DashboardBarChart data={barData} />
 
-        <CategorySectionCard pie={categoryPie} categoryInsights={categoryInsights} />
+        <CategorySectionCard
+          pie={categoryPie}
+          categoryInsights={categoryInsights}
+        />
 
         <DashboardBalancesCard house={house} />
 
         <TrendVsPreviousCard
           rangeLabel={rangeMeta.label}
-          summary={period.summary}
-          comparison={period.comparison}
+          summary={
+            period?.summary ?? {
+              cost: 0,
+              income: { manual: 0, estimate: 0 },
+            }
+          }
+          comparison={period?.comparison ?? null}
         />
 
         <WidgetStack height={400}>
-
-          <SmartAlertsCard alerts={period.smartAlerts} />
-          <InsightsGridCard insights={period.insights} />
-          <IncomeInsightsCard data={period} />
-
+          <SmartAlertsCard alerts={period?.smartAlerts ?? []} />
+          <InsightsGridCard insights={period?.insights ?? []} />
+          <IncomeInsightsCard data={period ?? {}} />
         </WidgetStack>
+
+        {!period ? (
+          <View style={styles.emptyState}>
+            <Text style={[styles.emptyTitle, { color: T.text }]}>No analytics yet</Text>
+            <Text style={[styles.emptySub, { color: T.muted }]}>
+              Start adding costs and income to see your dashboard fill up.
+            </Text>
+          </View>
+        ) : null}
 
         <View style={{ flexGrow: 1 }} />
       </ScrollView>
@@ -285,24 +274,18 @@ const styles = StyleSheet.create({
     gap: 12,
     flexGrow: 1,
   },
-  placeholderCard: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 16,
-    padding: 14,
-  },
-  fetchOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 12,
-    alignItems: "center",
-  },
-  fetchPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
+  emptyState: {
+    marginTop: 4,
+    paddingHorizontal: 6,
     paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+  },
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  emptySub: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

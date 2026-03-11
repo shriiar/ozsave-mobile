@@ -1,5 +1,5 @@
 // src/modules/shell/DashboardShell.tsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Pressable,
@@ -7,13 +7,14 @@ import {
   Text,
   View,
   Dimensions,
+  Platform,
 } from "react-native";
 import { router, usePathname } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
+
+import { GlassView } from "expo-glass-effect";
 
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -35,6 +36,42 @@ const ROUTES = {
 } as const;
 
 export const PILL_H = 58;
+
+const PILL_RADIUS = 22;
+
+function GlassSurface({
+  children,
+  isDark,
+  expanded,
+  fallbackStyle,
+}: {
+  children: React.ReactNode;
+  isDark: boolean;
+  expanded: boolean;
+  fallbackStyle: any;
+}) {
+  if (Platform.OS === "ios") {
+    return (
+      <GlassView
+        style={styles.glassFill}
+        glassEffectStyle={
+          isDark
+            ? "regular"
+            : {
+                style: expanded ? "regular" : "clear",
+                animate: true,
+                animationDuration: 0.45,
+              }
+        }
+        colorScheme={isDark ? "dark" : "light"}
+      >
+        {children}
+      </GlassView>
+    );
+  }
+
+  return <View style={[styles.glassFill, fallbackStyle]}>{children}</View>;
+}
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -112,6 +149,43 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [open, setOpen] = useState(false);       // user intent: expanded or not
   const [visible, setVisible] = useState(false); // render expanded content while animating
 
+  const menuIconOpacity = useRef(new Animated.Value(1)).current;
+  const menuIconScale = useRef(new Animated.Value(1)).current;
+  const [menuIconName, setMenuIconName] = useState<keyof typeof Ionicons.glyphMap>("menu");
+
+  const animateMenuIconTo = useCallback((nextIcon: keyof typeof Ionicons.glyphMap) => {
+    Animated.parallel([
+      Animated.timing(menuIconOpacity, {
+        toValue: 0,
+        duration: 90,
+        useNativeDriver: true,
+      }),
+      Animated.timing(menuIconScale, {
+        toValue: 0.86,
+        duration: 90,
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (!finished) return;
+      setMenuIconName(nextIcon);
+      Animated.parallel([
+        Animated.timing(menuIconOpacity, {
+          toValue: 1,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+        Animated.spring(menuIconScale, {
+          toValue: 1,
+          damping: 14,
+          stiffness: 220,
+          mass: 0.8,
+          overshootClamping: false,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+  }, [menuIconOpacity, menuIconScale]);
+
 
   const contentOpacity = useRef(new Animated.Value(0)).current;
   const contentY = useRef(new Animated.Value(10)).current; // small slide
@@ -127,6 +201,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
     setVisible(true);
     setOpen(true);
+    animateMenuIconTo("chevron-down");
 
     contentOpacity.setValue(0);
     contentY.setValue(10);
@@ -151,6 +226,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     if (!open) return;
 
     setOpen(false);
+    animateMenuIconTo("menu");
 
     Animated.sequence([
       Animated.parallel([
@@ -177,18 +253,21 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  useEffect(() => {
+    setOpen(false);
+    setVisible(false);
+    sheetH.setValue(PILL_H);
+    contentOpacity.setValue(0);
+    contentY.setValue(10);
+    menuIconOpacity.setValue(1);
+    menuIconScale.setValue(1);
+    setMenuIconName("menu");
+  }, [resolvedTheme, sheetH, contentOpacity, contentY, menuIconOpacity, menuIconScale]);
+
   // ===== TOKENS =====
   const TOKENS = useMemo(() => {
     const shellBg = isDark ? "#020617" : "#F5F7FB";
-
-    const glassGrad = isDark
-      ? ["rgba(15,23,42,0.26)", "rgba(15,23,42,0.18)", "rgba(15,23,42,0.12)"]
-      : ["rgba(255,255,255,0.22)", "rgba(255,255,255,0.16)", "rgba(255,255,255,0.10)"];
-
-    const glassRefraction = isDark
-      ? ["rgba(255,255,255,0.10)", "rgba(255,255,255,0.00)"]
-      : ["rgba(255,255,255,0.60)", "rgba(255,255,255,0.00)"];
-
+    const glassFallback = isDark ? "rgba(15,23,42,0.82)" : "rgba(255,255,255,0.88)";
     const ring = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)";
 
     const shadow = isDark
@@ -213,7 +292,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     const btnBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
     const btnBgHover = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
 
-    const activeBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
+    const activeBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0, 0, 0, 0.05)";
     const activeRing = isDark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)";
 
     const itemBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
@@ -225,8 +304,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
     return {
       shellBg,
-      glassGrad,
-      glassRefraction,
+      glassFallback,
       ring,
       shadow,
       textPrimary,
@@ -261,8 +339,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     );
   }
 
-  // Bottom padding so screens can scroll above pill
-  const bottomPad = PILL_H + insets.bottom + 14;
 
   return (
     <View style={[styles.screen, { backgroundColor: TOKENS.shellBg }]}>
@@ -281,166 +357,163 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             styles.pill,
             TOKENS.shadow,
             {
-              height: sheetH, // animated height
-            }
+              height: sheetH,
+            },
           ]}
         >
-          {/* glass layers must NOT steal touches */}
-          <BlurView
-            pointerEvents="none"
-            intensity={isDark ? 60 : 25}
-            tint={isDark ? "dark" : "light"}
-            style={StyleSheet.absoluteFill}
-          />
-          <LinearGradient
-            pointerEvents="none"
-            colors={TOKENS.glassGrad as any}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <LinearGradient
-            pointerEvents="none"
-            colors={TOKENS.glassRefraction as any}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={[StyleSheet.absoluteFill, { opacity: isDark ? 0.10 : 0.30 }]}
-          />
-          <View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFill,
-              { borderWidth: StyleSheet.hairlineWidth, borderColor: TOKENS.ring, borderRadius: 22 },
-            ]}
-          />
-
-          {/* Expanded content */}
-          {visible && (
-            <Animated.View
+          <GlassSurface
+            key={`glass-${resolvedTheme}`}
+            isDark={isDark}
+            expanded={open}
+            fallbackStyle={{
+              backgroundColor: TOKENS.glassFallback,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: TOKENS.ring,
+            }}
+          >
+            <View
+              pointerEvents="none"
               style={[
-                styles.menuWrap,
-                {
-                  opacity: contentOpacity,
-                  transform: [{ translateY: contentY }],
-                },
+                StyleSheet.absoluteFill,
+                { borderWidth: StyleSheet.hairlineWidth, borderColor: TOKENS.ring, borderRadius: PILL_RADIUS },
               ]}
-              pointerEvents={open ? "auto" : "none"}
-            >
-              {/* Header (fixed) */}
-              <View style={[styles.menuHeader, { borderBottomColor: TOKENS.divider }]}>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={[styles.brand, { color: TOKENS.textPrimary }]}>OzSave</Text>
-                  <Text style={[styles.sub, { color: TOKENS.textMuted }]} numberOfLines={1}>
-                    {hasHouse ? user.house?.name : "No house"}
-                  </Text>
+            />
+
+            {/* Expanded content */}
+            {visible && (
+              <Animated.View
+                style={[
+                  styles.menuWrap,
+                  {
+                    opacity: contentOpacity,
+                    transform: [{ translateY: contentY }],
+                  },
+                ]}
+                pointerEvents={open ? "auto" : "none"}
+              >
+                {/* Header (fixed) */}
+                <View style={[styles.menuHeader, { borderBottomColor: TOKENS.divider }]}> 
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={[styles.brand, { color: TOKENS.textPrimary }]}>OzSave</Text>
+                    <Text style={[styles.sub, { color: TOKENS.textMuted }]} numberOfLines={1}>
+                      {hasHouse ? user.house?.name : "No house"}
+                    </Text>
+                  </View>
+
+                  <Pressable
+                    onPress={closeSheet}
+                    hitSlop={10}
+                    style={({ pressed }) => [
+                      styles.smallBtn,
+                      { backgroundColor: pressed ? TOKENS.btnBgHover : TOKENS.btnBg },
+                    ]}
+                  >
+                    <Ionicons name="chevron-down" size={20} color={TOKENS.textPrimary} />
+                  </Pressable>
                 </View>
 
-                <Pressable
-                  onPress={closeSheet}
-                  hitSlop={10}
-                  style={({ pressed }) => [
-                    styles.smallBtn,
-                    { backgroundColor: pressed ? TOKENS.btnBgHover : TOKENS.btnBg },
-                  ]}
-                >
-                  <Ionicons name="chevron-down" size={20} color={TOKENS.textPrimary} />
-                </Pressable>
-              </View>
+                <View style={styles.listWrap}>
+                  <Animated.ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingTop: 10, paddingBottom: 10 }}
+                  >
+                    {[...navItems, ...adminItems].map((it) => {
+                      const active = isActive(it.href);
+                      return (
+                        <Pressable
+                          key={it.href}
+                          onPress={() => {
+                            closeSheet();
+                            go(it.href);
+                          }}
+                          style={({ pressed }) => [
+                            styles.listItem,
+                            {
+                              backgroundColor: active ? TOKENS.activeBg : pressed ? TOKENS.itemBg : "transparent",
+                              borderWidth: active ? StyleSheet.hairlineWidth : 0,
+                              borderColor: active ? TOKENS.activeRing : "transparent",
+                            },
+                          ]}
+                        >
+                          <View style={[styles.listIcon, { backgroundColor: TOKENS.btnBg }]}> 
+                            <Ionicons name={it.icon} size={18} color={TOKENS.textPrimary} />
+                          </View>
+                          <Text style={[styles.listText, { color: TOKENS.textPrimary }]}>{it.name}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </Animated.ScrollView>
+                </View>
 
-              <View style={styles.listWrap}>
-                <Animated.ScrollView
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={{ paddingTop: 10, paddingBottom: 10 }}
-                >
-                  {[...navItems, ...adminItems].map((it) => {
-                    const active = isActive(it.href);
-                    return (
-                      <Pressable
-                        key={it.href}
-                        onPress={() => {
-                          closeSheet();
-                          go(it.href);
-                        }}
-                        style={({ pressed }) => [
-                          styles.listItem,
-                          {
-                            backgroundColor: active ? TOKENS.activeBg : pressed ? TOKENS.itemBg : "transparent",
-                            borderWidth: active ? StyleSheet.hairlineWidth : 0,
-                            borderColor: active ? TOKENS.activeRing : "transparent",
-                          },
-                        ]}
-                      >
-                        <View style={[styles.listIcon, { backgroundColor: TOKENS.btnBg }]}>
-                          <Ionicons name={it.icon} size={18} color={TOKENS.textPrimary} />
-                        </View>
-                        <Text style={[styles.listText, { color: TOKENS.textPrimary }]}>{it.name}</Text>
-                      </Pressable>
-                    );
-                  })}
-                </Animated.ScrollView>
-              </View>
+                {/* Footer (fixed) */}
+                <View style={[styles.footer, { borderTopColor: TOKENS.divider }]}> 
+                  <ThemeToggle />
 
-              {/* Footer (fixed) */}
-              <View style={[styles.footer, { borderTopColor: TOKENS.divider }]}>
-                <ThemeToggle />
+                  <Pressable
+                    onPress={handleLogout}
+                    style={({ pressed }) => [
+                      styles.logoutBtn,
+                      {
+                        backgroundColor: TOKENS.dangerBg,
+                        borderColor: TOKENS.dangerBorder,
+                        opacity: pressed ? 0.95 : 1,
+                      },
+                    ]}
+                  >
+                    <Ionicons name="log-out-outline" size={18} color={TOKENS.dangerText} />
+                    <Text style={[styles.logoutText, { color: TOKENS.dangerText }]}>Logout</Text>
+                  </Pressable>
+                </View>
+              </Animated.View>
+            )}
 
-                <Pressable
-                  onPress={handleLogout}
-                  style={({ pressed }) => [
-                    styles.logoutBtn,
-                    {
-                      backgroundColor: TOKENS.dangerBg,
-                      borderColor: TOKENS.dangerBorder,
-                      opacity: pressed ? 0.95 : 1,
-                    },
-                  ]}
+            <Animated.View style={styles.row}>
+              {navItems.slice(0, 4).map((it) => {
+                const active = isActive(it.href);
+                return (
+                  <Pressable
+                    key={it.href}
+                    onPress={() => go(it.href)}
+                    style={({ pressed }) => [
+                      styles.tabBtn,
+                      {
+                        backgroundColor: active
+                          ? TOKENS.activeBg
+                          : pressed
+                            ? TOKENS.btnBgHover
+                            : "transparent",
+                        borderWidth: active ? StyleSheet.hairlineWidth : 0,
+                        borderColor: active ? TOKENS.activeRing : "transparent",
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={it.icon}
+                      size={22}
+                      color={active ? TOKENS.textPrimary : TOKENS.textMuted}
+                    />
+                  </Pressable>
+                );
+              })}
+
+              <Pressable
+                onPress={() => (open ? closeSheet() : openSheet())}
+                style={({ pressed }) => [
+                  styles.menuBtn,
+                  { backgroundColor: pressed ? TOKENS.btnBgHover : TOKENS.btnBg },
+                ]}
+              >
+                <Animated.View
+                  style={{
+                    opacity: menuIconOpacity,
+                    transform: [{ scale: menuIconScale }],
+                  }}
                 >
-                  <Ionicons name="log-out-outline" size={18} color={TOKENS.dangerText} />
-                  <Text style={[styles.logoutText, { color: TOKENS.dangerText }]}>Logout</Text>
-                </Pressable>
-              </View>
+                  <Ionicons name={menuIconName} size={22} color={TOKENS.textPrimary} />
+                </Animated.View>
+              </Pressable>
             </Animated.View>
-          )}
-
-          <Animated.View style={styles.row}>
-            {navItems.slice(0, 4).map((it) => {
-              const active = isActive(it.href);
-              return (
-                <Pressable
-                  key={it.href}
-                  onPress={() => go(it.href)}
-                  style={({ pressed }) => [
-                    styles.tabBtn,
-                    {
-                      backgroundColor: active
-                        ? TOKENS.activeBg
-                        : pressed
-                          ? TOKENS.btnBgHover
-                          : "transparent",
-                      borderWidth: active ? StyleSheet.hairlineWidth : 0,
-                      borderColor: active ? TOKENS.activeRing : "transparent",
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name={it.icon}
-                    size={22}
-                    color={active ? TOKENS.textPrimary : TOKENS.textMuted}
-                  />
-                </Pressable>
-              );
-            })}
-
-            <Pressable
-              onPress={() => (open ? closeSheet() : openSheet())}
-              style={({ pressed }) => [
-                styles.menuBtn,
-                { backgroundColor: pressed ? TOKENS.btnBgHover : TOKENS.btnBg },
-              ]}
-            >
-              <Ionicons name={open ? "chevron-down" : "menu"} size={22} color={TOKENS.textPrimary} />
-            </Pressable>
-          </Animated.View>
+          </GlassSurface>
         </Animated.View>
       </View>
     </View>
@@ -469,9 +542,15 @@ const styles = StyleSheet.create({
 
   pill: {
     width: "90%",
-    borderRadius: 22,
+    borderRadius: PILL_RADIUS,
     overflow: "hidden",
-    position: "relative", // IMPORTANT
+    position: "relative",
+  },
+
+  glassFill: {
+    flex: 1,
+    borderRadius: PILL_RADIUS,
+    overflow: "hidden",
   },
 
   // expanded content sits above the icon row

@@ -23,6 +23,7 @@ import type { BillingRow } from "../../src/modules/billing/api";
 import { useInfiniteBillings } from "../../src/modules/billing/hooks/useBillingApi";
 
 import AddBillingModal from "@/src/modules/billing/AddBillingModal";
+import EditBillingModal from "@/src/modules/billing/EditBillingModal";
 // import EditBillingModal from "@/src/modules/billing/EditBillingModal";
 // import DeleteBillingModal from "@/src/modules/billing/DeleteBillingModal";
 
@@ -396,13 +397,13 @@ export default function BillingScreen() {
 
         <AddBillingModal open={addOpen} onClose={() => setAddOpen(false)} />
 
-        {/* <EditBillingModal
+        <EditBillingModal
           open={!!editingBillingId}
           billingId={editingBillingId}
           onClose={closeEdit}
         />
 
-        <DeleteBillingModal
+        {/* <DeleteBillingModal
           open={!!deleting}
           billingId={deleting?.id ?? null}
           billingName={deleting?.name ?? ""}

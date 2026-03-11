@@ -9,8 +9,8 @@ import {
     Text,
     View,
 } from "react-native";
-import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { GlassView } from "expo-glass-effect";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/src/context/ThemeContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -93,16 +93,17 @@ export default function CostFilterModal({
 
     const T = useMemo(() => {
         const surfaceGrad = isDark
-            ? ["rgba(15,23,42,0.70)", "rgba(2,6,23,0.55)"]
-            : ["rgba(255,255,255,0.82)", "rgba(255,255,255,0.58)"];
+            ? ["rgba(15,23,42,0.14)", "rgba(2,6,23,0.08)"]
+            : ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.08)"];
 
+        const glassFallback = isDark ? "rgba(15,23,42,0.82)" : "rgba(255,255,255,0.88)";
         const ring = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
         const text = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
         const muted = isDark ? "rgba(148,163,184,0.95)" : "#64748B";
         const tile = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)";
         const danger = "rgba(239,68,68,0.95)";
         const primary = "#4F46E5";
-        return { surfaceGrad, ring, text, muted, tile, danger, primary };
+        return { surfaceGrad, glassFallback, ring, text, muted, tile, danger, primary };
     }, [isDark]);
 
     const invalidRange = isInvalidRange(draft.from, draft.to);
@@ -125,16 +126,16 @@ export default function CostFilterModal({
                 style={[
                     styles.panelWrap,
                     {
-                        paddingTop: insets.top + 12,       // ✅ below status bar/notch
-                        paddingBottom: insets.bottom + 12, // ✅ above home indicator
-                        paddingHorizontal: 14,
+                        paddingTop: insets.top + 12,
+                        paddingBottom: 0,
+                        paddingHorizontal: 0,
                     },
                 ]}
             >
                 <View style={styles.panelShadow}>
-                    <BlurView
-                        intensity={isDark ? 20 : 28}
-                        tint={isDark ? "dark" : "light"}
+                    <GlassView
+                        glassEffectStyle="regular"
+                        colorScheme={isDark ? "dark" : "light"}
                         style={[styles.panel, { borderColor: T.ring }]}
                     >
                         <LinearGradient
@@ -148,23 +149,7 @@ export default function CostFilterModal({
                         <View style={styles.header}>
                             <View style={{ flex: 1 }}>
                                 <Text style={[styles.title, { color: T.text }]}>Filters</Text>
-                                <Text style={[styles.subtitle, { color: T.muted }]}>Narrow down costs fast.</Text>
                             </View>
-
-                            <Pressable
-                                onPress={onClose}
-                                style={({ pressed }) => [
-                                    styles.iconBtn,
-                                    { backgroundColor: T.tile, opacity: pressed ? 0.85 : 1 },
-                                ]}
-                                hitSlop={10}
-                            >
-                                <Ionicons
-                                    name="close"
-                                    size={18}
-                                    color={isDark ? "rgba(255,255,255,0.9)" : "rgba(15,23,42,0.85)"}
-                                />
-                            </Pressable>
                         </View>
 
                         {/* Body (scrollable so date picker is reachable) */}
@@ -283,9 +268,7 @@ export default function CostFilterModal({
                                         value={(picking === "from" ? fromDate : toDate) ?? new Date()}
                                         mode="date"
                                         display={Platform.OS === "ios" ? "inline" : "default"}
-                                        // iOS only: force proper theme + text color
                                         textColor={pickerTextColor as any}
-                                        // some versions support this, some don't, harmless if ignored
                                         // @ts-ignore
                                         themeVariant={isDark ? "dark" : "light"}
                                         onChange={(_, selected) => {
@@ -340,7 +323,15 @@ export default function CostFilterModal({
                         </ScrollView>
 
                         {/* Footer (pinned) */}
-                        <View style={[styles.footer, { borderTopColor: T.ring }]}>
+                        <View
+                            style={[
+                                styles.footer,
+                                {
+                                    borderTopColor: T.ring,
+                                    paddingBottom: Math.max(insets.bottom, 10) + 10,
+                                },
+                            ]}
+                        >
                             <Pressable
                                 onPress={() => {
                                     closePicker();
@@ -368,7 +359,7 @@ export default function CostFilterModal({
                                 <Text style={styles.btnPrimaryText}>Apply</Text>
                             </Pressable>
                         </View>
-                    </BlurView>
+                    </GlassView>
                 </View>
             </View>
         </Modal>
@@ -420,9 +411,11 @@ const styles = StyleSheet.create({
     },
 
     bodyScroll: {
-        flexGrow: 0,
+        flex: 1,
+        minHeight: 0,
     },
     bodyContent: {
+        flexGrow: 1,
         gap: 12,
         paddingBottom: 12,
     },
@@ -498,7 +491,6 @@ const styles = StyleSheet.create({
     errorText: { fontSize: 12.5, fontWeight: "800" },
 
     footer: {
-        marginTop: 10,
         paddingTop: 12,
         borderTopWidth: StyleSheet.hairlineWidth,
         flexDirection: "row",

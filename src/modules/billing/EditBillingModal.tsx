@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
   Modal,
   View,
   Text,
@@ -731,6 +732,9 @@ export default function EditBillingModal({
 
   const [error, setError] = useState<string | null>(null);
 
+  const formOpacity = useRef(new Animated.Value(0)).current;
+  const formTranslateY = useRef(new Animated.Value(8)).current;
+
   React.useEffect(() => {
     if (!open || !billing) return;
 
@@ -759,6 +763,33 @@ export default function EditBillingModal({
 
     setError(null);
   }, [open, billing]);
+
+  useEffect(() => {
+    if (!open) {
+      formOpacity.setValue(0);
+      formTranslateY.setValue(8);
+      return;
+    }
+
+    if (isLoading) {
+      formOpacity.setValue(0);
+      formTranslateY.setValue(8);
+      return;
+    }
+
+    Animated.parallel([
+      Animated.timing(formOpacity, {
+        toValue: 1,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+      Animated.timing(formTranslateY, {
+        toValue: 0,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [open, isLoading, billing, formOpacity, formTranslateY]);
 
   const T = useMemo(() => {
     const modalBgGrad = isDark
@@ -1033,7 +1064,15 @@ export default function EditBillingModal({
                     </Text>
                   </View>
                 ) : (
-                  <>
+                  <Animated.View
+                    style={[
+                      styles.contentWrap,
+                      {
+                        opacity: formOpacity,
+                        transform: [{ translateY: formTranslateY }],
+                      },
+                    ]}
+                  >
                     <ScrollView
                       contentContainerStyle={styles.body}
                       keyboardShouldPersistTaps="handled"
@@ -1584,7 +1623,7 @@ export default function EditBillingModal({
                         )}
                       </Pressable>
                     </View>
-                  </>
+                  </Animated.View>
                 )}
               </BlurView>
             </View>
@@ -1792,8 +1831,12 @@ const styles = StyleSheet.create({
   },
   loadingWrap: {
     flex: 1,
+    minHeight: 420,
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
+  },
+  contentWrap: {
+    flex: 1,
   },
 });

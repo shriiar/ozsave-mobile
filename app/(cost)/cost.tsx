@@ -1,5 +1,6 @@
 // app/cost.tsx
 import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useMemo, useRef, useState } from "react";
 import {
@@ -152,9 +153,9 @@ function CostCard({
                 style={({ pressed }) => [{ opacity: pressed ? 0.95 : 1 }]}
             >
                 <View style={styles.cardWrap}>
-                    <BlurView
-                        intensity={isDark ? 18 : 26}
-                        tint={isDark ? "dark" : "light"}
+                    <GlassView
+                        glassEffectStyle="clear"
+                        colorScheme={isDark ? "dark" : "light"}
                         style={[styles.card, { borderColor: T.ring }]}
                     >
                         {/* base glass gradient */}
@@ -222,7 +223,7 @@ function CostCard({
                                 <Text style={[styles.badgeBottom, { color: T.muted }]}>{money(item.amount)}</Text>
                             </View>
                         </View>
-                    </BlurView>
+                    </GlassView>
                 </View>
             </Pressable>
         </Swipeable>
@@ -385,21 +386,48 @@ export default function CostScreen() {
                     </View>
 
                     <Pressable
-                        style={({ pressed }) => [
-                            styles.filterBtn,
-                            { opacity: pressed ? 0.92 : 1 },
-                        ]}
+                        style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
                         onPress={() => setFiltersOpen(true)}
                     >
-                        <Ionicons name="options-outline" size={16} color="#fff" />
-                        <Text style={styles.filterBtnText}>Filters</Text>
+                        <GlassView
+                            glassEffectStyle="regular"
+                            colorScheme={isDark ? "dark" : "light"}
+                            style={styles.filterBtn}
+                        >
+                            <Ionicons
+                                name="options-outline"
+                                size={16}
+                                color={isDark ? "rgba(255,255,255,0.92)" : "#0F172A"}
+                            />
+                            <Text
+                                style={[
+                                    styles.filterBtnText,
+                                    { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" },
+                                ]}
+                            >
+                                Filters
+                            </Text>
+                        </GlassView>
                     </Pressable>
 
                     <Pressable
-                        style={({ pressed }) => [styles.addBtn, { opacity: pressed ? 0.92 : 1 }]}
+                        style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
                         onPress={() => setAddOpen(true)}
                     >
-                        <Text style={styles.addBtnText}>Add</Text>
+                        <GlassView
+                            glassEffectStyle="regular"
+                            colorScheme={isDark ? "dark" : "light"}
+                            style={styles.addBtn}
+                        >
+                            <Text
+                                style={[
+                                    styles.addBtnText,
+                                    { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" },
+                                ]}
+                            >
+                                Add
+                            </Text>
+                        </GlassView>
                     </Pressable>
                 </View>
 
@@ -505,10 +533,10 @@ const styles = StyleSheet.create({
     h2: { marginTop: 2, fontSize: 13, lineHeight: 18 },
 
     addBtn: {
-        backgroundColor: "#4F46E5",
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 14,
+        overflow: "hidden",
     },
     addBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 
@@ -641,10 +669,10 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
-        backgroundColor: "#4F46E5",
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 14,
+        overflow: "hidden",
     },
     filterBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 });

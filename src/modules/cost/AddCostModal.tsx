@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
@@ -534,43 +535,22 @@ export default function AddCostModal({ open, onClose }: Props) {
                 style={[
                     StyleSheet.absoluteFillObject,
                     {
-                        paddingTop: insets.top + 8,
-                        paddingBottom: insets.bottom + 8,
-                        paddingHorizontal: 7,
+                        paddingTop: insets.top,
+                        paddingBottom: 0,
+                        paddingHorizontal: 0,
                     },
                 ]}
             >
-                {/* Background blur */}
-                <BlurView
-                    intensity={isDark ? 70 : 90}
-                    tint={isDark ? "dark" : "light"}
-                    style={StyleSheet.absoluteFill}
-                />
+                
 
                 <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.kav}>
                     <View style={styles.center}>
                         <View style={styles.modalWrap}>
-                            <BlurView
-                                intensity={isDark ? 28 : 45}
-                                tint={isDark ? "dark" : "light"}
+                            <GlassView
+                                glassEffectStyle="regular"
+                                colorScheme={isDark ? "dark" : "light"}
                                 style={[styles.modal, { borderColor: T.border }, T.shadow]}
                             >
-                                {/* background gradient */}
-                                <LinearGradient
-                                    colors={T.modalBgGrad as any}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 0, y: 1 }}
-                                    style={StyleSheet.absoluteFill}
-                                />
-
-                                {/* glow */}
-                                <LinearGradient
-                                    colors={T.glowA as any}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 1 }}
-                                    style={[styles.glow, { top: -90, left: -90 }]}
-                                />
-
                                 {/* Header */}
                                 <View style={[styles.header, { borderBottomColor: T.headerBorder }]}>
                                     <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
@@ -585,17 +565,6 @@ export default function AddCostModal({ open, onClose }: Props) {
                                             </Text>
                                         </View>
                                     </View>
-
-                                    <Pressable
-                                        onPress={() => !saving && onClose()}
-                                        style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
-                                        hitSlop={10}
-                                        disabled={saving}
-                                    >
-                                        <View style={[styles.closeBtn, { borderColor: T.border, backgroundColor: T.inputBg }]}>
-                                            <Ionicons name="close" size={18} color={T.text} />
-                                        </View>
-                                    </Pressable>
                                 </View>
 
                                 {/* Categorized toggle */}
@@ -632,7 +601,7 @@ export default function AddCostModal({ open, onClose }: Props) {
                                 {/* Body */}
                                 <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
                                     {items.map((item, index) => (
-                                        <View key={index} style={[styles.block, { borderColor: T.border, backgroundColor: "transparent" }]}>
+                                        <View key={index}>
                                             <View style={styles.blockHeader}>
                                                 <View style={{ flex: 1 }}>
                                                     <Text style={[styles.blockTitle, { color: T.text }]}>
@@ -816,6 +785,15 @@ export default function AddCostModal({ open, onClose }: Props) {
                                                     { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder },
                                                 ]}
                                             />
+
+                                            {categorized && index < items.length - 1 ? (
+                                                <View
+                                                    style={[
+                                                        styles.itemDivider,
+                                                        { backgroundColor: T.headerBorder },
+                                                    ]}
+                                                />
+                                            ) : null}
                                         </View>
                                     ))}
 
@@ -837,7 +815,15 @@ export default function AddCostModal({ open, onClose }: Props) {
                                 </ScrollView>
 
                                 {/* Footer */}
-                                <View style={[styles.footer, { borderTopColor: T.headerBorder }]}>
+                                <View
+                                    style={[
+                                        styles.footer,
+                                        {
+                                            borderTopColor: T.headerBorder,
+                                            paddingBottom: Math.max(insets.bottom, 10) + 10,
+                                        },
+                                    ]}
+                                >
                                     <Pressable
                                         onPress={() => !saving && onClose()}
                                         disabled={saving}
@@ -864,7 +850,7 @@ export default function AddCostModal({ open, onClose }: Props) {
                                         {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "600" }}>Save</Text>}
                                     </Pressable>
                                 </View>
-                            </BlurView>
+                            </GlassView>
                         </View>
                     </View>
                 </KeyboardAvoidingView>
@@ -877,8 +863,6 @@ const styles = StyleSheet.create({
     root: { flex: 1 },
     kav: { flex: 1 },
 
-    // ❌ DO NOT use this as a solid background behind BlurView anymore.
-    // Keep it only if you want it for something else, but you should NOT render it.
     backdrop: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: "transparent",
@@ -1023,6 +1007,12 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
+    },
+    itemDivider: {
+        height: StyleSheet.hairlineWidth,
+        marginTop: 18,
+        marginBottom: 4,
+        opacity: 0.9,
     },
 
     errorBox: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 12 },

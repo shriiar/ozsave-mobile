@@ -1,6 +1,7 @@
 // src/modules/cost/EditCostModal.tsx
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
   Modal,
   View,
   Text,
@@ -14,9 +15,11 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 
 import { useTheme } from "../../context/ThemeContext";
@@ -350,6 +353,8 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
   const isDark = resolvedTheme === "dark";
   const { user } = useAuth();
 
+  const insets = useSafeAreaInsets();
+
   const members: Member[] = useMemo(() => ((user as any)?.house?.members ?? []) as Member[], [user]);
   const currentUserId = (user as any)?._id as string | undefined;
 
@@ -371,17 +376,11 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
 
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
+  const formOpacity = useRef(new Animated.Value(0)).current;
+  const formTranslateY = useRef(new Animated.Value(8)).current;
 
   // ✅ Same token system as AddCostModal
   const T = useMemo(() => {
-    const modalBgGrad = isDark
-      ? ["rgba(2,6,23,0.58)", "rgba(15,23,42,0.46)", "rgba(2,6,23,0.38)"]
-      : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.62)", "rgba(255,255,255,0.52)"];
-
-    const glowA = isDark
-      ? ["rgba(79,70,229,0.20)", "rgba(168,85,247,0.10)", "rgba(0,0,0,0)"]
-      : ["rgba(79,70,229,0.22)", "rgba(168,85,247,0.10)", "rgba(0,0,0,0)"];
-
     const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
     const headerBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
 
@@ -410,8 +409,9 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
           elevation: 12,
         };
 
-    return { modalBgGrad, glowA, border, headerBorder, text, muted, inputBg, inputBorder, primary, danger, shadow };
+    return { border, headerBorder, text, muted, inputBg, inputBorder, primary, danger, shadow };
   }, [isDark]);
+
 
   // ✅ Fetch cost only when modal is open and id exists
   const { data: cost, isLoading, isFetching } = useQuery({
@@ -424,6 +424,35 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
     staleTime: 0,
     gcTime: 0,
   });
+
+  const showLoading = isLoading || (!cost && !!costId) || isFetching;
+
+  useEffect(() => {
+    if (!open) {
+      formOpacity.setValue(0);
+      formTranslateY.setValue(8);
+      return;
+    }
+
+    if (showLoading) {
+      formOpacity.setValue(0);
+      formTranslateY.setValue(8);
+      return;
+    }
+
+    Animated.parallel([
+      Animated.timing(formOpacity, {
+        toValue: 1,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+      Animated.timing(formTranslateY, {
+        toValue: 0,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [open, showLoading, cost, formOpacity, formTranslateY]);
 
   // ✅ When opening, reset UI immediately so you don't show stale form.
   React.useEffect(() => {
@@ -500,266 +529,371 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
     }
   }
 
-  const showLoading = isLoading || (!cost && !!costId) || isFetching;
-
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={() => !saving && onClose()}>
-      <View style={styles.root}>
-        <BlurView intensity={isDark ? 70 : 90} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => !saving && onClose()}>
-          <View style={{ flex: 1, backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)" }} />
-        </Pressable>
+    <Modal
+      visible={open}
+      transparent
+      animationType="fade"
+      onRequestClose={() => !saving && onClose()}
+    >
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        onPress={() => !saving && onClose()}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: isDark
+              ? "rgba(0,0,0,0.35)"
+              : "rgba(0,0,0,0.18)",
+          }}
+        />
+      </Pressable>
 
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.kav}>
+      <View
+        style={[
+          StyleSheet.absoluteFillObject,
+          {
+            paddingTop: insets.top,
+            paddingBottom: 0,
+            paddingHorizontal: 0,
+          },
+        ]}
+      >
+
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.kav}
+        >
           <View style={styles.center}>
             <View style={styles.modalWrap}>
-              <BlurView intensity={isDark ? 28 : 45} tint={isDark ? "dark" : "light"} style={[styles.modal, { borderColor: T.border }, T.shadow]}>
-                <LinearGradient colors={T.modalBgGrad as any} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
-                <LinearGradient colors={T.glowA as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.glow, { top: -90, left: -90 }]} />
+              <GlassView
+                glassEffectStyle="regular"
+                colorScheme={isDark ? "dark" : "light"}
+                style={[styles.modal, { borderColor: T.border }, T.shadow]}
+              >
 
-                {/* Header */}
-                <View style={[styles.header, { borderBottomColor: T.headerBorder }]}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
-                    <View style={[styles.iconPill, { borderColor: T.border, backgroundColor: T.inputBg }]}>
+                <View
+                  style={[styles.header, { borderBottomColor: T.headerBorder }]}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                      flex: 1,
+                    }}
+                  >
+                    <View
+                      style={[
+                        styles.iconPill,
+                        { borderColor: T.border, backgroundColor: T.inputBg },
+                      ]}
+                    >
                       <Ionicons name="create-outline" size={18} color={T.text} />
                     </View>
 
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.h1, { color: T.text }]}>Edit cost</Text>
-                      <Text style={[styles.h2, { color: T.muted }]}>Changes will recalculate balances for this house.</Text>
+                      <Text style={[styles.h2, { color: T.muted }]}>
+                        Changes will recalculate balances for this house.
+                      </Text>
                     </View>
                   </View>
-
-                  <Pressable
-                    onPress={() => !saving && onClose()}
-                    style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
-                    hitSlop={10}
-                    disabled={saving}
-                  >
-                    <View style={[styles.closeBtn, { borderColor: T.border, backgroundColor: T.inputBg }]}>
-                      <Ionicons name="close" size={18} color={T.text} />
-                    </View>
-                  </Pressable>
                 </View>
 
-                {/* Body */}
-                <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-                  {showLoading ? (
-                    // ✅ IMPORTANT: keep a stable body height to avoid the "jump"
-                    <View style={[styles.loadingWrap, { borderColor: T.border }]}>
-                      <ActivityIndicator />
-                      <Text style={{ marginTop: 10, color: T.muted, fontWeight: "600" }}>Loading cost...</Text>
-
-                      {/* fake blocks to keep height similar */}
-                      <View style={{ height: 16 }} />
-                      <View style={[styles.fakeBlock, { backgroundColor: T.inputBg, borderColor: T.inputBorder }]} />
-                      <View style={[styles.fakeBlock, { backgroundColor: T.inputBg, borderColor: T.inputBorder }]} />
-                      <View style={[styles.fakeBlock, { backgroundColor: T.inputBg, borderColor: T.inputBorder }]} />
-                    </View>
-                  ) : (
-                    <View style={[styles.block, { borderColor: T.border, backgroundColor: "transparent" }]}>
-                      <View style={styles.blockHeader}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.blockTitle, { color: T.text }]}>Cost details</Text>
-                          <Text style={[styles.blockSub, { color: T.muted }]}>Edit the basics first.</Text>
-                        </View>
-                      </View>
-
-                      <Text style={[styles.label, { color: T.muted }]}>Name</Text>
-                      <TextInput
-                        value={form.name}
-                        onChangeText={(v) => updateField("name", v)}
-                        placeholder="Eg. Groceries"
-                        placeholderTextColor={isDark ? "rgba(148,163,184,0.55)" : "rgba(100,116,139,0.65)"}
-                        style={[styles.input, { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder }]}
-                      />
-
-                      <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Amount (AUD)</Text>
-                      <TextInput
-                        value={form.amount}
-                        onChangeText={(v) => updateField("amount", v)}
-                        placeholder="0.00"
-                        keyboardType="decimal-pad"
-                        placeholderTextColor={isDark ? "rgba(148,163,184,0.55)" : "rgba(100,116,139,0.65)"}
-                        style={[styles.input, { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder }]}
-                      />
-
-                      <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Paid by</Text>
-                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
-                        {members.map((m) => {
-                          const active = form.paidBy === m._id;
-                          return (
-                            <Pressable
-                              key={m._id}
-                              disabled={saving}
-                              onPress={() => updateField("paidBy", m._id)}
-                              style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
-                            >
-                              <View
-                                style={[
-                                  styles.memberChip,
-                                  {
-                                    borderColor: active ? "rgba(79,70,229,0.45)" : T.border,
-                                    backgroundColor: active ? "rgba(79,70,229,0.10)" : T.inputBg,
-                                  },
-                                ]}
-                              >
-                                <View style={[styles.avatar, { borderColor: T.border }]}>
-                                  <Text style={{ color: T.text, fontWeight: "600", fontSize: 11 }}>{initials(m.name)}</Text>
-                                </View>
-
-                                <View style={{ minWidth: 140 }}>
-                                  <Text numberOfLines={1} style={{ color: T.text, fontWeight: "600", fontSize: 13 }}>
-                                    {m.name}
-                                  </Text>
-                                  <Text numberOfLines={1} style={{ color: T.muted, fontWeight: "400", fontSize: 12 }}>
-                                    {m.email}
-                                  </Text>
-                                </View>
-                              </View>
-                            </Pressable>
-                          );
-                        })}
-                      </View>
-
-                      <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Date</Text>
-                      <DateField
-                        valueYmd={form.date}
-                        onChangeYmd={(v) => updateField("date", v)}
-                        disabled={saving}
-                        isDark={isDark}
-                        borderColor={T.inputBorder}
-                        bgColor={T.inputBg}
-                        textColor={T.text}
-                        mutedColor={T.muted}
-                      />
-
-                      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
-                        <Text style={[styles.label, { color: T.muted }]}>Shared by</Text>
-
-                        <View style={{ flexDirection: "row", gap: 14 }}>
-                          <Pressable disabled={saving} onPress={() => updateField("sharedBy", members.map((m) => m._id))} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
-                            <Text style={{ color: T.text, fontWeight: "600" }}>All</Text>
-                          </Pressable>
-
-                          {currentUserId ? (
-                            <Pressable disabled={saving} onPress={() => updateField("sharedBy", [currentUserId])} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
-                              <Text style={{ color: T.text, fontWeight: "600" }}>Just me</Text>
-                            </Pressable>
-                          ) : null}
-                        </View>
-                      </View>
-
-                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
-                        {members.map((m) => {
-                          const checked = form.sharedBy.includes(m._id);
-                          return (
-                            <Pressable key={m._id} disabled={saving} onPress={() => toggleShared(m._id)} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
-                              <View
-                                style={[
-                                  styles.sharedChip,
-                                  {
-                                    borderColor: checked ? "rgba(16,185,129,0.45)" : T.border,
-                                    backgroundColor: checked ? "rgba(16,185,129,0.10)" : T.inputBg,
-                                  },
-                                ]}
-                              >
-                                <View
-                                  style={[
-                                    styles.dot,
-                                    {
-                                      backgroundColor: checked
-                                        ? "rgba(16,185,129,1)"
-                                        : isDark
-                                        ? "rgba(148,163,184,0.35)"
-                                        : "rgba(100,116,139,0.35)",
-                                    },
-                                  ]}
-                                />
-                                <Text style={{ color: T.text, fontWeight: "600", fontSize: 13 }}>{m.name}</Text>
-                              </View>
-                            </Pressable>
-                          );
-                        })}
-                      </View>
-
-                      {form.sharedBy.length === 0 ? (
-                        <Text style={{ marginTop: 10, color: T.danger, fontWeight: "600", fontSize: 12 }}>
-                          Select at least 1 member.
-                        </Text>
-                      ) : null}
-
-                      <Text style={[styles.label, { color: T.muted, marginTop: 14 }]}>Category</Text>
-                      <CategorySelect
-                        value={form.category}
-                        onChange={(v) => updateField("category", v)}
-                        disabled={saving}
-                        isDark={isDark}
-                        borderColor={T.inputBorder}
-                        bgColor={T.inputBg}
-                        textColor={T.text}
-                        mutedColor={T.muted}
-                      />
-
-                      <Text style={[styles.label, { color: T.muted, marginTop: 14 }]}>Notes (optional)</Text>
-                      <TextInput
-                        value={form.notes}
-                        onChangeText={(v) => updateField("notes", v)}
-                        placeholder="Eg. Coles run, split equally."
-                        placeholderTextColor={isDark ? "rgba(148,163,184,0.55)" : "rgba(100,116,139,0.65)"}
-                        multiline
-                        style={[
-                          styles.input,
-                          styles.textarea,
-                          { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder },
-                        ]}
-                      />
-                    </View>
-                  )}
-
-                  {error ? (
-                    <View style={[styles.errorBox, { borderColor: "rgba(239,68,68,0.30)", backgroundColor: "rgba(239,68,68,0.10)" }]}>
-                      <Text style={{ color: T.danger, fontWeight: "600" }}>Can’t save</Text>
-                      <Text style={{ color: T.danger, marginTop: 4, fontWeight: "400" }}>{error}</Text>
-                    </View>
-                  ) : null}
-                </ScrollView>
-
-                {/* Footer */}
-                <View style={[styles.footer, { borderTopColor: T.headerBorder }]}>
-                  <Pressable
-                    onPress={() => !saving && onClose()}
-                    disabled={saving}
-                    style={({ pressed }) => [
-                      styles.footerBtn,
+                {showLoading ? (
+                  <View style={styles.loadingWrap}>
+                    <ActivityIndicator color={T.primary} />
+                    <Text style={{ marginTop: 10, color: T.muted }}>
+                      Loading cost...
+                    </Text>
+                  </View>
+                ) : (
+                  <Animated.View
+                    style={[
+                      styles.contentWrap,
                       {
-                        borderColor: T.border,
-                        backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
-                        opacity: pressed ? 0.9 : 1,
+                        opacity: formOpacity,
+                        transform: [{ translateY: formTranslateY }],
                       },
                     ]}
                   >
-                    <Text style={{ color: T.text, fontWeight: "600" }}>Cancel</Text>
-                  </Pressable>
+                    <ScrollView
+                      contentContainerStyle={styles.body}
+                      keyboardShouldPersistTaps="handled"
+                    >
+                      <View>
+                        <View style={styles.blockHeader}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={[styles.blockTitle, { color: T.text }]}>Cost details</Text>
+                            <Text style={[styles.blockSub, { color: T.muted }]}>Edit the basics first.</Text>
+                          </View>
+                        </View>
 
-                  <Pressable
-                    onPress={handleSave}
-                    disabled={saving || showLoading}
-                    style={({ pressed }) => [
-                      styles.footerBtnPrimary,
-                      { backgroundColor: T.primary, opacity: pressed ? 0.92 : 1 },
-                    ]}
-                  >
-                    {saving ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <Text style={{ color: "#fff", fontWeight: "600" }}>
-                        Save changes
-                      </Text>
-                    )}
-                  </Pressable>
-                </View>
-              </BlurView>
+                        <Text style={[styles.label, { color: T.muted }]}>Name</Text>
+                        <TextInput
+                          value={form.name}
+                          onChangeText={(v) => updateField("name", v)}
+                          placeholder="Eg. Groceries"
+                          placeholderTextColor={
+                            isDark
+                              ? "rgba(148,163,184,0.55)"
+                              : "rgba(100,116,139,0.65)"
+                          }
+                          style={[
+                            styles.input,
+                            {
+                              color: T.text,
+                              backgroundColor: T.inputBg,
+                              borderColor: T.inputBorder,
+                            },
+                          ]}
+                        />
+
+                        <Text
+                          style={[styles.label, { color: T.muted, marginTop: 12 }]}
+                        >
+                          Amount (AUD)
+                        </Text>
+                        <TextInput
+                          value={form.amount}
+                          onChangeText={(v) => updateField("amount", v)}
+                          placeholder="0.00"
+                          keyboardType="decimal-pad"
+                          placeholderTextColor={
+                            isDark
+                              ? "rgba(148,163,184,0.55)"
+                              : "rgba(100,116,139,0.65)"
+                          }
+                          style={[
+                            styles.input,
+                            {
+                              color: T.text,
+                              backgroundColor: T.inputBg,
+                              borderColor: T.inputBorder,
+                            },
+                          ]}
+                        />
+
+                        <Text
+                          style={[styles.label, { color: T.muted, marginTop: 12 }]}
+                        >
+                          Paid by
+                        </Text>
+                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
+                          {members.map((m) => {
+                            const active = form.paidBy === m._id;
+                            return (
+                              <Pressable
+                                key={m._id}
+                                disabled={saving}
+                                onPress={() => updateField("paidBy", m._id)}
+                                style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+                              >
+                                <View
+                                  style={[
+                                    styles.memberChip,
+                                    {
+                                      borderColor: active ? "rgba(79,70,229,0.45)" : T.border,
+                                      backgroundColor: active ? "rgba(79,70,229,0.10)" : T.inputBg,
+                                    },
+                                  ]}
+                                >
+                                  <View style={[styles.avatar, { borderColor: T.border }]}> 
+                                    <Text style={{ color: T.text, fontWeight: "600", fontSize: 11 }}>{initials(m.name)}</Text>
+                                  </View>
+
+                                  <View style={{ minWidth: 140 }}>
+                                    <Text numberOfLines={1} style={{ color: T.text, fontWeight: "600", fontSize: 13 }}>
+                                      {m.name}
+                                    </Text>
+                                    <Text numberOfLines={1} style={{ color: T.muted, fontWeight: "400", fontSize: 12 }}>
+                                      {m.email}
+                                    </Text>
+                                  </View>
+                                </View>
+                              </Pressable>
+                            );
+                          })}
+                        </View>
+
+                        <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Date</Text>
+                        <DateField
+                          valueYmd={form.date}
+                          onChangeYmd={(v) => updateField("date", v)}
+                          disabled={saving}
+                          isDark={isDark}
+                          borderColor={T.inputBorder}
+                          bgColor={T.inputBg}
+                          textColor={T.text}
+                          mutedColor={T.muted}
+                        />
+
+                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
+                          <Text style={[styles.label, { color: T.muted }]}>Shared by</Text>
+
+                          <View style={{ flexDirection: "row", gap: 14 }}>
+                            <Pressable disabled={saving} onPress={() => updateField("sharedBy", members.map((m) => m._id))} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
+                              <Text style={{ color: T.text, fontWeight: "600" }}>All</Text>
+                            </Pressable>
+
+                            {currentUserId ? (
+                              <Pressable disabled={saving} onPress={() => updateField("sharedBy", [currentUserId])} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
+                                <Text style={{ color: T.text, fontWeight: "600" }}>Just me</Text>
+                              </Pressable>
+                            ) : null}
+                          </View>
+                        </View>
+
+                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
+                          {members.map((m) => {
+                            const checked = form.sharedBy.includes(m._id);
+                            return (
+                              <Pressable key={m._id} disabled={saving} onPress={() => toggleShared(m._id)} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
+                                <View
+                                  style={[
+                                    styles.sharedChip,
+                                    {
+                                      borderColor: checked ? "rgba(16,185,129,0.45)" : T.border,
+                                      backgroundColor: checked ? "rgba(16,185,129,0.10)" : T.inputBg,
+                                    },
+                                  ]}
+                                >
+                                  <View
+                                    style={[
+                                      styles.dot,
+                                      {
+                                        backgroundColor: checked
+                                          ? "rgba(16,185,129,1)"
+                                          : isDark
+                                          ? "rgba(148,163,184,0.35)"
+                                          : "rgba(100,116,139,0.35)",
+                                      },
+                                    ]}
+                                  />
+                                  <Text style={{ color: T.text, fontWeight: "600", fontSize: 13 }}>{m.name}</Text>
+                                </View>
+                              </Pressable>
+                            );
+                          })}
+                        </View>
+
+                        {form.sharedBy.length === 0 ? (
+                          <Text style={{ marginTop: 10, color: T.danger, fontWeight: "600", fontSize: 12 }}>
+                            Select at least 1 member.
+                          </Text>
+                        ) : null}
+
+                        <Text style={[styles.label, { color: T.muted, marginTop: 14 }]}>Category</Text>
+                        <CategorySelect
+                          value={form.category}
+                          onChange={(v) => updateField("category", v)}
+                          disabled={saving}
+                          isDark={isDark}
+                          borderColor={T.inputBorder}
+                          bgColor={T.inputBg}
+                          textColor={T.text}
+                          mutedColor={T.muted}
+                        />
+
+                        <Text style={[styles.label, { color: T.muted, marginTop: 14 }]}>Notes (optional)</Text>
+                        <TextInput
+                          value={form.notes}
+                          onChangeText={(v) => updateField("notes", v)}
+                          placeholder="Eg. Coles run, split equally."
+                          placeholderTextColor={
+                            isDark
+                              ? "rgba(148,163,184,0.55)"
+                              : "rgba(100,116,139,0.65)"
+                          }
+                          multiline
+                          style={[
+                            styles.input,
+                            styles.textarea,
+                            { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder },
+                          ]}
+                        />
+                      </View>
+
+                      {error ? (
+                        <View
+                          style={[
+                            styles.errorBox,
+                            {
+                              borderColor: "rgba(239,68,68,0.30)",
+                              backgroundColor: "rgba(239,68,68,0.10)",
+                            },
+                          ]}
+                        >
+                          <Text style={{ color: T.danger, fontWeight: "600" }}>
+                            Can’t save
+                          </Text>
+                          <Text
+                            style={{
+                              color: T.danger,
+                              marginTop: 4,
+                              fontWeight: "400",
+                            }}
+                          >
+                            {error}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </ScrollView>
+
+                    <View
+                      style={[
+                        styles.footer,
+                        {
+                          borderTopColor: T.headerBorder,
+                          paddingBottom: Math.max(insets.bottom, 10) + 10,
+                        },
+                      ]}
+                    >
+                      <Pressable
+                        onPress={() => !saving && onClose()}
+                        disabled={saving}
+                        style={({ pressed }) => [
+                          styles.footerBtn,
+                          {
+                            borderColor: T.border,
+                            backgroundColor: isDark
+                              ? "rgba(255,255,255,0.06)"
+                              : "rgba(0,0,0,0.05)",
+                            opacity: pressed ? 0.9 : 1,
+                          },
+                        ]}
+                      >
+                        <Text style={{ color: T.text, fontWeight: "600" }}>
+                          Cancel
+                        </Text>
+                      </Pressable>
+
+                      <Pressable
+                        onPress={handleSave}
+                        disabled={saving || showLoading}
+                        style={({ pressed }) => [
+                          styles.footerBtnPrimary,
+                          {
+                            backgroundColor: T.primary,
+                            opacity: pressed ? 0.92 : 1,
+                          },
+                        ]}
+                      >
+                        {saving ? (
+                          <ActivityIndicator color="#fff" />
+                        ) : (
+                          <Text style={{ color: "#fff", fontWeight: "600" }}>
+                            Save changes
+                          </Text>
+                        )}
+                      </Pressable>
+                    </View>
+                  </Animated.View>
+                )}
+              </GlassView>
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -774,35 +908,32 @@ const styles = StyleSheet.create({
 
   center: {
     flex: 1,
-    alignItems: "center",
+    alignItems: "stretch",
     justifyContent: "flex-end",
-    padding: 7,
+    padding: 0,
   },
 
   modalWrap: {
     width: "100%",
+    flex: 1,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     overflow: "hidden",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
   },
 
   modal: {
-    borderWidth: StyleSheet.hairlineWidth,
+    flex: 1,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     overflow: "hidden",
-    maxHeight: "86%",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
   },
 
-  glow: {
-    position: "absolute",
-    height: 280,
-    width: 280,
-    borderRadius: 280,
-    opacity: 1,
-  },
+
 
   header: {
     padding: 16,
@@ -832,7 +963,7 @@ const styles = StyleSheet.create({
   h1: { fontSize: 16, fontWeight: "600" },
   h2: { marginTop: 2, fontSize: 12, fontWeight: "400", lineHeight: 16 },
 
-  body: { padding: 16, paddingBottom: 18, gap: 14 },
+  body: { padding: 16, paddingBottom: 28, gap: 14 },
 
   block: {
     borderRadius: 16,
@@ -962,13 +1093,22 @@ const styles = StyleSheet.create({
   },
 
   // ---- Loading stabilizer ----
+  loadingBody: {
+    flex: 1,
+    padding: 16,
+    paddingBottom: 18,
+    justifyContent: "center",
+  },
   loadingWrap: {
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
     padding: 16,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 420, // ✅ prevents the bottom "snap"
+    minHeight: 520,
+  },
+  contentWrap: {
+    flex: 1,
   },
   fakeBlock: {
     width: "100%",

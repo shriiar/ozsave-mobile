@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, Pressable, StyleSheet, Modal, ScrollView, Platform } from "react-native";
 import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
@@ -143,6 +144,40 @@ function RangePickerModal(props: {
   );
 }
 
+function HeaderGlassButton(props: {
+  children: React.ReactNode;
+  isDark: boolean;
+  style: any;
+  borderColor: string;
+  fallbackBg: string;
+}) {
+  if (Platform.OS === "ios") {
+    return (
+      <GlassView
+        glassEffectStyle="regular"
+        colorScheme={props.isDark ? "dark" : "light"}
+        style={[props.style, { borderColor: props.borderColor }]}
+      >
+        {props.children}
+      </GlassView>
+    );
+  }
+
+  return (
+    <View
+      style={[
+        props.style,
+        {
+          borderColor: props.borderColor,
+          backgroundColor: props.fallbackBg,
+        },
+      ]}
+    >
+      {props.children}
+    </View>
+  );
+}
+
 export function DashboardHeader(props: {
   range: RangeKey;
   onRangeChange: (r: RangeKey) => void;
@@ -214,15 +249,19 @@ export function DashboardHeader(props: {
 
                 <Pressable
                   onPress={() => setRangeOpen(true)}
-                  style={({ pressed }) => [
-                    styles.rangeBtn,
-                    { backgroundColor: T.inputBg, borderColor: T.border, opacity: pressed ? 0.9 : 1 },
-                  ]}
+                  style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
                 >
-                  <Text numberOfLines={1} style={{ color: T.text, fontSize: 12, fontWeight: "800" }}>
-                    {rangeLabel}
-                  </Text>
-                  <Ionicons name="chevron-down" size={14} color={T.muted} />
+                  <HeaderGlassButton
+                    isDark={isDark}
+                    style={styles.rangeBtn}
+                    borderColor={T.border}
+                    fallbackBg={T.inputBg}
+                  >
+                    <Text numberOfLines={1} style={{ color: T.text, fontSize: 12, fontWeight: "800" }}>
+                      {rangeLabel}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color={T.muted} />
+                  </HeaderGlassButton>
                 </Pressable>
               </View>
 
@@ -237,27 +276,31 @@ export function DashboardHeader(props: {
             <View style={styles.rightCol}>
               <Pressable
                 onPress={props.onPrev}
-                style={({ pressed }) => [
-                  styles.iconBtn,
-                  { backgroundColor: T.inputBg, borderColor: T.border, opacity: pressed ? 0.9 : 1 },
-                ]}
+                style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
               >
-                <Ionicons name="chevron-back" size={16} color={T.text} />
+                <HeaderGlassButton
+                  isDark={isDark}
+                  style={styles.iconBtn}
+                  borderColor={T.border}
+                  fallbackBg={T.inputBg}
+                >
+                  <Ionicons name="chevron-back" size={16} color={T.text} />
+                </HeaderGlassButton>
               </Pressable>
 
               <Pressable
                 onPress={props.onNext}
                 disabled={!props.canGoForward}
-                style={({ pressed }) => [
-                  styles.iconBtn,
-                  {
-                    backgroundColor: T.inputBg,
-                    borderColor: T.border,
-                    opacity: !props.canGoForward ? 0.4 : pressed ? 0.9 : 1,
-                  },
-                ]}
+                style={({ pressed }) => [{ opacity: !props.canGoForward ? 0.4 : pressed ? 0.9 : 1 }]}
               >
-                <Ionicons name="chevron-forward" size={16} color={T.text} />
+                <HeaderGlassButton
+                  isDark={isDark}
+                  style={styles.iconBtn}
+                  borderColor={T.border}
+                  fallbackBg={T.inputBg}
+                >
+                  <Ionicons name="chevron-forward" size={16} color={T.text} />
+                </HeaderGlassButton>
               </Pressable>
             </View>
           </View>
@@ -281,6 +324,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
+  },
+
+  glassBtnFill: {
+    overflow: "hidden",
   },
 
   glow: {
@@ -308,6 +355,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    overflow: "hidden",
   },
 
   iconBtn: {
@@ -317,6 +365,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
 
   modalOverlay: {

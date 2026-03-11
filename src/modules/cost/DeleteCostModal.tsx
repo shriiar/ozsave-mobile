@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -32,14 +33,6 @@ export default function DeleteCostModal({ open, costId, costName, onClose, onDel
   const [localError, setLocalError] = useState<string | null>(null);
 
   const T = useMemo(() => {
-    const modalBgGrad = isDark
-      ? ["rgba(2,6,23,0.58)", "rgba(15,23,42,0.46)", "rgba(2,6,23,0.38)"]
-      : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.62)", "rgba(255,255,255,0.52)"];
-
-    const glowA = isDark
-      ? ["rgba(239,68,68,0.18)", "rgba(244,63,94,0.08)", "rgba(0,0,0,0)"]
-      : ["rgba(239,68,68,0.18)", "rgba(244,63,94,0.08)", "rgba(0,0,0,0)"];
-
     const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
     const headerBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
 
@@ -51,7 +44,7 @@ export default function DeleteCostModal({ open, costId, costName, onClose, onDel
       ? { shadowColor: "#000", shadowOpacity: 0.6, shadowRadius: 36, shadowOffset: { width: 0, height: 18 }, elevation: 16 }
       : { shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 28, shadowOffset: { width: 0, height: 14 }, elevation: 12 };
 
-    return { modalBgGrad, glowA, border, headerBorder, text, muted, danger, shadow };
+    return { border, headerBorder, text, muted, danger, shadow };
   }, [isDark]);
 
   function closeIfAllowed() {
@@ -81,17 +74,17 @@ export default function DeleteCostModal({ open, costId, costName, onClose, onDel
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={closeIfAllowed}>
       <View style={styles.root}>
-        <BlurView intensity={isDark ? 70 : 90} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
-
         <Pressable style={StyleSheet.absoluteFill} onPress={closeIfAllowed}>
           <View style={{ flex: 1, backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)" }} />
         </Pressable>
 
         <View style={styles.center}>
           <View style={styles.modalWrap}>
-            <BlurView intensity={isDark ? 28 : 45} tint={isDark ? "dark" : "light"} style={[styles.modal, { borderColor: T.border }, T.shadow]}>
-              <LinearGradient colors={T.modalBgGrad as any} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
-              <LinearGradient colors={T.glowA as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.glow, { top: -90, left: -90 }]} />
+            <GlassView
+              glassEffectStyle="regular"
+              colorScheme={isDark ? "dark" : "light"}
+              style={[styles.modal, { borderColor: T.border }, T.shadow]}
+            >
 
               {/* Header */}
               <View style={[styles.header, { borderBottomColor: T.headerBorder }]}>
@@ -159,7 +152,7 @@ export default function DeleteCostModal({ open, costId, costName, onClose, onDel
                   )}
                 </Pressable>
               </View>
-            </BlurView>
+            </GlassView>
           </View>
         </View>
       </View>
@@ -177,7 +170,6 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
   },
-  glow: { position: "absolute", height: 280, width: 280, borderRadius: 280, opacity: 1 },
 
   header: {
     padding: 16,

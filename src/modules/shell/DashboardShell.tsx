@@ -54,15 +54,7 @@ function GlassSurface({
     return (
       <GlassView
         style={styles.glassFill}
-        glassEffectStyle={
-          isDark
-            ? "regular"
-            : {
-                style: expanded ? "regular" : "clear",
-                animate: true,
-                animationDuration: 0.45,
-              }
-        }
+        glassEffectStyle="regular"
         colorScheme={isDark ? "dark" : "light"}
       >
         {children}

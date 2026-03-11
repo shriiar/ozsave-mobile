@@ -116,6 +116,26 @@ export default function CostFilterModal({
 
     const pickerTextColor = isDark ? "#FFFFFF" : "#0F172A";
 
+    const emptyFilters: CostFiltersDraft = {
+        paidBy: "all",
+        onlyMine: false,
+        from: "",
+        to: "",
+        sortBy: "date",
+        sortOrder: -1,
+    };
+    
+    function isSameFilters(a: CostFiltersDraft, b: CostFiltersDraft) {
+        return (
+            a.paidBy === b.paidBy &&
+            a.onlyMine === b.onlyMine &&
+            a.from === b.from &&
+            a.to === b.to &&
+            a.sortBy === b.sortBy &&
+            a.sortOrder === b.sortOrder
+        );
+    }
+
     return (
         <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
             {/* Backdrop */}

@@ -240,6 +240,8 @@ export default function CostScreen() {
     const insets = useSafeAreaInsets();
     const TOPBAR_H = 52;
     const bottomSpace = TOPBAR_H + insets.bottom + 16;
+    const [headerHeight, setHeaderHeight] = useState(insets.top + 92);
+    const headerGap = 8;
 
     const swipeRefs = useRef<Record<string, () => void>>({});
 
@@ -262,6 +264,26 @@ export default function CostScreen() {
         sortBy: "date",
         sortOrder: -1,
     });
+
+    const emptyFilters: CostFiltersDraft = {
+        paidBy: "all",
+        onlyMine: false,
+        from: "",
+        to: "",
+        sortBy: "date",
+        sortOrder: -1,
+    };
+
+    function isSameFilters(a: CostFiltersDraft, b: CostFiltersDraft) {
+        return (
+            a.paidBy === b.paidBy &&
+            a.onlyMine === b.onlyMine &&
+            a.from === b.from &&
+            a.to === b.to &&
+            a.sortBy === b.sortBy &&
+            a.sortOrder === b.sortOrder
+        );
+    }
 
     const { resolvedTheme } = useTheme();
     const isDark = resolvedTheme === "dark";
@@ -348,7 +370,7 @@ export default function CostScreen() {
 
     async function onRefresh() {
         await refreshUser();
-        await q.refetch();
+        await q.refreshTop();
     }
 
     function onEndReached() {
@@ -374,67 +396,97 @@ export default function CostScreen() {
 
     return (
         <DashboardShell>
-            <View style={[styles.screen, { paddingTop: insets.top + 20 }]}>
-                <View style={[styles.headerRow, { marginBottom: 10 }]}>
-                    <View style={{ flex: 1 }}>
-                        <Text style={[styles.h1, { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" }]}>
-                            Costs
-                        </Text>
-                        <Text style={[styles.h2, { color: isDark ? "rgba(148,163,184,0.95)" : "#64748B" }]}>
-                            Track shared costs for this house.
-                        </Text>
+            <View style={styles.screen}>
+                <GlassView
+                    glassEffectStyle="regular"
+                    colorScheme={isDark ? "dark" : "light"}
+                    onLayout={(e) => {
+                        const next = Math.ceil(e.nativeEvent.layout.height);
+                        if (next > 0 && next !== headerHeight) setHeaderHeight(next);
+                    }}
+                    style={[
+                        styles.topHeaderGlass,
+                        {
+                            paddingTop: insets.top + 20,
+                            borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                        },
+                    ]}
+                >
+                    <View style={[styles.headerRow, { marginBottom: 10 }]}>
+                        <View style={{ flex: 1 }}>
+                            <Text style={[styles.h1, { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" }]}>
+                                Costs
+                            </Text>
+                            <Text style={[styles.h2, { color: isDark ? "rgba(148,163,184,0.95)" : "#64748B" }]}>
+                                Track shared costs for this house.
+                            </Text>
+                        </View>
+
+                        <Pressable
+                            style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+                            onPress={() => setFiltersOpen(true)}
+                        >
+                            <GlassView
+                                glassEffectStyle="clear"
+                                colorScheme={isDark ? "dark" : "light"}
+                                style={[
+                                    styles.filterBtn,
+                                    { borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)" }
+                                ]}
+                            >
+                                <Ionicons
+                                    name="options-outline"
+                                    size={16}
+                                    color={isDark ? "rgba(255,255,255,0.92)" : "#0F172A"}
+                                />
+                                <Text
+                                    style={[
+                                        styles.filterBtnText,
+                                        { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" },
+                                    ]}
+                                >
+                                    Filters
+                                </Text>
+                            </GlassView>
+                        </Pressable>
+
+                        <Pressable
+                            style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+                            onPress={() => setAddOpen(true)}
+                        >
+                            <GlassView
+                                glassEffectStyle="clear"
+                                colorScheme={isDark ? "dark" : "light"}
+                                style={[
+                                    styles.addBtn,
+                                    { borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)" }
+                                ]}
+                            >
+                                <Text
+                                    style={[
+                                        styles.addBtnText,
+                                        { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" },
+                                    ]}
+                                >
+                                    Add
+                                </Text>
+                            </GlassView>
+                        </Pressable>
                     </View>
-
-                    <Pressable
-                        style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
-                        onPress={() => setFiltersOpen(true)}
-                    >
-                        <GlassView
-                            glassEffectStyle="regular"
-                            colorScheme={isDark ? "dark" : "light"}
-                            style={styles.filterBtn}
-                        >
-                            <Ionicons
-                                name="options-outline"
-                                size={16}
-                                color={isDark ? "rgba(255,255,255,0.92)" : "#0F172A"}
-                            />
-                            <Text
-                                style={[
-                                    styles.filterBtnText,
-                                    { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" },
-                                ]}
-                            >
-                                Filters
-                            </Text>
-                        </GlassView>
-                    </Pressable>
-
-                    <Pressable
-                        style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
-                        onPress={() => setAddOpen(true)}
-                    >
-                        <GlassView
-                            glassEffectStyle="regular"
-                            colorScheme={isDark ? "dark" : "light"}
-                            style={styles.addBtn}
-                        >
-                            <Text
-                                style={[
-                                    styles.addBtnText,
-                                    { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" },
-                                ]}
-                            >
-                                Add
-                            </Text>
-                        </GlassView>
-                    </Pressable>
-                </View>
+                </GlassView>
 
                 {isInitialLoading ? (
-                    <View style={styles.center}>
-                        <ActivityIndicator />
-                        <Text style={{ marginTop: 10, opacity: 0.7 }}>Loading costs...</Text>
+                    <View
+                        style={{
+                            flex: 1,
+                            paddingTop: headerHeight + headerGap,
+                            paddingBottom: bottomSpace,
+                        }}
+                    >
+                        <View style={styles.center}>
+                            <ActivityIndicator />
+                            <Text style={{ marginTop: 10, opacity: 0.7 }}>Loading costs...</Text>
+                        </View>
                     </View>
                 ) : (
                     <FlatList
@@ -443,7 +495,11 @@ export default function CostScreen() {
                         keyExtractor={(item) => item._id}
                         showsVerticalScrollIndicator={false}
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingBottom: bottomSpace, flexGrow: 1 }}
+                        contentContainerStyle={{
+                            paddingTop: headerHeight + headerGap,
+                            paddingBottom: bottomSpace,
+                            flexGrow: 1,
+                        }}
                         alwaysBounceVertical
                         bounces
                         onScrollBeginDrag={closeAllSwipes}
@@ -466,6 +522,7 @@ export default function CostScreen() {
                                 tintColor={spinner}
                                 colors={[spinner]}
                                 progressBackgroundColor={androidBg}
+                                progressViewOffset={headerHeight + headerGap}
                             />
                         }
                         onEndReached={onEndReached}
@@ -481,24 +538,25 @@ export default function CostScreen() {
                     setDraft={setDraft}
                     onClose={() => setFiltersOpen(false)}
                     onClear={() => {
-                        const cleared: CostFiltersDraft = {
-                            paidBy: "all",
-                            onlyMine: false,
-                            from: "",
-                            to: "",
-                            sortBy: "date",
-                            sortOrder: -1,
-                        };
+                        const cleared: CostFiltersDraft = { ...emptyFilters };
+                        const shouldRefetch = !isSameFilters(applied, cleared);
+
                         setDraft(cleared);
                         setApplied(cleared);
                         setFiltersOpen(false);
-                        q.refetch();
+
+                        if (shouldRefetch) {
+                            q.refreshTop();
+                        }
                     }}
                     onApply={() => {
-                        // basic range validation already inside modal disables Apply
+                        const shouldRefetch = !isSameFilters(applied, draft);
                         setApplied(draft);
                         setFiltersOpen(false);
-                        q.refetch();
+
+                        if (shouldRefetch) {
+                            q.refreshTop();
+                        }
                     }}
                 />
 
@@ -523,6 +581,17 @@ export default function CostScreen() {
 
 const styles = StyleSheet.create({
     screen: { flex: 1, paddingHorizontal: 14 },
+    topHeaderGlass: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 20,
+        paddingHorizontal: 18,
+        paddingBottom: 0,
+        borderRadius: 18,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+    },
     headerRow: {
         flexDirection: "row",
         alignItems: "flex-start",
@@ -537,6 +606,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 14,
         overflow: "hidden",
+        borderWidth: StyleSheet.hairlineWidth,
     },
     addBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 
@@ -673,6 +743,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 14,
         overflow: "hidden",
+        borderWidth: StyleSheet.hairlineWidth,
     },
     filterBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 });

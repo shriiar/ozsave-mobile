@@ -130,11 +130,18 @@ export function useInfiniteCosts(params: Omit<GetCostsCursorParams, "cursor">) {
     },
 
     // pull-to-refresh style helper
+    // pull-to-refresh style helper
     refreshTop: async () => {
-      await queryClient.removeQueries({
-        queryKey: ["costs-infinite", keyParams],
-        exact: true,
+      queryClient.setQueryData(["costs-infinite", keyParams], (old: any) => {
+        if (!old?.pages?.length) return old;
+
+        return {
+          ...old,
+          pages: [old.pages[0]],
+          pageParams: old.pageParams?.length ? [old.pageParams[0]] : old.pageParams,
+        };
       });
+
       await query.refetch();
     },
   };

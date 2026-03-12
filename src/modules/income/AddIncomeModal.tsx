@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
@@ -391,32 +392,22 @@ export default function AddIncomeModal({ open, onClose }: Props) {
       <View
         style={[
           StyleSheet.absoluteFillObject,
-          { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 8, paddingHorizontal: 7 },
+          {
+            paddingTop: insets.top,
+            paddingBottom: 0,
+            paddingHorizontal: 0,
+          },
         ]}
       >
-        <BlurView intensity={isDark ? 70 : 90} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
 
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.kav}>
           <View style={styles.center}>
             <View style={styles.modalWrap}>
-              <BlurView
-                intensity={isDark ? 28 : 45}
-                tint={isDark ? "dark" : "light"}
+              <GlassView
+                glassEffectStyle="regular"
+                colorScheme={isDark ? "dark" : "light"}
                 style={[styles.modal, { borderColor: T.border }, T.shadow]}
               >
-                <LinearGradient
-                  colors={T.modalBgGrad as any}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-
-                <LinearGradient
-                  colors={T.glowA as any}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[styles.glow, { top: -90, left: -90 }]}
-                />
 
                 {/* Header */}
                 <View style={[styles.header, { borderBottomColor: T.headerBorder }]}>
@@ -432,17 +423,6 @@ export default function AddIncomeModal({ open, onClose }: Props) {
                       </Text>
                     </View>
                   </View>
-
-                  <Pressable
-                    onPress={() => !saving && onClose()}
-                    style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
-                    hitSlop={10}
-                    disabled={saving}
-                  >
-                    <View style={[styles.closeBtn, { borderColor: T.border, backgroundColor: T.inputBg }]}>
-                      <Ionicons name="close" size={18} color={T.text} />
-                    </View>
-                  </Pressable>
                 </View>
 
                 {/* Body */}
@@ -527,7 +507,15 @@ export default function AddIncomeModal({ open, onClose }: Props) {
                 </ScrollView>
 
                 {/* Footer */}
-                <View style={[styles.footer, { borderTopColor: T.headerBorder }]}>
+                <View
+                  style={[
+                    styles.footer,
+                    {
+                      borderTopColor: T.headerBorder,
+                      paddingBottom: Math.max(insets.bottom, 10) + 10,
+                    },
+                  ]}
+                >
                   <Pressable
                     onPress={() => !saving && onClose()}
                     disabled={saving}
@@ -554,7 +542,7 @@ export default function AddIncomeModal({ open, onClose }: Props) {
                     {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "600" }}>Save</Text>}
                   </Pressable>
                 </View>
-              </BlurView>
+              </GlassView>
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -566,13 +554,26 @@ export default function AddIncomeModal({ open, onClose }: Props) {
 const styles = StyleSheet.create({
   kav: { flex: 1 },
 
-  center: { flex: 1, alignItems: "center", justifyContent: "flex-end" },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
 
-  modalWrap: { width: "100%", flex: 1, borderRadius: 24, overflow: "hidden" },
+  modalWrap: {
+    width: "100%",
+    flex: 1,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
 
-  modal: { flex: 1, borderRadius: 24, overflow: "hidden", borderWidth: StyleSheet.hairlineWidth },
+  modal: {
+    flex: 1,
+    borderRadius: 24,
+    overflow: "hidden",
+    borderWidth: StyleSheet.hairlineWidth,
+  },
 
-  glow: { position: "absolute", height: 280, width: 280, borderRadius: 280, opacity: 1 },
 
   header: {
     padding: 16,

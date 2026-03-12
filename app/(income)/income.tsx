@@ -1,5 +1,6 @@
 // app/income.tsx
 import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useMemo, useRef, useState } from "react";
 import {
@@ -219,6 +220,9 @@ export default function IncomeScreen() {
     const TOPBAR_H = 52;
     const bottomSpace = TOPBAR_H + insets.bottom + 16;
 
+    const [headerHeight, setHeaderHeight] = useState(insets.top + 92);
+    const headerGap = 8;
+
     const spinner = isDark ? "rgba(255,255,255,0.92)" : "rgba(15,23,42,0.85)";
     const androidBg = isDark ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.95)";
 
@@ -245,6 +249,26 @@ export default function IncomeScreen() {
         sortBy: "date",
         sortOrder: -1,
     });
+
+    const emptyFilters: IncomeFiltersDraft = {
+        name: "",
+        source: "all",
+        from: "",
+        to: "",
+        sortBy: "date",
+        sortOrder: -1,
+    };
+
+    function isSameFilters(a: IncomeFiltersDraft, b: IncomeFiltersDraft) {
+        return (
+            a.name === b.name &&
+            a.source === b.source &&
+            a.from === b.from &&
+            a.to === b.to &&
+            a.sortBy === b.sortBy &&
+            a.sortOrder === b.sortOrder
+        );
+    }
 
     const swipeRefs = useRef<Record<string, () => void>>({});
     const openSwipe = useRef<{ id: string; close: () => void } | null>(null);
@@ -302,7 +326,7 @@ export default function IncomeScreen() {
 
     async function onRefresh() {
         await refreshUser();
-        await q.refetch();
+        await q.refreshTop();
     }
 
     function onEndReached() {
@@ -325,37 +349,97 @@ export default function IncomeScreen() {
 
     return (
         <DashboardShell>
-            <View style={[styles.screen, { paddingTop: insets.top + 20 }]}>
-                <View style={[styles.headerRow, { marginBottom: 10 }]}>
-                    <View style={{ flex: 1 }}>
-                        <Text style={[styles.h1, { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" }]}>
-                            Income
-                        </Text>
-                        <Text style={[styles.h2, { color: isDark ? "rgba(148,163,184,0.95)" : "#64748B" }]}>
-                            Track income for this house.
-                        </Text>
+            <View style={styles.screen}>
+                <GlassView
+                    glassEffectStyle="regular"
+                    colorScheme={isDark ? "dark" : "light"}
+                    onLayout={(e) => {
+                        const next = Math.ceil(e.nativeEvent.layout.height);
+                        if (next > 0 && next !== headerHeight) setHeaderHeight(next);
+                    }}
+                    style={[
+                        styles.topHeaderGlass,
+                        {
+                            paddingTop: insets.top + 20,
+                            borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                        },
+                    ]}
+                >
+                    <View style={[styles.headerRow, { marginBottom: 10 }]}> 
+                        <View style={{ flex: 1 }}>
+                            <Text style={[styles.h1, { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" }]}>
+                                Income
+                            </Text>
+                            <Text style={[styles.h2, { color: isDark ? "rgba(148,163,184,0.95)" : "#64748B" }]}>
+                                Track income for this house.
+                            </Text>
+                        </View>
+
+                        <Pressable
+                            style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+                            onPress={() => setFiltersOpen(true)}
+                        >
+                            <GlassView
+                                glassEffectStyle="clear"
+                                colorScheme={isDark ? "dark" : "light"}
+                                style={[
+                                    styles.filterBtn,
+                                    { borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)" },
+                                ]}
+                            >
+                                <Ionicons
+                                    name="options-outline"
+                                    size={16}
+                                    color={isDark ? "rgba(255,255,255,0.92)" : "#0F172A"}
+                                />
+                                <Text
+                                    style={[
+                                        styles.filterBtnText,
+                                        { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" },
+                                    ]}
+                                >
+                                    Filters
+                                </Text>
+                            </GlassView>
+                        </Pressable>
+
+                        <Pressable
+                            style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+                            onPress={() => setAddOpen(true)}
+                        >
+                            <GlassView
+                                glassEffectStyle="clear"
+                                colorScheme={isDark ? "dark" : "light"}
+                                style={[
+                                    styles.addBtn,
+                                    { borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)" },
+                                ]}
+                            >
+                                <Text
+                                    style={[
+                                        styles.addBtnText,
+                                        { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" },
+                                    ]}
+                                >
+                                    Add
+                                </Text>
+                            </GlassView>
+                        </Pressable>
                     </View>
-
-                    <Pressable
-                        style={({ pressed }) => [styles.filterBtn, { opacity: pressed ? 0.92 : 1 }]}
-                        onPress={() => setFiltersOpen(true)}
-                    >
-                        <Ionicons name="options-outline" size={16} color="#fff" />
-                        <Text style={styles.filterBtnText}>Filters</Text>
-                    </Pressable>
-
-                    <Pressable
-                        style={({ pressed }) => [styles.addBtn, { opacity: pressed ? 0.92 : 1 }]}
-                        onPress={() => setAddOpen(true)}
-                    >
-                        <Text style={styles.addBtnText}>Add</Text>
-                    </Pressable>
-                </View>
+                </GlassView>
 
                 {isInitialLoading ? (
-                    <View style={styles.center}>
-                        <ActivityIndicator />
-                        <Text style={{ marginTop: 10, opacity: 0.7 }}>Loading income...</Text>
+                    <View
+                        style={{
+                            flex: 1,
+                            paddingTop: headerHeight + headerGap,
+                            paddingBottom: bottomSpace,
+                        }}
+                    >
+                        <View style={styles.center}>
+                            <ActivityIndicator />
+                            <Text style={{ marginTop: 10, opacity: 0.7 }}>Loading income...</Text>
+                        </View>
                     </View>
                 ) : (
                     <FlatList
@@ -364,7 +448,11 @@ export default function IncomeScreen() {
                         keyExtractor={(item) => item._id}
                         showsVerticalScrollIndicator={false}
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingBottom: bottomSpace, flexGrow: 1 }}
+                        contentContainerStyle={{
+                            paddingTop: headerHeight + headerGap,
+                            paddingBottom: bottomSpace,
+                            flexGrow: 1,
+                        }}
                         alwaysBounceVertical
                         bounces
                         onScrollBeginDrag={closeAllSwipes}
@@ -387,6 +475,7 @@ export default function IncomeScreen() {
                                 tintColor={spinner}
                                 colors={[spinner]}
                                 progressBackgroundColor={androidBg}
+                                progressViewOffset={headerHeight + headerGap}
                             />
                         }
                         onEndReached={onEndReached}
@@ -401,24 +490,26 @@ export default function IncomeScreen() {
                     setDraft={setDraft}
                     onClose={() => setFiltersOpen(false)}
                     onClear={() => {
-                        const cleared: IncomeFiltersDraft = {
-                          name: "",
-                          source: "all",
-                          from: "",
-                          to: "",
-                          sortBy: "date",
-                          sortOrder: -1,
-                        };
+                        const cleared: IncomeFiltersDraft = { ...emptyFilters };
+                        const shouldRefetch = !isSameFilters(applied, cleared);
+
                         setDraft(cleared);
                         setApplied(cleared);
                         setFiltersOpen(false);
-                        q.refetch();
-                      }}
-                      onApply={() => {
+
+                        if (shouldRefetch) {
+                            q.refreshTop();
+                        }
+                    }}
+                    onApply={() => {
+                        const shouldRefetch = !isSameFilters(applied, draft);
                         setApplied(draft);
                         setFiltersOpen(false);
-                        q.refetch();
-                      }}
+
+                        if (shouldRefetch) {
+                            q.refreshTop();
+                        }
+                    }}
                 />
 
                 {/* keep your modals same as cost pattern */}
@@ -437,6 +528,17 @@ export default function IncomeScreen() {
 
 const styles = StyleSheet.create({
     screen: { flex: 1, paddingHorizontal: 14 },
+    topHeaderGlass: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 20,
+        paddingHorizontal: 18,
+        paddingBottom: 0,
+        borderRadius: 18,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+    },
 
     headerRow: {
         flexDirection: "row",
@@ -449,10 +551,11 @@ const styles = StyleSheet.create({
     h2: { marginTop: 2, fontSize: 13, lineHeight: 18 },
 
     addBtn: {
-        backgroundColor: "#4F46E5",
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 14,
+        overflow: "hidden",
+        borderWidth: StyleSheet.hairlineWidth,
     },
     addBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 
@@ -460,10 +563,11 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
-        backgroundColor: "#4F46E5",
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 14,
+        overflow: "hidden",
+        borderWidth: StyleSheet.hairlineWidth,
     },
     filterBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 

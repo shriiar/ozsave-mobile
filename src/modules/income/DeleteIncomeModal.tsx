@@ -7,12 +7,11 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "@/src/context/ThemeContext";
 import { useDeleteIncome } from "./hooks/useIncomeApi";
+import { GlassView } from "expo-glass-effect";
 
 type Props = {
   open: boolean;
@@ -38,14 +37,6 @@ export default function DeleteIncomeModal({
   const [localError, setLocalError] = useState<string | null>(null);
 
   const T = useMemo(() => {
-    const modalBgGrad = isDark
-      ? ["rgba(2,6,23,0.58)", "rgba(15,23,42,0.46)", "rgba(2,6,23,0.38)"]
-      : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.62)", "rgba(255,255,255,0.52)"];
-
-    const glowA = isDark
-      ? ["rgba(239,68,68,0.18)", "rgba(244,63,94,0.08)", "rgba(0,0,0,0)"]
-      : ["rgba(239,68,68,0.18)", "rgba(244,63,94,0.08)", "rgba(0,0,0,0)"];
-
     const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
     const headerBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
 
@@ -69,7 +60,7 @@ export default function DeleteIncomeModal({
           elevation: 12,
         };
 
-    return { modalBgGrad, glowA, border, headerBorder, text, muted, danger, shadow };
+    return { border, headerBorder, text, muted, danger, shadow };
   }, [isDark]);
 
   function closeIfAllowed() {
@@ -99,12 +90,6 @@ export default function DeleteIncomeModal({
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={closeIfAllowed}>
       <View style={styles.root}>
-        <BlurView
-          intensity={isDark ? 70 : 90}
-          tint={isDark ? "dark" : "light"}
-          style={StyleSheet.absoluteFill}
-        />
-
         <Pressable style={StyleSheet.absoluteFill} onPress={closeIfAllowed}>
           <View
             style={{
@@ -116,23 +101,11 @@ export default function DeleteIncomeModal({
 
         <View style={styles.center}>
           <View style={styles.modalWrap}>
-            <BlurView
-              intensity={isDark ? 28 : 45}
-              tint={isDark ? "dark" : "light"}
+            <GlassView
+              glassEffectStyle="regular"
+              colorScheme={isDark ? "dark" : "light"}
               style={[styles.modal, { borderColor: T.border }, T.shadow]}
             >
-              <LinearGradient
-                colors={T.modalBgGrad as any}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <LinearGradient
-                colors={T.glowA as any}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[styles.glow, { top: -90, left: -90 }]}
-              />
 
               {/* Header */}
               <View style={[styles.header, { borderBottomColor: T.headerBorder }]}>
@@ -156,13 +129,6 @@ export default function DeleteIncomeModal({
                     </Text>
                   </View>
                 </View>
-
-                {/* optional close icon like your cost modal header (you removed it there, so keep it consistent) */}
-                {/* <Pressable disabled={busy} onPress={closeIfAllowed} hitSlop={10}>
-                  <View style={[styles.closeBtn, { borderColor: T.border, backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)" }]}>
-                    <Ionicons name="close" size={18} color={T.text} />
-                  </View>
-                </Pressable> */}
               </View>
 
               {/* Body */}
@@ -217,7 +183,7 @@ export default function DeleteIncomeModal({
                   {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "900" }}>Delete</Text>}
                 </Pressable>
               </View>
-            </BlurView>
+            </GlassView>
           </View>
         </View>
       </View>
@@ -235,7 +201,6 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
   },
-  glow: { position: "absolute", height: 280, width: 280, borderRadius: 280, opacity: 1 },
 
   header: {
     padding: 16,

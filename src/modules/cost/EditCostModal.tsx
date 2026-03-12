@@ -625,13 +625,6 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
                       keyboardShouldPersistTaps="handled"
                     >
                       <View>
-                        <View style={styles.blockHeader}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={[styles.blockTitle, { color: T.text }]}>Cost details</Text>
-                            <Text style={[styles.blockSub, { color: T.muted }]}>Edit the basics first.</Text>
-                          </View>
-                        </View>
-
                         <Text style={[styles.label, { color: T.muted }]}>Name</Text>
                         <TextInput
                           value={form.name}

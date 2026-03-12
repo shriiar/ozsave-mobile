@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/src/context/ThemeContext";
@@ -90,8 +90,9 @@ export default function IncomeFilterModal({
 
   const T = useMemo(() => {
     const surfaceGrad = isDark
-      ? ["rgba(15,23,42,0.70)", "rgba(2,6,23,0.55)"]
-      : ["rgba(255,255,255,0.82)", "rgba(255,255,255,0.58)"];
+      ? ["rgba(15,23,42,0.14)", "rgba(2,6,23,0.08)"]
+      : ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.08)"];
+    const glassFallback = isDark ? "rgba(15,23,42,0.82)" : "rgba(255,255,255,0.88)";
 
     const ring = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
     const text = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
@@ -118,15 +119,15 @@ export default function IncomeFilterModal({
           styles.panelWrap,
           {
             paddingTop: insets.top + 12,
-            paddingBottom: insets.bottom + 12,
-            paddingHorizontal: 14,
+            paddingBottom: 0,
+            paddingHorizontal: 0,
           },
         ]}
       >
         <View style={styles.panelShadow}>
-          <BlurView
-            intensity={isDark ? 20 : 28}
-            tint={isDark ? "dark" : "light"}
+          <GlassView
+            glassEffectStyle="regular"
+            colorScheme={isDark ? "dark" : "light"}
             style={[styles.panel, { borderColor: T.ring }]}
           >
             <LinearGradient
@@ -140,23 +141,7 @@ export default function IncomeFilterModal({
             <View style={styles.header}>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.title, { color: T.text }]}>Filters</Text>
-                <Text style={[styles.subtitle, { color: T.muted }]}>Narrow down income fast.</Text>
               </View>
-
-              <Pressable
-                onPress={onClose}
-                style={({ pressed }) => [
-                  styles.iconBtn,
-                  { backgroundColor: T.tile, opacity: pressed ? 0.85 : 1 },
-                ]}
-                hitSlop={10}
-              >
-                <Ionicons
-                  name="close"
-                  size={18}
-                  color={isDark ? "rgba(255,255,255,0.9)" : "rgba(15,23,42,0.85)"}
-                />
-              </Pressable>
             </View>
 
             {/* Body */}
@@ -344,7 +329,15 @@ export default function IncomeFilterModal({
             </ScrollView>
 
             {/* Footer */}
-            <View style={[styles.footer, { borderTopColor: T.ring }]}>
+            <View
+              style={[
+                styles.footer,
+                {
+                  borderTopColor: T.ring,
+                  paddingBottom: Math.max(insets.bottom, 10) + 10,
+                },
+              ]}
+            >
               <Pressable
                 onPress={() => {
                   closePicker();
@@ -372,7 +365,7 @@ export default function IncomeFilterModal({
                 <Text style={styles.btnPrimaryText}>Apply</Text>
               </Pressable>
             </View>
-          </BlurView>
+          </GlassView>
         </View>
       </View>
     </Modal>
@@ -423,8 +416,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  bodyScroll: { flexGrow: 0 },
-  bodyContent: { gap: 12, paddingBottom: 12 },
+  bodyScroll: {
+    flex: 1,
+    minHeight: 0,
+  },
+  bodyContent: {
+    flexGrow: 1,
+    gap: 12,
+    paddingBottom: 12,
+  },
 
   label: { fontSize: 12, fontWeight: "800", marginBottom: 6 },
 
@@ -495,7 +495,6 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 12.5, fontWeight: "800" },
 
   footer: {
-    marginTop: 10,
     paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",

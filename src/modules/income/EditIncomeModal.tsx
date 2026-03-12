@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -12,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { useQuery } from "@tanstack/react-query";
@@ -20,6 +21,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "@/src/context/ThemeContext";
 import { IncomeApi, FullIncome, IncomeSource, IncomeStatus } from "./api";
 import { useUpdateIncome } from "./hooks/useIncomeApi";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
 
 type FormState = {
   name: string;
@@ -189,6 +192,7 @@ function DateField({
 export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const insets = useSafeAreaInsets();
 
   const update = useUpdateIncome();
   const saving = update.isPending;
@@ -209,14 +213,10 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
 
-  const T = useMemo(() => {
-    const modalBgGrad = isDark
-      ? ["rgba(2,6,23,0.58)", "rgba(15,23,42,0.46)", "rgba(2,6,23,0.38)"]
-      : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.62)", "rgba(255,255,255,0.52)"];
+  const formOpacity = useRef(new Animated.Value(0)).current;
+  const formTranslateY = useRef(new Animated.Value(8)).current;
 
-    const glowA = isDark
-      ? ["rgba(79,70,229,0.20)", "rgba(168,85,247,0.10)", "rgba(0,0,0,0)"]
-      : ["rgba(79,70,229,0.22)", "rgba(168,85,247,0.10)", "rgba(0,0,0,0)"];
+  const T = useMemo(() => {
 
     const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
     const headerBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
@@ -229,21 +229,21 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
 
     const shadow = isDark
       ? {
-          shadowColor: "#000",
-          shadowOpacity: 0.6,
-          shadowRadius: 36,
-          shadowOffset: { width: 0, height: 18 },
-          elevation: 16,
-        }
+        shadowColor: "#000",
+        shadowOpacity: 0.6,
+        shadowRadius: 36,
+        shadowOffset: { width: 0, height: 18 },
+        elevation: 16,
+      }
       : {
-          shadowColor: "#000",
-          shadowOpacity: 0.14,
-          shadowRadius: 28,
-          shadowOffset: { width: 0, height: 14 },
-          elevation: 12,
-        };
+        shadowColor: "#000",
+        shadowOpacity: 0.14,
+        shadowRadius: 28,
+        shadowOffset: { width: 0, height: 14 },
+        elevation: 12,
+      };
 
-    return { modalBgGrad, glowA, border, headerBorder, text, muted, inputBg, inputBorder, primary, danger, shadow };
+    return { border, headerBorder, text, muted, inputBg, inputBorder, primary, danger, shadow };
   }, [isDark]);
 
   const { data: income, isLoading, isFetching, isError } = useQuery({
@@ -335,38 +335,61 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
   }
 
   const showLoading = isLoading || isFetching || (open && !!incomeId && !income);
+  useEffect(() => {
+    if (!open) {
+      formOpacity.setValue(0);
+      formTranslateY.setValue(8);
+      return;
+    }
+
+    if (showLoading) {
+      formOpacity.setValue(0);
+      formTranslateY.setValue(8);
+      return;
+    }
+
+    Animated.parallel([
+      Animated.timing(formOpacity, {
+        toValue: 1,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+      Animated.timing(formTranslateY, {
+        toValue: 0,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [open, showLoading, income, formOpacity, formTranslateY]);
+
   const disabled = saving || showLoading;
 
   if (!open) return null;
 
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={() => !saving && onClose()}>
-      <View style={styles.root}>
-        <BlurView intensity={isDark ? 70 : 90} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => !saving && onClose()}>
-          <View style={{ flex: 1, backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)" }} />
-        </Pressable>
+      <Pressable style={StyleSheet.absoluteFill} onPress={() => !saving && onClose()}>
+        <View style={{ flex: 1, backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)" }} />
+      </Pressable>
 
+      <View
+        style={[
+          StyleSheet.absoluteFillObject,
+          {
+            paddingTop: insets.top,
+            paddingBottom: 0,
+            paddingHorizontal: 0,
+          },
+        ]}
+      >
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.kav}>
           <View style={styles.center}>
             <View style={styles.modalWrap}>
-              <BlurView
-                intensity={isDark ? 28 : 45}
-                tint={isDark ? "dark" : "light"}
+              <GlassView
+                glassEffectStyle="regular"
+                colorScheme={isDark ? "dark" : "light"}
                 style={[styles.modal, { borderColor: T.border }, T.shadow]}
               >
-                <LinearGradient
-                  colors={T.modalBgGrad as any}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                <LinearGradient
-                  colors={T.glowA as any}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[styles.glow, { top: -90, left: -90 }]}
-                />
 
                 {/* Header */}
                 <View style={[styles.header, { borderBottomColor: T.headerBorder }]}>
@@ -380,111 +403,95 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                       <Text style={[styles.h2, { color: T.muted }]}>Changes update your analytics.</Text>
                     </View>
                   </View>
-
-                  <Pressable
-                    onPress={() => !saving && onClose()}
-                    style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
-                    hitSlop={10}
-                    disabled={saving}
-                  >
-                    <View style={[styles.closeBtn, { borderColor: T.border, backgroundColor: T.inputBg }]}>
-                      <Ionicons name="close" size={18} color={T.text} />
-                    </View>
-                  </Pressable>
                 </View>
 
                 {/* Body */}
                 <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
                   {showLoading ? (
-                    <View style={[styles.loadingWrap, { borderColor: T.border }]}>
-                      <ActivityIndicator />
-                      <Text style={{ marginTop: 10, color: T.muted, fontWeight: "600" }}>
+                    <View style={styles.loadingWrap}>
+                      <ActivityIndicator color={T.primary} />
+                      <Text style={{ marginTop: 10, color: T.muted }}>
                         {isError ? "Failed to load income..." : "Loading income..."}
                       </Text>
-
-                      <View style={{ height: 16 }} />
-                      <View style={[styles.fakeBlock, { backgroundColor: T.inputBg, borderColor: T.inputBorder }]} />
-                      <View style={[styles.fakeBlock, { backgroundColor: T.inputBg, borderColor: T.inputBorder }]} />
-                      <View style={[styles.fakeBlock, { backgroundColor: T.inputBg, borderColor: T.inputBorder }]} />
                     </View>
                   ) : (
-                    <View style={[styles.block, { borderColor: T.border, backgroundColor: "transparent" }]}>
-                      <View style={styles.blockHeader}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.blockTitle, { color: T.text }]}>Income details</Text>
-                          <Text style={[styles.blockSub, { color: T.muted }]}>Edit the basics first.</Text>
+                    <Animated.View
+                      style={{
+                        opacity: formOpacity,
+                        transform: [{ translateY: formTranslateY }],
+                      }}
+                    >
+                      <View>
+                        <Text style={[styles.label, { color: T.muted }]}>Name</Text>
+                        <TextInput
+                          value={form.name}
+                          onChangeText={(v) => updateField("name", v)}
+                          placeholder="Eg. Salary, shift payment"
+                          placeholderTextColor={isDark ? "rgba(148,163,184,0.55)" : "rgba(100,116,139,0.65)"}
+                          style={[styles.input, { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder }]}
+                          editable={!disabled}
+                        />
+
+                        <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Amount (AUD)</Text>
+                        <TextInput
+                          value={form.amount}
+                          onChangeText={(v) => updateField("amount", v)}
+                          placeholder="0.00"
+                          keyboardType="decimal-pad"
+                          placeholderTextColor={isDark ? "rgba(148,163,184,0.55)" : "rgba(100,116,139,0.65)"}
+                          style={[styles.input, { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder }]}
+                          editable={!disabled}
+                        />
+
+                        <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Date</Text>
+                        <DateField
+                          valueYmd={form.date}
+                          onChangeYmd={(v) => updateField("date", v)}
+                          disabled={disabled}
+                          isDark={isDark}
+                          borderColor={T.inputBorder}
+                          bgColor={T.inputBg}
+                          textColor={T.text}
+                          mutedColor={T.muted}
+                        />
+
+                        <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Source</Text>
+                        <View style={[styles.selectField, { borderColor: T.inputBorder, backgroundColor: T.inputBg, opacity: 0.7 }]}>
+                          <Text style={{ color: T.text, fontSize: 14, fontWeight: "500" }}>
+                            {SOURCE_OPTIONS.find((x) => x === form.source) ?? "manual"}
+                          </Text>
+                          <Ionicons name="lock-closed-outline" size={16} color={T.muted} />
                         </View>
-                      </View>
 
-                      <Text style={[styles.label, { color: T.muted }]}>Name</Text>
-                      <TextInput
-                        value={form.name}
-                        onChangeText={(v) => updateField("name", v)}
-                        placeholder="Eg. Salary, shift payment"
-                        placeholderTextColor={isDark ? "rgba(148,163,184,0.55)" : "rgba(100,116,139,0.65)"}
-                        style={[styles.input, { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder }]}
-                        editable={!disabled}
-                      />
-
-                      <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Amount (AUD)</Text>
-                      <TextInput
-                        value={form.amount}
-                        onChangeText={(v) => updateField("amount", v)}
-                        placeholder="0.00"
-                        keyboardType="decimal-pad"
-                        placeholderTextColor={isDark ? "rgba(148,163,184,0.55)" : "rgba(100,116,139,0.65)"}
-                        style={[styles.input, { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder }]}
-                        editable={!disabled}
-                      />
-
-                      <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Date</Text>
-                      <DateField
-                        valueYmd={form.date}
-                        onChangeYmd={(v) => updateField("date", v)}
-                        disabled={disabled}
-                        isDark={isDark}
-                        borderColor={T.inputBorder}
-                        bgColor={T.inputBg}
-                        textColor={T.text}
-                        mutedColor={T.muted}
-                      />
-
-                      <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Source</Text>
-                      <View style={[styles.selectField, { borderColor: T.inputBorder, backgroundColor: T.inputBg, opacity: 0.7 }]}>
-                        <Text style={{ color: T.text, fontSize: 14, fontWeight: "500" }}>
-                          {SOURCE_OPTIONS.find((x) => x === form.source) ?? "manual"}
+                        <Text style={[styles.label, { color: T.muted, marginTop: 14 }]}>Tags (optional)</Text>
+                        <TextInput
+                          value={form.tagsInput}
+                          onChangeText={(v) => updateField("tagsInput", v)}
+                          placeholder="Eg. woolies, overtime, bonus"
+                          placeholderTextColor={isDark ? "rgba(148,163,184,0.55)" : "rgba(100,116,139,0.65)"}
+                          style={[styles.input, { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder }]}
+                          editable={!disabled}
+                        />
+                        <Text style={{ marginTop: 6, color: T.muted, fontSize: 11 }}>
+                          Comma separated, max 20 tags.
                         </Text>
-                        <Ionicons name="lock-closed-outline" size={16} color={T.muted} />
+
+                        <Text style={[styles.label, { color: T.muted, marginTop: 14 }]}>Notes (optional)</Text>
+                        <TextInput
+                          value={form.notes}
+                          onChangeText={(v) => updateField("notes", v)}
+                          placeholder="Eg. Salary includes Sunday penalty."
+                          placeholderTextColor={isDark ? "rgba(148,163,184,0.55)" : "rgba(100,116,139,0.65)"}
+                          multiline
+                          style={[
+                            styles.input,
+                            styles.textarea,
+                            { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder },
+                          ]}
+                          editable={!disabled}
+                        />
                       </View>
-
-                      <Text style={[styles.label, { color: T.muted, marginTop: 14 }]}>Tags (optional)</Text>
-                      <TextInput
-                        value={form.tagsInput}
-                        onChangeText={(v) => updateField("tagsInput", v)}
-                        placeholder="Eg. woolies, overtime, bonus"
-                        placeholderTextColor={isDark ? "rgba(148,163,184,0.55)" : "rgba(100,116,139,0.65)"}
-                        style={[styles.input, { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder }]}
-                        editable={!disabled}
-                      />
-                      <Text style={{ marginTop: 6, color: T.muted, fontSize: 11 }}>
-                        Comma separated, max 20 tags.
-                      </Text>
-
-                      <Text style={[styles.label, { color: T.muted, marginTop: 14 }]}>Notes (optional)</Text>
-                      <TextInput
-                        value={form.notes}
-                        onChangeText={(v) => updateField("notes", v)}
-                        placeholder="Eg. Salary includes Sunday penalty."
-                        placeholderTextColor={isDark ? "rgba(148,163,184,0.55)" : "rgba(100,116,139,0.65)"}
-                        multiline
-                        style={[
-                          styles.input,
-                          styles.textarea,
-                          { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder },
-                        ]}
-                        editable={!disabled}
-                      />
-                    </View>
+                    </Animated.View>
                   )}
 
                   {error ? (
@@ -501,7 +508,15 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                 </ScrollView>
 
                 {/* Footer */}
-                <View style={[styles.footer, { borderTopColor: T.headerBorder }]}>
+                <View
+                  style={[
+                    styles.footer,
+                    {
+                      borderTopColor: T.headerBorder,
+                      paddingBottom: Math.max(insets.bottom, 10) + 10,
+                    },
+                  ]}
+                >
                   <Pressable
                     onPress={() => !saving && onClose()}
                     disabled={saving}
@@ -528,7 +543,7 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                     {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "600" }}>Save changes</Text>}
                   </Pressable>
                 </View>
-              </BlurView>
+              </GlassView>
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -543,34 +558,29 @@ const styles = StyleSheet.create({
 
   center: {
     flex: 1,
-    alignItems: "center",
+    alignItems: "stretch",
     justifyContent: "flex-end",
-    padding: 7,
+    padding: 0,
   },
 
   modalWrap: {
     width: "100%",
+    flex: 1,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     overflow: "hidden",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
   },
 
   modal: {
-    borderWidth: StyleSheet.hairlineWidth,
+    flex: 1,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     overflow: "hidden",
-    maxHeight: "86%",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-
-  glow: {
-    position: "absolute",
-    height: 280,
-    width: 280,
-    borderRadius: 280,
-    opacity: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
 
   header: {
@@ -691,21 +701,12 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 
-  // loading stabilizer
   loadingWrap: {
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 16,
+    flex: 1,
+    minHeight: 420,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 420,
-  },
-  fakeBlock: {
-    width: "100%",
-    height: 54,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    marginTop: 10,
+    padding: 24,
   },
 
   errorBox: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 12 },

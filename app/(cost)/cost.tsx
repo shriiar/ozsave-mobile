@@ -2,7 +2,8 @@
 import { BlurView } from "expo-blur";
 import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import Toast from "react-native-toast-message";
 import {
     ActivityIndicator,
     Animated,
@@ -356,6 +357,34 @@ export default function CostScreen() {
         sortBy: applied.sortBy,
         sortOrder: applied.sortOrder,
     } as any);
+
+    const shownErrorRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        const rawError = q.error as any;
+        const message =
+            rawError?.response?.data?.message ||
+            rawError?.message ||
+            null;
+
+        if (!message) {
+            shownErrorRef.current = null;
+            return;
+        }
+
+        if (shownErrorRef.current === message) return;
+
+        shownErrorRef.current = message;
+
+        Toast.show({
+            type: "error",
+            text1: "Something went wrong",
+            text2: message,
+            position: "top",
+            autoHide: false,
+            onPress: () => Toast.hide(),
+        });
+    }, [q.error]);
 
     const rows: CostRow[] = useMemo(() => {
         const pages = q.data?.pages ?? [];

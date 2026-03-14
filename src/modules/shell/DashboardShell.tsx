@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
   },
 
   pill: {
-    width: "90%",
+    width: "94%",
     borderRadius: PILL_RADIUS,
     overflow: "hidden",
     position: "relative",

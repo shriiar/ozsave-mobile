@@ -2,7 +2,8 @@
 import { BlurView } from "expo-blur";
 import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import Toast from "react-native-toast-message";
 import {
     ActivityIndicator,
     Animated,
@@ -72,9 +73,11 @@ function IncomeCard({
         const ring = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
         const text = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
         const muted = isDark ? "rgba(148,163,184,0.95)" : "rgba(42,45,49,0.95)";
-        const chipBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(24,24,24,0.04)";
+        const defaultChipBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(24,24,24,0.04)";
+        const manualChipBg = isDark ? "rgba(22,163,74,0.30)" : "rgba(22,163,74,0.20)";
+        const estimateChipBg = isDark ? "rgba(255, 162, 0, 0.3)" : "rgba(255, 162, 0, 0.2)";
 
-        return { cardGrad, ring, text, muted, chipBg };
+        return { cardGrad, ring, text, muted, defaultChipBg, manualChipBg, estimateChipBg };
     }, [isDark]);
 
     function renderRightActions(
@@ -139,9 +142,9 @@ function IncomeCard({
                 style={({ pressed }) => [{ opacity: pressed ? 0.95 : 1 }]}
             >
                 <View style={styles.cardWrap}>
-                    <BlurView
-                        intensity={isDark ? 18 : 26}
-                        tint={isDark ? "dark" : "light"}
+                    <GlassView
+                        glassEffectStyle="clear"
+                        colorScheme={isDark ? "dark" : "light"}
                         style={[styles.card, { borderColor: T.ring }]}
                     >
                         <LinearGradient
@@ -186,7 +189,19 @@ function IncomeCard({
                                 </Text>
 
                                 <View style={styles.miniStatsRow}>
-                                    <View style={[styles.miniPill, { backgroundColor: T.chipBg }]}>
+                                    <View
+                                        style={[
+                                            styles.miniPill,
+                                            {
+                                                backgroundColor:
+                                                    item.source === "manual"
+                                                        ? T.manualChipBg
+                                                        : item.source === "estimate"
+                                                        ? T.estimateChipBg
+                                                        : T.defaultChipBg,
+                                            },
+                                        ]}
+                                    >
                                         <Text style={[styles.miniPillText, { color: T.muted }]} numberOfLines={1}>
                                             {item.source.charAt(0).toUpperCase() + item.source.slice(1)}
                                         </Text>
@@ -204,7 +219,7 @@ function IncomeCard({
                                 <Text style={[styles.badgeBottom, { color: T.muted }]}>{money(item.amount)}</Text>
                             </View>
                         </View>
-                    </BlurView>
+                    </GlassView>
                 </View>
             </Pressable>
         </Swipeable>
@@ -310,6 +325,7 @@ export default function IncomeScreen() {
         setDeleting({ id, name });
     }
 
+    const shownErrorRef = useRef<string | null>(null);
     // ✅ infinite query (like cost)
     const q = useInfiniteIncomes({
         limit: PAGE_SIZE,
@@ -321,6 +337,31 @@ export default function IncomeScreen() {
         sortOrder: applied.sortOrder,
     });
 
+    useEffect(() => {
+        const rawError = q.error as any;
+        const message =
+            rawError?.response?.data?.message ||
+            rawError?.message ||
+            null;
+
+        if (!message) {
+            shownErrorRef.current = null;
+            return;
+        }
+
+        if (shownErrorRef.current === message) return;
+
+        shownErrorRef.current = message;
+
+        Toast.show({
+            type: "error",
+            text1: "Something went wrong",
+            text2: message,
+            position: "top",
+            autoHide: false,
+            onPress: () => Toast.hide(),
+        });
+    }, [q.error]);
     const rows = q.items;
     const isInitialLoading = q.isLoading && rows.length === 0;
 

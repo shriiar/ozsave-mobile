@@ -1,6 +1,7 @@
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import Toast from "react-native-toast-message";
 import {
   ActivityIndicator,
   Animated,
@@ -241,6 +242,7 @@ export default function BillingScreen() {
 
   const swipeRefs = useRef<Record<string, () => void>>({});
   const openSwipe = useRef<{ id: string; close: () => void } | null>(null);
+  const shownErrorRef = useRef<string | null>(null);
 
   function closeOpenSwipe() {
     openSwipe.current?.close?.();
@@ -291,6 +293,33 @@ export default function BillingScreen() {
   const q = useInfiniteBillings({
     limit,
   } as any);
+
+  useEffect(() => {
+    const rawError = q.error as any;
+  
+    const message =
+      rawError?.response?.data?.message ||
+      rawError?.message ||
+      null;
+  
+    if (!message) {
+      shownErrorRef.current = null;
+      return;
+    }
+  
+    if (shownErrorRef.current === message) return;
+  
+    shownErrorRef.current = message;
+  
+    Toast.show({
+      type: "error",
+      text1: "Something went wrong",
+      text2: message,
+      position: "top",
+      autoHide: false,
+      onPress: () => Toast.hide(),
+    });
+  }, [q.error]);
 
   const rows: BillingRow[] = useMemo(() => {
     const pages = q.data?.pages ?? [];

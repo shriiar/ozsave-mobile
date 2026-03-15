@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   wrap: {
     borderRadius: 18,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
   card: {
     borderRadius: 18,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   },
   inner: {
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     padding: 12,
     overflow: "hidden",
     height: 420, // matches your stack height vibe. Remove if you want auto height.
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
 
   badge: {
     borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   tile: {
     height: 68,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 10,

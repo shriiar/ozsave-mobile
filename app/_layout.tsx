@@ -20,7 +20,12 @@ function AppShell() {
   const { resolvedTheme } = useTheme();
 
   return (
-    <View style={styles.root}>
+    <View
+      style={[
+        styles.root,
+        { backgroundColor: resolvedTheme === "dark" ? "#020617" : "#ffffff" }
+      ]}
+    >
       <Stack
         screenOptions={{
           headerShown: false,
@@ -30,7 +35,6 @@ function AppShell() {
         }}
       />
 
-      <ThemeTransitionOverlay />
       <Toast config={createToastConfig(resolvedTheme)} topOffset={insets.top + 10} />
     </View>
   );
@@ -73,6 +77,7 @@ export default function RootLayout() {
             <AuthProvider>
               <AppShell />
             </AuthProvider>
+            <ThemeTransitionOverlay />
           </ThemeProvider>
         </SafeAreaProvider>
       </QueryClientProvider>

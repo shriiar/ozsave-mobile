@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 12,
     paddingHorizontal: 24,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    // borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "rgba(15,23,42,0.10)",
   },
   heading: { fontSize: 20, fontWeight: "700", color: "#0F172A" },

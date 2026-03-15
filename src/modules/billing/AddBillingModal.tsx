@@ -13,7 +13,7 @@ import {
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
@@ -142,12 +142,6 @@ function CategorySelect({
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <View style={StyleSheet.absoluteFill}>
-          <BlurView
-            intensity={isDark ? 70 : 90}
-            tint={isDark ? "dark" : "light"}
-            style={StyleSheet.absoluteFill}
-          />
-
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)}>
             <View
               style={{
@@ -156,23 +150,12 @@ function CategorySelect({
               }}
             />
           </Pressable>
-
-          <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}> 
-            <BlurView
-              intensity={isDark ? 28 : 45}
-              tint={isDark ? "dark" : "light"}
+          <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}>
+            <GlassView
+              glassEffectStyle="regular"
+              colorScheme={isDark ? "dark" : "light"}
               style={[styles.categorySheet, { borderColor }]}
             >
-              <LinearGradient
-                colors={
-                  isDark
-                    ? ["rgba(2,6,23,0.55)", "rgba(15,23,42,0.35)", "rgba(2,6,23,0.25)"]
-                    : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.60)", "rgba(255,255,255,0.50)"]
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
 
               <View style={[styles.selectHeader, { borderBottomColor: borderColor }]}> 
                 <Text style={{ color: textColor, fontSize: 15, fontWeight: "600" }}>Category</Text>
@@ -234,7 +217,7 @@ function CategorySelect({
                   <Text style={{ color: textColor, fontSize: 14, fontWeight: "600" }}>Done</Text>
                 </Pressable>
               </View>
-            </BlurView>
+            </GlassView>
           </View>
         </View>
       </Modal>
@@ -291,12 +274,6 @@ function FrequencySelect({
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <View style={StyleSheet.absoluteFill}>
-          <BlurView
-            intensity={isDark ? 70 : 90}
-            tint={isDark ? "dark" : "light"}
-            style={StyleSheet.absoluteFill}
-          />
-
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)}>
             <View
               style={{
@@ -305,23 +282,12 @@ function FrequencySelect({
               }}
             />
           </Pressable>
-
-          <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}> 
-            <BlurView
-              intensity={isDark ? 28 : 45}
-              tint={isDark ? "dark" : "light"}
+          <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}>
+            <GlassView
+              glassEffectStyle="regular"
+              colorScheme={isDark ? "dark" : "light"}
               style={[styles.categorySheet, { borderColor }]}
             >
-              <LinearGradient
-                colors={
-                  isDark
-                    ? ["rgba(2,6,23,0.55)", "rgba(15,23,42,0.35)", "rgba(2,6,23,0.25)"]
-                    : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.60)", "rgba(255,255,255,0.50)"]
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
 
               <View style={[styles.selectHeader, { borderBottomColor: borderColor }]}> 
                 <Text style={{ color: textColor, fontSize: 15, fontWeight: "600" }}>Frequency</Text>
@@ -383,7 +349,7 @@ function FrequencySelect({
                   <Text style={{ color: textColor, fontSize: 14, fontWeight: "600" }}>Done</Text>
                 </Pressable>
               </View>
-            </BlurView>
+            </GlassView>
           </View>
         </View>
       </Modal>
@@ -452,63 +418,46 @@ function DateField({
         Platform.OS === "ios" ? (
           <Modal transparent animationType="fade" onRequestClose={() => setShow(false)}>
             <View style={StyleSheet.absoluteFill}>
-              <BlurView
-                intensity={isDark ? 70 : 90}
-                tint={isDark ? "dark" : "light"}
-                style={StyleSheet.absoluteFill}
+            <Pressable style={StyleSheet.absoluteFill} onPress={() => setShow(false)}>
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)",
+                }}
               />
+            </Pressable>
+            <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}>
+              <GlassView
+                glassEffectStyle="regular"
+                colorScheme={isDark ? "dark" : "light"}
+                style={[styles.dateSheet, { borderColor }]}
+              >
 
-              <Pressable style={StyleSheet.absoluteFill} onPress={() => setShow(false)}>
-                <View
-                  style={{
-                    flex: 1,
-                    backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)",
-                  }}
-                />
-              </Pressable>
+                <View style={[styles.selectHeader, { borderBottomColor: borderColor }]}> 
+                  <Text style={{ color: textColor, fontSize: 15, fontWeight: "600" }}>{title}</Text>
+                  <Text style={{ color: mutedColor, marginTop: 2, fontSize: 12, fontWeight: "400" }}>
+                    {subtitle}
+                  </Text>
+                </View>
 
-              <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}> 
-                <BlurView
-                  intensity={isDark ? 28 : 45}
-                  tint={isDark ? "dark" : "light"}
-                  style={[styles.dateSheet, { borderColor }]}
-                >
-                  <LinearGradient
-                    colors={
-                      isDark
-                        ? ["rgba(2,6,23,0.55)", "rgba(15,23,42,0.35)", "rgba(2,6,23,0.25)"]
-                        : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.60)", "rgba(255,255,255,0.50)"]
-                    }
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                    style={StyleSheet.absoluteFill}
+                <View style={{ padding: 12 }}>
+                  <DateTimePicker
+                    value={valueDate}
+                    mode="date"
+                    display="spinner"
+                    onChange={onChange}
+                    themeVariant={isDark ? "dark" : "light"}
+                    minimumDate={minimumDate}
                   />
+                </View>
 
-                  <View style={[styles.selectHeader, { borderBottomColor: borderColor }]}> 
-                    <Text style={{ color: textColor, fontSize: 15, fontWeight: "600" }}>{title}</Text>
-                    <Text style={{ color: mutedColor, marginTop: 2, fontSize: 12, fontWeight: "400" }}>
-                      {subtitle}
-                    </Text>
-                  </View>
-
-                  <View style={{ padding: 12 }}>
-                    <DateTimePicker
-                      value={valueDate}
-                      mode="date"
-                      display="spinner"
-                      onChange={onChange}
-                      themeVariant={isDark ? "dark" : "light"}
-                      minimumDate={minimumDate}
-                    />
-                  </View>
-
-                  <View style={[styles.selectFooter, { borderTopColor: borderColor }]}> 
-                    <Pressable onPress={() => setShow(false)} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}> 
-                      <Text style={{ color: textColor, fontSize: 14, fontWeight: "600" }}>Done</Text>
-                    </Pressable>
-                  </View>
-                </BlurView>
-              </View>
+                <View style={[styles.selectFooter, { borderTopColor: borderColor }]}> 
+                  <Pressable onPress={() => setShow(false)} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}> 
+                    <Text style={{ color: textColor, fontSize: 14, fontWeight: "600" }}>Done</Text>
+                  </Pressable>
+                </View>
+              </GlassView>
+            </View>
             </View>
           </Modal>
         ) : (
@@ -564,14 +513,6 @@ export default function AddBillingModal({ open, onClose }: Props) {
   }, [open]);
 
   const T = useMemo(() => {
-    const modalBgGrad = isDark
-      ? ["rgba(2,6,23,0.58)", "rgba(15,23,42,0.46)", "rgba(2,6,23,0.38)"]
-      : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.62)", "rgba(255,255,255,0.52)"];
-
-    const glowA = isDark
-      ? ["rgba(79,70,229,0.20)", "rgba(168,85,247,0.10)", "rgba(0,0,0,0)"]
-      : ["rgba(79,70,229,0.22)", "rgba(168,85,247,0.10)", "rgba(0,0,0,0)"];
-
     const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
     const headerBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
 
@@ -601,8 +542,6 @@ export default function AddBillingModal({ open, onClose }: Props) {
         };
 
     return {
-      modalBgGrad,
-      glowA,
       border,
       headerBorder,
       text,
@@ -707,44 +646,24 @@ export default function AddBillingModal({ open, onClose }: Props) {
       <Pressable style={StyleSheet.absoluteFill} onPress={() => !saving && onClose()}>
         <View style={{ flex: 1, backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)" }} />
       </Pressable>
-
       <View
         style={[
           StyleSheet.absoluteFillObject,
           {
-            paddingTop: insets.top + 8,
-            paddingBottom: insets.bottom + 8,
-            paddingHorizontal: 7,
+            paddingTop: insets.top,
+            paddingBottom: 0,
+            paddingHorizontal: 0,
           },
         ]}
       >
-        <BlurView
-          intensity={isDark ? 70 : 90}
-          tint={isDark ? "dark" : "light"}
-          style={StyleSheet.absoluteFill}
-        />
-
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.kav}>
           <View style={styles.center}>
             <View style={styles.modalWrap}>
-              <BlurView
-                intensity={isDark ? 28 : 45}
-                tint={isDark ? "dark" : "light"}
+              <GlassView
+                glassEffectStyle="regular"
+                colorScheme={isDark ? "dark" : "light"}
                 style={[styles.modal, { borderColor: T.border }, T.shadow]}
               >
-                <LinearGradient
-                  colors={T.modalBgGrad as any}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-
-                <LinearGradient
-                  colors={T.glowA as any}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[styles.glow, { top: -90, left: -90 }]}
-                />
 
                 <View style={[styles.header, { borderBottomColor: T.headerBorder }]}> 
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
@@ -757,7 +676,7 @@ export default function AddBillingModal({ open, onClose }: Props) {
                       <Text style={[styles.h2, { color: T.muted }]}>Create a recurring subscription or household billing.</Text>
                     </View>
                   </View>
-
+{/* 
                   <Pressable
                     onPress={() => !saving && onClose()}
                     style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
@@ -767,11 +686,11 @@ export default function AddBillingModal({ open, onClose }: Props) {
                     <View style={[styles.closeBtn, { borderColor: T.border, backgroundColor: T.inputBg }]}> 
                       <Ionicons name="close" size={18} color={T.text} />
                     </View>
-                  </Pressable>
+                  </Pressable> */}
                 </View>
 
                 <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-                  <View style={[styles.block, { borderColor: T.border, backgroundColor: "transparent" }]}> 
+                  <View> 
                     <View style={styles.blockHeader}>
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.blockTitle, { color: T.text }]}>Billing details</Text>
@@ -1004,7 +923,15 @@ export default function AddBillingModal({ open, onClose }: Props) {
                   ) : null}
                 </ScrollView>
 
-                <View style={[styles.footer, { borderTopColor: T.headerBorder }]}> 
+                <View
+                  style={[
+                    styles.footer,
+                    {
+                      borderTopColor: T.headerBorder,
+                      paddingBottom: Math.max(insets.bottom, 10) + 10,
+                    },
+                  ]}
+                >
                   <Pressable
                     onPress={() => !saving && onClose()}
                     disabled={saving}
@@ -1031,7 +958,7 @@ export default function AddBillingModal({ open, onClose }: Props) {
                     {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "600" }}>Save billing</Text>}
                   </Pressable>
                 </View>
-              </BlurView>
+              </GlassView>
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -1050,7 +977,7 @@ const styles = StyleSheet.create({
   categorySheet: {
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     maxHeight: "40%",
     width: "100%",
   },
@@ -1069,28 +996,21 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 24,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  glow: {
-    position: "absolute",
-    height: 280,
-    width: 280,
-    borderRadius: 280,
-    opacity: 1,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
   header: {
     padding: 16,
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    // borderBottomWidth: StyleSheet.hairlineWidth,
     gap: 10,
   },
   iconPill: {
     height: 36,
     width: 36,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1098,7 +1018,7 @@ const styles = StyleSheet.create({
     height: 36,
     width: 36,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1107,7 +1027,7 @@ const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 18, gap: 14 },
   block: {
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     padding: 14,
   },
   blockHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 8 },
@@ -1116,7 +1036,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 12, fontWeight: "500" },
   input: {
     marginTop: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: Platform.OS === "ios" ? 12 : 10,
@@ -1131,13 +1051,13 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     paddingHorizontal: 12,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
   avatar: {
     height: 30,
     width: 30,
     borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1148,20 +1068,22 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     paddingHorizontal: 12,
     borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
   dot: { height: 8, width: 8, borderRadius: 999 },
-  errorBox: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 12 },
+  errorBox: { borderRadius: 16, 
+    // borderWidth: StyleSheet.hairlineWidth, 
+    padding: 12 },
   footer: {
     padding: 14,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    // borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     gap: 10,
   },
   footerBtn: {
     flex: 1,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",
@@ -1175,7 +1097,7 @@ const styles = StyleSheet.create({
   },
   selectField: {
     marginTop: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -1192,18 +1114,18 @@ const styles = StyleSheet.create({
   selectSheet: {
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     maxHeight: "70%",
   },
   selectHeader: {
     padding: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    // borderBottomWidth: StyleSheet.hairlineWidth,
   },
   selectRow: {
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     marginBottom: 8,
     flexDirection: "row",
     alignItems: "center",
@@ -1211,13 +1133,13 @@ const styles = StyleSheet.create({
   },
   selectFooter: {
     padding: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    // borderTopWidth: StyleSheet.hairlineWidth,
     alignItems: "flex-end",
   },
   dateSheet: {
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     maxHeight: "70%",
     width: "100%",
   },

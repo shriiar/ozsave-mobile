@@ -871,7 +871,7 @@ const styles = StyleSheet.create({
     categorySheet: {
         borderRadius: 16,
         overflow: "hidden",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         maxHeight: "40%",
         width: "100%",
     },
@@ -891,7 +891,7 @@ const styles = StyleSheet.create({
         flex: 1,
         borderRadius: 24,
         overflow: "hidden",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
     },
 
     glow: {
@@ -907,14 +907,14 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "flex-start",
         justifyContent: "space-between",
-        borderBottomWidth: StyleSheet.hairlineWidth,
+        // borderBottomWidth: StyleSheet.hairlineWidth,
         gap: 10,
     },
     iconPill: {
         height: 36,
         width: 36,
         borderRadius: 14,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -922,7 +922,7 @@ const styles = StyleSheet.create({
         height: 36,
         width: 36,
         borderRadius: 14,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -935,12 +935,14 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 12,
         borderRadius: 16,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
     },
-    checkbox: { height: 14, width: 14, borderRadius: 5, borderWidth: StyleSheet.hairlineWidth },
+    checkbox: { height: 14, width: 14, borderRadius: 5, 
+        // borderWidth: StyleSheet.hairlineWidth 
+    },
     toggleText: { fontWeight: "600" },
     toggleHint: { marginLeft: "auto", fontSize: 12, fontWeight: "500" },
 
@@ -948,7 +950,7 @@ const styles = StyleSheet.create({
 
     block: {
         borderRadius: 16,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         padding: 14,
     },
     blockHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 8 },
@@ -959,7 +961,7 @@ const styles = StyleSheet.create({
 
     input: {
         marginTop: 8,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         borderRadius: 12,
         paddingHorizontal: 12,
         paddingVertical: Platform.OS === "ios" ? 12 : 10,
@@ -975,13 +977,13 @@ const styles = StyleSheet.create({
         paddingVertical: 11,
         paddingHorizontal: 12,
         borderRadius: 14,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
     },
     avatar: {
         height: 30,
         width: 30,
         borderRadius: 999,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -993,14 +995,14 @@ const styles = StyleSheet.create({
         paddingVertical: 9,
         paddingHorizontal: 12,
         borderRadius: 999,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
     },
     dot: { height: 8, width: 8, borderRadius: 999 },
 
     addItemBtn: {
         marginTop: 4,
         borderRadius: 16,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         paddingVertical: 12,
         paddingHorizontal: 12,
         flexDirection: "row",
@@ -1015,18 +1017,20 @@ const styles = StyleSheet.create({
         opacity: 0.9,
     },
 
-    errorBox: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 12 },
+    errorBox: { borderRadius: 16, 
+        // borderWidth: StyleSheet.hairlineWidth, 
+        padding: 12 },
 
     footer: {
         padding: 14,
-        borderTopWidth: StyleSheet.hairlineWidth,
+        // borderTopWidth: StyleSheet.hairlineWidth,
         flexDirection: "row",
         gap: 10,
     },
     footerBtn: {
         flex: 1,
         borderRadius: 14,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         paddingVertical: 12,
         alignItems: "center",
         justifyContent: "center",
@@ -1042,7 +1046,7 @@ const styles = StyleSheet.create({
     // ---- Category/date select modal styles ----
     selectField: {
         marginTop: 8,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         borderRadius: 12,
         paddingHorizontal: 12,
         paddingVertical: 12,
@@ -1063,18 +1067,18 @@ const styles = StyleSheet.create({
     selectSheet: {
         borderRadius: 16,
         overflow: "hidden",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         maxHeight: "70%",
     },
     selectHeader: {
         padding: 14,
-        borderBottomWidth: StyleSheet.hairlineWidth,
+        // borderBottomWidth: StyleSheet.hairlineWidth,
     },
     selectRow: {
         paddingVertical: 12,
         paddingHorizontal: 12,
         borderRadius: 12,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         marginBottom: 8,
         flexDirection: "row",
         alignItems: "center",
@@ -1082,13 +1086,13 @@ const styles = StyleSheet.create({
     },
     selectFooter: {
         padding: 12,
-        borderTopWidth: StyleSheet.hairlineWidth,
+        // borderTopWidth: StyleSheet.hairlineWidth,
         alignItems: "flex-end",
     },
     dateSheet: {
         borderRadius: 16,
         overflow: "hidden",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         maxHeight: "70%",
         width: "100%",
     },

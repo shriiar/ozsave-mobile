@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     wrap: {
         borderRadius: 18,
         overflow: "hidden",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
     },
     card: {
         borderRadius: 18,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     },
     inner: {
         borderRadius: 16,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         paddingTop: 10,
         paddingBottom: 12,
         overflow: "visible",
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 14,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         maxWidth: 220,
     },
 });

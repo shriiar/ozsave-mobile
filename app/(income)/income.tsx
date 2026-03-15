@@ -74,8 +74,8 @@ function IncomeCard({
         const text = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
         const muted = isDark ? "rgba(148,163,184,0.95)" : "rgba(42,45,49,0.95)";
         const defaultChipBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(24,24,24,0.04)";
-        const manualChipBg = isDark ? "rgba(22,163,74,0.30)" : "rgba(22,163,74,0.20)";
-        const estimateChipBg = isDark ? "rgba(255, 162, 0, 0.3)" : "rgba(255, 162, 0, 0.2)";
+        const manualChipBg = isDark ? "rgba(0, 102, 37, 0.8)" : "rgba(0, 215, 79, 0.46)";
+        const estimateChipBg = isDark ? "rgb(185, 117, 0)" : "rgba(255, 162, 0, 0.38)";
 
         return { cardGrad, ring, text, muted, defaultChipBg, manualChipBg, estimateChipBg };
     }, [isDark]);
@@ -202,7 +202,7 @@ function IncomeCard({
                                             },
                                         ]}
                                     >
-                                        <Text style={[styles.miniPillText, { color: T.muted }]} numberOfLines={1}>
+                                        <Text style={[styles.miniPillText, { color: T.text }]} numberOfLines={1}>
                                             {item.source.charAt(0).toUpperCase() + item.source.slice(1)}
                                         </Text>
                                     </View>
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 18,
         paddingBottom: 0,
         borderRadius: 18,
-        borderBottomWidth: StyleSheet.hairlineWidth,
+        // borderBottomWidth: StyleSheet.hairlineWidth,
     },
 
     headerRow: {
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 14,
         overflow: "hidden",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
     },
     addBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 
@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 14,
         overflow: "hidden",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
     },
     filterBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
     card: {
         borderRadius: 18,
         overflow: "hidden",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         padding: 14,
         position: "relative",
     },
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         alignItems: "center",
         justifyContent: "center",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
     },
 
     mid: { flex: 1, minWidth: 0 },

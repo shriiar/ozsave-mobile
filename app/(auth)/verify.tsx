@@ -209,7 +209,8 @@ export default function Verify() {
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFFFFF", justifyContent: "center", alignItems: "center", paddingHorizontal: 16 },
   card: { width: "100%", maxWidth: 380, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.85)", overflow: "hidden" },
-  header: { padding: 24, paddingBottom: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: "#E5E7EB" },
+  header: { padding: 24, paddingBottom: 14, 
+    borderBottomWidth: StyleSheet.hairlineWidth, borderColor: "#E5E7EB" },
   chip: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, backgroundColor: "rgba(0,0,0,0.04)", borderWidth: 1, borderColor: "rgba(0,0,0,0.08)" },
   chipText: { fontSize: 13, fontWeight: "600", color: "#111827" },
   title: { marginTop: 14, fontSize: 22, fontWeight: "700", color: "#111827" },

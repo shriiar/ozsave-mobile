@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   wrap: {
     borderRadius: 18,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
   card: {
     borderRadius: 18,
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
   },
   inner: {
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
     paddingBottom: 2,
   },
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     height: 160,
     width: 160,
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -287,14 +287,14 @@ const styles = StyleSheet.create({
   tooltip: {
     flex: 1,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 12,
     paddingVertical: 10,
     maxWidth: 220,
   },
   tile: {
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 10,
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   },
   top3Box: {
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 12,
     paddingVertical: 12,
   },

@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     wrap: {
         borderRadius: 18,
         overflow: "hidden",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
     },
     card: {
         borderRadius: 18,
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     },
     inner: {
         borderRadius: 16,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         padding: 12,
         overflow: "hidden",
     },
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     tile: {
         flex: 1,
         borderRadius: 14,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         paddingVertical: 12,
         paddingHorizontal: 10,
         alignItems: "center",

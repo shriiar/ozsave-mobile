@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 24,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
 
 
@@ -580,14 +580,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    // borderBottomWidth: StyleSheet.hairlineWidth,
     gap: 10,
   },
   iconPill: {
     height: 36,
     width: 36,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
     height: 36,
     width: 36,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -605,13 +605,15 @@ const styles = StyleSheet.create({
 
   body: { padding: 16, paddingBottom: 18 },
 
-  block: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 14 },
+  block: { borderRadius: 16, 
+    // borderWidth: StyleSheet.hairlineWidth, 
+    padding: 14 },
 
   label: { fontSize: 12, fontWeight: "500" },
 
   input: {
     marginTop: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: Platform.OS === "ios" ? 12 : 10,
@@ -620,11 +622,13 @@ const styles = StyleSheet.create({
   },
   textarea: { minHeight: 92, textAlignVertical: "top" },
 
-  footer: { padding: 14, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: "row", gap: 10 },
+  footer: { padding: 14, 
+    // borderTopWidth: StyleSheet.hairlineWidth,
+     flexDirection: "row", gap: 10 },
   footerBtn: {
     flex: 1,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",
@@ -634,7 +638,7 @@ const styles = StyleSheet.create({
   // selects
   selectField: {
     marginTop: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -645,22 +649,28 @@ const styles = StyleSheet.create({
 
   pickerWrap: {
     marginTop: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 12,
     overflow: "hidden",
   },
 
-  errorBox: { marginTop: 14, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 12 },
+  errorBox: { marginTop: 14, borderRadius: 16, 
+    // borderWidth: StyleSheet.hairlineWidth, 
+    padding: 12 },
 
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "center", padding: 18 },
 
-  selectHeader: { padding: 14, borderBottomWidth: StyleSheet.hairlineWidth },
-  selectFooter: { padding: 12, borderTopWidth: StyleSheet.hairlineWidth, alignItems: "flex-end" },
+  selectHeader: { padding: 14, 
+    // borderBottomWidth: StyleSheet.hairlineWidth 
+  },
+  selectFooter: { padding: 12, 
+    // borderTopWidth: StyleSheet.hairlineWidth, 
+    alignItems: "flex-end" },
 
   dateSheet: {
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     maxHeight: "70%",
     width: "100%",
   },

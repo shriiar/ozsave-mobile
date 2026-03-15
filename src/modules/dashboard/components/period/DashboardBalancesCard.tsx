@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   wrap: {
     borderRadius: 18,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
   card: {
     borderRadius: 18,
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   },
   inner: {
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     padding: 12,
     overflow: "hidden",
   },
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   },
   row: {
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 10,
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     height: 36,
     width: 36,
     borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",

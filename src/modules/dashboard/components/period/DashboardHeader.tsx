@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 18,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
 
   glassBtnFill: {
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     height: 38,
     width: 38,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -372,18 +372,22 @@ const styles = StyleSheet.create({
   sheet: {
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     maxHeight: Platform.OS === "ios" ? "55%" : "70%",
   },
 
-  sheetHeader: { padding: 14, borderBottomWidth: StyleSheet.hairlineWidth },
-  sheetFooter: { padding: 12, borderTopWidth: StyleSheet.hairlineWidth, alignItems: "flex-end" },
+  sheetHeader: { padding: 14, 
+    borderBottomWidth: StyleSheet.hairlineWidth 
+  },
+  sheetFooter: { padding: 12, 
+    borderTopWidth: StyleSheet.hairlineWidth, 
+    alignItems: "flex-end" },
 
   optionRow: {
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     marginBottom: 8,
     flexDirection: "row",
     alignItems: "center",

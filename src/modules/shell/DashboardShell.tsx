@@ -245,16 +245,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  useEffect(() => {
-    setOpen(false);
-    setVisible(false);
-    sheetH.setValue(PILL_H);
-    contentOpacity.setValue(0);
-    contentY.setValue(10);
-    menuIconOpacity.setValue(1);
-    menuIconScale.setValue(1);
-    setMenuIconName("menu");
-  }, [resolvedTheme, sheetH, contentOpacity, contentY, menuIconOpacity, menuIconScale]);
 
   // ===== TOKENS =====
   const TOKENS = useMemo(() => {
@@ -359,7 +349,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             expanded={open}
             fallbackStyle={{
               backgroundColor: TOKENS.glassFallback,
-              borderWidth: StyleSheet.hairlineWidth,
+              // borderWidth: StyleSheet.hairlineWidth,
               borderColor: TOKENS.ring,
             }}
           >
@@ -367,7 +357,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               pointerEvents="none"
               style={[
                 StyleSheet.absoluteFill,
-                { borderWidth: StyleSheet.hairlineWidth, borderColor: TOKENS.ring, borderRadius: PILL_RADIUS },
+                { 
+                  // borderWidth: StyleSheet.hairlineWidth,
+                   borderColor: TOKENS.ring, borderRadius: PILL_RADIUS },
               ]}
             />
 
@@ -422,7 +414,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                             styles.listItem,
                             {
                               backgroundColor: active ? TOKENS.activeBg : pressed ? TOKENS.itemBg : "transparent",
-                              borderWidth: active ? StyleSheet.hairlineWidth : 0,
+                              // borderWidth: active ? StyleSheet.hairlineWidth : 0,
                               borderColor: active ? TOKENS.activeRing : "transparent",
                             },
                           ]}
@@ -474,7 +466,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                           : pressed
                             ? TOKENS.btnBgHover
                             : "transparent",
-                        borderWidth: active ? StyleSheet.hairlineWidth : 0,
+                        // borderWidth: active ? StyleSheet.hairlineWidth : 0,
                         borderColor: active ? TOKENS.activeRing : "transparent",
                       },
                     ]}
@@ -567,7 +559,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 10,
     paddingBottom: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    // borderBottomWidth: StyleSheet.hairlineWidth,
   },
   brand: { fontSize: 16, fontWeight: "700" },
   sub: { marginTop: 2, fontSize: 12, opacity: 0.9 },
@@ -601,7 +593,7 @@ const styles = StyleSheet.create({
   footer: {
     marginTop: 10,
     paddingTop: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    // borderTopWidth: StyleSheet.hairlineWidth,
     gap: 10,
   },
 
@@ -612,7 +604,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
   logoutText: { fontSize: 13, fontWeight: "700" },
 

@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
 
   panel: {
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
   },
 
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
 
   badgeText: {
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
 
   card: {
     borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     padding: 14,
   },
 
@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
     width: 36,
     borderRadius: 12,
     backgroundColor: "rgba(79,70,229,0.10)",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(79,70,229,0.15)",
     alignItems: "center",
     justifyContent: "center",

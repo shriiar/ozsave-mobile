@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   blurCard: {
     borderRadius: 22,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 14,
     paddingTop: 10,
     paddingBottom: 12,

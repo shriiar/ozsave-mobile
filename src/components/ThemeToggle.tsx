@@ -122,18 +122,9 @@ export function ThemeToggle() {
       <View style={styles.row}>
         <View style={styles.left}>
           <Animated.Text style={[styles.title, titleStyle]}>Theme</Animated.Text>
-          <Animated.Text style={[styles.sub, subStyle]}>{subtitle}</Animated.Text>
         </View>
 
-        <Pressable onPress={toggle}>
-          <AnimatedView style={[styles.quickBtn, quickBtnStyle]}>
-            <Ionicons
-              name={resolvedTheme === "dark" ? "sunny-outline" : "moon-outline"}
-              size={16}
-              color={isDark ? "rgba(255,255,255,0.92)" : "#111827"}
-            />
-          </AnimatedView>
-        </Pressable>
+       
       </View>
 
       <AnimatedView style={[styles.segment, segmentStyle]}>
@@ -148,7 +139,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     padding: 12,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
 
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
@@ -163,7 +154,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
 
   segment: {
@@ -171,7 +162,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderRadius: 14,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
 
   segBtn: {

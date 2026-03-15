@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 18,
         paddingBottom: 0,
         borderRadius: 18,
-        borderBottomWidth: StyleSheet.hairlineWidth,
+        // borderBottomWidth: StyleSheet.hairlineWidth,
     },
     headerRow: {
         flexDirection: "row",
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 14,
         overflow: "hidden",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
     },
     addBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
     card: {
         borderRadius: 18,
         overflow: "hidden",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         padding: 14,
         position: "relative",
     },
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         alignItems: "center",
         justifyContent: "center",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
     },
 
     mid: {
@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 14,
         overflow: "hidden",
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
     },
     filterBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 });

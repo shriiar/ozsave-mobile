@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   modal: {
     borderRadius: 24,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
 
   glow: {
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     padding: 18,
     flexDirection: "row",
     alignItems: "flex-start",
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    // borderBottomWidth: StyleSheet.hairlineWidth,
   },
 
   title: {
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     fontSize: 13,
   },
 
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   errorBox: {
     marginTop: 6,
     borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(239,68,68,0.20)",
     backgroundColor: "rgba(239,68,68,0.10)",
     padding: 12,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
 
   footer: {
     padding: 14,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    // borderTopWidth: StyleSheet.hairlineWidth,
   },
 
   footerRow: {

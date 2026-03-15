@@ -1,5 +1,5 @@
-import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { GlassView } from "expo-glass-effect";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Toast from "react-native-toast-message";
 import {
@@ -25,8 +25,7 @@ import { useInfiniteBillings } from "../../src/modules/billing/hooks/useBillingA
 
 import AddBillingModal from "@/src/modules/billing/AddBillingModal";
 import EditBillingModal from "@/src/modules/billing/EditBillingModal";
-// import EditBillingModal from "@/src/modules/billing/EditBillingModal";
-// import DeleteBillingModal from "@/src/modules/billing/DeleteBillingModal";
+import DeleteBillingModal from "@/src/modules/billing/DeleteBillingModal";
 
 function money(n: number) {
   if (!Number.isFinite(n)) return "$0.00";
@@ -143,9 +142,9 @@ function BillingCard({
         style={({ pressed }) => [{ opacity: pressed ? 0.95 : 1 }]}
       >
         <View style={styles.cardWrap}>
-          <BlurView
-            intensity={isDark ? 18 : 26}
-            tint={isDark ? "dark" : "light"}
+          <GlassView
+            glassEffectStyle="clear"
+            colorScheme={isDark ? "dark" : "light"}
             style={[styles.card, { borderColor: T.ring }]}
           >
             <LinearGradient
@@ -192,13 +191,46 @@ function BillingCard({
                 </Text>
 
                 <View style={styles.miniStatsRow}>
-                  <View style={[styles.miniPill, { backgroundColor: T.chipBg }]}>
+                  <View
+                    style={[
+                      styles.miniPill,
+                      {
+                        backgroundColor:
+                          item.frequency === "weekly"
+                            ? isDark
+                              ? "rgba(59,130,246,0.18)"
+                              : "rgba(59,130,246,0.12)"
+                            : item.frequency === "monthly"
+                            ? isDark
+                              ? "rgba(168,85,247,0.18)"
+                              : "rgba(168,85,247,0.12)"
+                            : item.frequency === "yearly"
+                            ? isDark
+                              ? "rgba(245,158,11,0.20)"
+                              : "rgba(245,158,11,0.14)"
+                            : T.chipBg,
+                      },
+                    ]}
+                  >
                     <Text style={[styles.miniPillText, { color: T.muted }]} numberOfLines={1}>
                       {capitalize(item.frequency)}
                     </Text>
                   </View>
 
-                  <View style={[styles.miniPill, { backgroundColor: T.chipBg }]}>
+                  <View
+                    style={[
+                      styles.miniPill,
+                      {
+                        backgroundColor: item.isActive
+                          ? isDark
+                            ? "rgba(34,197,94,0.22)"
+                            : "rgba(34,197,94,0.14)"
+                          : isDark
+                          ? "rgba(239,68,68,0.22)"
+                          : "rgba(239,68,68,0.14)",
+                      },
+                    ]}
+                  >
                     <Text style={[styles.miniPillText, { color: T.muted }]} numberOfLines={1}>
                       {item.isActive ? "Active" : "Inactive"}
                     </Text>
@@ -216,7 +248,7 @@ function BillingCard({
                 <Text style={[styles.badgeBottom, { color: T.muted }]}>{money(item.amount)}</Text>
               </View>
             </View>
-          </BlurView>
+          </GlassView>
         </View>
       </Pressable>
     </Swipeable>
@@ -231,6 +263,8 @@ export default function BillingScreen() {
   const insets = useSafeAreaInsets();
   const TOPBAR_H = 52;
   const bottomSpace = TOPBAR_H + insets.bottom + 16;
+  const [headerHeight, setHeaderHeight] = useState(insets.top + 92);
+  const headerGap = 8;
 
   const spinner = isDark ? "rgba(255,255,255,0.92)" : "rgba(15,23,42,0.85)";
   const androidBg = isDark ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.95)";
@@ -357,29 +391,69 @@ export default function BillingScreen() {
 
   return (
     <DashboardShell>
-      <View style={[styles.screen, { paddingTop: insets.top + 20 }]}>
-        <View style={[styles.headerRow, { marginBottom: 10 }]}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.h1, { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" }]}>
-              Billing
-            </Text>
-            <Text style={[styles.h2, { color: isDark ? "rgba(148,163,184,0.95)" : "#64748B" }]}>
-              Track recurring subscriptions for this house.
-            </Text>
-          </View>
+      <View style={styles.screen}>
+        <GlassView
+          glassEffectStyle="regular"
+          colorScheme={isDark ? "dark" : "light"}
+          onLayout={(e) => {
+            const next = Math.ceil(e.nativeEvent.layout.height);
+            if (next > 0 && next !== headerHeight) setHeaderHeight(next);
+          }}
+          style={[
+            styles.topHeaderGlass,
+            {
+              paddingTop: insets.top + 20,
+              borderBottomColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+            },
+          ]}
+        >
+          <View style={[styles.headerRow, { marginBottom: 10 }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.h1, { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" }]}>
+                Billing
+              </Text>
+              <Text style={[styles.h2, { color: isDark ? "rgba(148,163,184,0.95)" : "#64748B" }]}>
+                Track recurring subscriptions for this house.
+              </Text>
+            </View>
 
-          <Pressable
-            style={({ pressed }) => [styles.addBtn, { opacity: pressed ? 0.92 : 1 }]}
-            onPress={() => setAddOpen(true)}
-          >
-            <Text style={styles.addBtnText}>Add</Text>
-          </Pressable>
-        </View>
+            <Pressable
+              style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+              onPress={() => setAddOpen(true)}
+            >
+              <GlassView
+                glassEffectStyle="clear"
+                colorScheme={isDark ? "dark" : "light"}
+                style={[
+                  styles.addBtn,
+                  { borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)" },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.addBtnText,
+                    { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" },
+                  ]}
+                >
+                  Add
+                </Text>
+              </GlassView>
+            </Pressable>
+          </View>
+        </GlassView>
 
         {isInitialLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator />
-            <Text style={{ marginTop: 10, opacity: 0.7 }}>Loading billings...</Text>
+          <View
+            style={{
+              flex: 1,
+              paddingTop: headerHeight + headerGap,
+              paddingBottom: bottomSpace,
+            }}
+          >
+            <View style={styles.center}>
+              <ActivityIndicator />
+              <Text style={{ marginTop: 10, opacity: 0.7 }}>Loading billings...</Text>
+            </View>
           </View>
         ) : (
           <FlatList
@@ -388,7 +462,11 @@ export default function BillingScreen() {
             keyExtractor={(item) => item._id}
             showsVerticalScrollIndicator={false}
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: bottomSpace, flexGrow: 1 }}
+            contentContainerStyle={{
+              paddingTop: headerHeight + headerGap,
+              paddingBottom: bottomSpace,
+              flexGrow: 1,
+            }}
             alwaysBounceVertical
             bounces
             onScrollBeginDrag={closeAllSwipes}
@@ -411,6 +489,7 @@ export default function BillingScreen() {
                 tintColor={spinner}
                 colors={[spinner]}
                 progressBackgroundColor={androidBg}
+                progressViewOffset={headerHeight + headerGap}
               />
             }
             onEndReached={onEndReached}
@@ -432,7 +511,7 @@ export default function BillingScreen() {
           onClose={closeEdit}
         />
 
-        {/* <DeleteBillingModal
+        <DeleteBillingModal
           open={!!deleting}
           billingId={deleting?.id ?? null}
           billingName={deleting?.name ?? ""}
@@ -440,7 +519,7 @@ export default function BillingScreen() {
           onDeleted={() => {
             q.refetch();
           }}
-        /> */}
+        />
       </View>
     </DashboardShell>
   );
@@ -448,6 +527,17 @@ export default function BillingScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, paddingHorizontal: 14 },
+  topHeaderGlass: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    paddingHorizontal: 18,
+    paddingBottom: 0,
+    borderRadius: 18,
+    // borderBottomWidth: StyleSheet.hairlineWidth,
+  },
 
   headerRow: {
     flexDirection: "row",
@@ -460,10 +550,11 @@ const styles = StyleSheet.create({
   h2: { marginTop: 2, fontSize: 13, lineHeight: 18 },
 
   addBtn: {
-    backgroundColor: "#4F46E5",
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 14,
+    overflow: "hidden",
+    // borderWidth: StyleSheet.hairlineWidth,
   },
   addBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 
@@ -475,7 +566,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 18,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     padding: 14,
     position: "relative",
   },
@@ -513,7 +604,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
 
   mid: {

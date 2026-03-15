@@ -923,7 +923,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
 
 
@@ -940,7 +940,7 @@ const styles = StyleSheet.create({
     height: 36,
     width: 36,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -948,7 +948,7 @@ const styles = StyleSheet.create({
     height: 36,
     width: 36,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -960,7 +960,7 @@ const styles = StyleSheet.create({
 
   block: {
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     padding: 14,
   },
   blockHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 8 },
@@ -971,7 +971,7 @@ const styles = StyleSheet.create({
 
   input: {
     marginTop: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: Platform.OS === "ios" ? 12 : 10,
@@ -987,13 +987,13 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     paddingHorizontal: 12,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
   avatar: {
     height: 30,
     width: 30,
     borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1005,7 +1005,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     paddingHorizontal: 12,
     borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
   dot: { height: 8, width: 8, borderRadius: 999 },
 
@@ -1018,7 +1018,7 @@ const styles = StyleSheet.create({
   footerBtn: {
     flex: 1,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",
@@ -1034,7 +1034,7 @@ const styles = StyleSheet.create({
   // ---- Category/date select modal styles ----
   selectField: {
     marginTop: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -1053,7 +1053,7 @@ const styles = StyleSheet.create({
   categorySheet: {
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     maxHeight: "70%",
     width: "100%",
   },
@@ -1066,7 +1066,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     marginBottom: 8,
     flexDirection: "row",
     alignItems: "center",
@@ -1080,7 +1080,7 @@ const styles = StyleSheet.create({
   dateSheet: {
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     maxHeight: "70%",
     width: "100%",
   },
@@ -1094,7 +1094,7 @@ const styles = StyleSheet.create({
   },
   loadingWrap: {
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     padding: 16,
     alignItems: "center",
     justifyContent: "center",
@@ -1107,9 +1107,11 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 54,
     borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     marginTop: 10,
   },
 
-  errorBox: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 12 },
+  errorBox: { borderRadius: 16, 
+    // borderWidth: StyleSheet.hairlineWidth, 
+    padding: 12 },
 });

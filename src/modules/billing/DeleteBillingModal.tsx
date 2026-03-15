@@ -7,41 +7,41 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import { GlassView } from "expo-glass-effect";
 import { Ionicons } from "@expo/vector-icons";
 
-import { useTheme } from "@/src/context/ThemeContext";
-import { useDeleteIncome } from "./hooks/useIncomeApi";
-import { GlassView } from "expo-glass-effect";
+import { useTheme } from "../../context/ThemeContext";
+import { useDeleteBilling } from "./hooks/useBillingApi";
 
 type Props = {
   open: boolean;
-  incomeId: string | null;
-  incomeName: string;
+  billingId: string | null;
+  billingName: string;
   onClose: () => void;
   onDeleted?: () => void;
 };
 
-export default function DeleteIncomeModal({
+export default function DeleteBillingModal({
   open,
-  incomeId,
-  incomeName,
+  billingId,
+  billingName,
   onClose,
   onDeleted,
 }: Props) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
-  const del = useDeleteIncome();
+  const del = useDeleteBilling();
   const busy = del.isPending;
 
   const [localError, setLocalError] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState(incomeName);
+  const [displayName, setDisplayName] = useState(billingName);
 
   React.useEffect(() => {
     if (open) {
-      setDisplayName(incomeName);
+      setDisplayName(billingName);
     }
-  }, [open, incomeName]);
+  }, [open, billingName]);
 
   const T = useMemo(() => {
     const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
@@ -75,11 +75,11 @@ export default function DeleteIncomeModal({
   }
 
   function handleDelete() {
-    if (!incomeId || busy) return;
+    if (!billingId || busy) return;
 
     setLocalError(null);
 
-    del.mutate(incomeId, {
+    del.mutate(billingId, {
       onSuccess: () => {
         onDeleted?.();
         onClose();
@@ -88,7 +88,7 @@ export default function DeleteIncomeModal({
         const msg =
           err?.response?.data?.message ||
           err?.message ||
-          "Failed to delete income";
+          "Failed to delete billing";
         setLocalError(msg);
       },
     });
@@ -113,8 +113,6 @@ export default function DeleteIncomeModal({
               colorScheme={isDark ? "dark" : "light"}
               style={[styles.modal, { borderColor: T.border }, T.shadow]}
             >
-
-              {/* Header */}
               <View style={[styles.header, { borderBottomColor: T.headerBorder }]}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
                   <View
@@ -122,7 +120,9 @@ export default function DeleteIncomeModal({
                       styles.iconPill,
                       {
                         borderColor: T.border,
-                        backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                        backgroundColor: isDark
+                          ? "rgba(255,255,255,0.06)"
+                          : "rgba(0,0,0,0.05)",
                       },
                     ]}
                   >
@@ -130,21 +130,26 @@ export default function DeleteIncomeModal({
                   </View>
 
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.h1, { color: T.text }]}>Delete income</Text>
+                    <Text style={[styles.h1, { color: T.text }]}>Delete billing</Text>
                     <Text style={[styles.h2, { color: T.muted }]}>
-                      This will permanently remove the income and update analytics.
+                      This will stop future recurring charges for this billing.
                     </Text>
                   </View>
                 </View>
               </View>
 
-              {/* Body */}
               <View style={styles.body}>
                 <Text style={[styles.bodyText, { color: T.text }]}>
                   Are you sure you want to delete{" "}
-                  <Text style={{ fontWeight: "800" }}>{displayName || "this income"}</Text>?
+                  <Text style={{ fontWeight: "800" }}>
+                    {displayName || "this billing"}
+                  </Text>
+                  ?
                 </Text>
-                <Text style={[styles.bodySub, { color: T.muted }]}>You can’t undo this.</Text>
+
+                <Text style={[styles.bodySub, { color: T.muted }]}>
+                  Existing costs already created will stay, but future recurring costs will stop. You can’t undo this.
+                </Text>
 
                 {localError ? (
                   <View
@@ -156,13 +161,16 @@ export default function DeleteIncomeModal({
                       },
                     ]}
                   >
-                    <Text style={{ color: T.danger, fontWeight: "800" }}>Delete failed</Text>
-                    <Text style={{ color: T.danger, marginTop: 4 }}>{localError}</Text>
+                    <Text style={{ color: T.danger, fontWeight: "800" }}>
+                      Delete failed
+                    </Text>
+                    <Text style={{ color: T.danger, marginTop: 4 }}>
+                      {localError}
+                    </Text>
                   </View>
                 ) : null}
               </View>
 
-              {/* Footer */}
               <View style={[styles.footer, { borderTopColor: T.headerBorder }]}>
                 <Pressable
                   onPress={closeIfAllowed}
@@ -171,7 +179,9 @@ export default function DeleteIncomeModal({
                     styles.footerBtn,
                     {
                       borderColor: T.border,
-                      backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.06)"
+                        : "rgba(0,0,0,0.05)",
                       opacity: pressed ? 0.9 : 1,
                     },
                   ]}
@@ -181,13 +191,20 @@ export default function DeleteIncomeModal({
 
                 <Pressable
                   onPress={handleDelete}
-                  disabled={!incomeId || busy}
+                  disabled={!billingId || busy}
                   style={({ pressed }) => [
                     styles.footerBtnPrimary,
-                    { backgroundColor: "rgba(239,68,68,0.95)", opacity: pressed ? 0.92 : 1 },
+                    {
+                      backgroundColor: "rgba(239,68,68,0.95)",
+                      opacity: pressed ? 0.92 : 1,
+                    },
                   ]}
                 >
-                  {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "900" }}>Delete</Text>}
+                  {busy ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={{ color: "#fff", fontWeight: "900" }}>Delete</Text>
+                  )}
                 </Pressable>
               </View>
             </GlassView>
@@ -200,9 +217,19 @@ export default function DeleteIncomeModal({
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 12 },
 
-  modalWrap: { width: "100%", maxWidth: 420 },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+  },
+
+  modalWrap: {
+    width: "100%",
+    maxWidth: 420,
+  },
+
   modal: {
     borderRadius: 24,
     // borderWidth: StyleSheet.hairlineWidth,
@@ -214,9 +241,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    // borderBottomWidth: StyleSheet.hairlineWidth,
     gap: 10,
   },
+
   iconPill: {
     height: 36,
     width: 36,
@@ -225,32 +253,50 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  closeBtn: {
-    height: 36,
-    width: 36,
-    borderRadius: 14,
-    // borderWidth: StyleSheet.hairlineWidth,
-    alignItems: "center",
-    justifyContent: "center",
+
+  h1: {
+    fontSize: 16,
+    fontWeight: "800",
   },
 
-  h1: { fontSize: 16, fontWeight: "800" },
-  h2: { marginTop: 2, fontSize: 12, fontWeight: "500", lineHeight: 16 },
+  h2: {
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: "500",
+    lineHeight: 16,
+  },
 
-  body: { padding: 16 },
-  bodyText: { fontSize: 14, fontWeight: "700", lineHeight: 20 },
-  bodySub: { marginTop: 6, fontSize: 12, fontWeight: "600" },
+  body: {
+    padding: 16,
+  },
 
-  errorBox: { marginTop: 12, borderRadius: 16, 
-    // borderWidth: StyleSheet.hairlineWidth, 
-    padding: 12 },
+  bodyText: {
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+
+  bodySub: {
+    marginTop: 6,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 18,
+  },
+
+  errorBox: {
+    marginTop: 12,
+    borderRadius: 16,
+    // borderWidth: StyleSheet.hairlineWidth,
+    padding: 12,
+  },
 
   footer: {
     padding: 14,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    // borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     gap: 10,
   },
+
   footerBtn: {
     flex: 1,
     borderRadius: 14,
@@ -259,6 +305,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   footerBtnPrimary: {
     flex: 1,
     borderRadius: 14,

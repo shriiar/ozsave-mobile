@@ -31,6 +31,13 @@ export default function DeleteCostModal({ open, costId, costName, onClose, onDel
   const busy = del.isPending;
 
   const [localError, setLocalError] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState(costName);
+
+  React.useEffect(() => {
+    if (open) {
+      setDisplayName(costName);
+    }
+  }, [open, costName]);
 
   const T = useMemo(() => {
     const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
@@ -108,7 +115,7 @@ export default function DeleteCostModal({ open, costId, costName, onClose, onDel
               <View style={styles.body}>
                 <Text style={[styles.bodyText, { color: T.text }]}>
                   Are you sure you want to delete{" "}
-                  <Text style={{ fontWeight: "800" }}>{costName || "this cost"}</Text>?
+                  <Text style={{ fontWeight: "800" }}>{displayName || "this cost"}</Text>?
                 </Text>
                 <Text style={[styles.bodySub, { color: T.muted }]}>You can’t undo this.</Text>
 
@@ -167,7 +174,7 @@ const styles = StyleSheet.create({
   modalWrap: { width: "100%", maxWidth: 420 },
   modal: {
     borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
   },
 
@@ -183,7 +190,7 @@ const styles = StyleSheet.create({
     height: 36,
     width: 36,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -191,7 +198,7 @@ const styles = StyleSheet.create({
     height: 36,
     width: 36,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -202,7 +209,9 @@ const styles = StyleSheet.create({
   bodyText: { fontSize: 14, fontWeight: "700", lineHeight: 20 },
   bodySub: { marginTop: 6, fontSize: 12, fontWeight: "600" },
 
-  errorBox: { marginTop: 12, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: 12 },
+  errorBox: { marginTop: 12, borderRadius: 16, 
+    // borderWidth: StyleSheet.hairlineWidth, 
+    padding: 12 },
 
   footer: {
     padding: 14,
@@ -213,7 +222,7 @@ const styles = StyleSheet.create({
   footerBtn: {
     flex: 1,
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",

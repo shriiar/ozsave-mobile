@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
 
     panel: {
         flex: 1,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         padding: 14,
     },
 
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
 
     tile: {
         borderRadius: 16,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         overflow: "hidden",
     },
 
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     input: {
         height: 44,
         borderRadius: 16,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         paddingHorizontal: 12,
         justifyContent: "center",
     },
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
 
     pickerWrap: {
         borderRadius: 16,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         overflow: "hidden",
         paddingBottom: 8,
     },
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
         width: 56,
         height: 44,
         borderRadius: 16,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 44,
         borderRadius: 16,
-        borderWidth: StyleSheet.hairlineWidth,
+        // borderWidth: StyleSheet.hairlineWidth,
         alignItems: "center",
         justifyContent: "center",
     },

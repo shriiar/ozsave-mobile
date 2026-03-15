@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 18,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
   },
 
   card: {
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   inner: {
     flex: 1,
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     padding: 12,
     overflow: "hidden",
   },
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
 
   badge: {
     borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    // borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 10,
     paddingVertical: 10,
     marginBottom: 8,

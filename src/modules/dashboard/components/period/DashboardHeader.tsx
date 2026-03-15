@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, Pressable, StyleSheet, Modal, ScrollView, Platform } from "react-native";
-import { BlurView } from "expo-blur";
 import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { useTheme } from "../../../../context/ThemeContext";
+import { BlurView } from "expo-blur";
 
 export type RangeKey = "7d" | "14d" | "30d";
 
@@ -46,20 +46,14 @@ function RangePickerModal(props: {
   return (
     <Modal visible={props.open} transparent animationType="fade" onRequestClose={props.onClose}>
       <View style={StyleSheet.absoluteFill}>
-        <BlurView
-          intensity={isDark ? 70 : 90}
-          tint={isDark ? "dark" : "light"}
-          style={StyleSheet.absoluteFill}
-        />
-
         <Pressable style={StyleSheet.absoluteFill} onPress={props.onClose}>
           <View style={{ flex: 1, backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)" }} />
         </Pressable>
 
         <View style={styles.modalOverlay}>
-          <BlurView
-            intensity={isDark ? 28 : 45}
-            tint={isDark ? "dark" : "light"}
+          <GlassView
+            glassEffectStyle="regular"
+            colorScheme={isDark ? "dark" : "light"}
             style={[styles.sheet, { borderColor: T.border }]}
           >
             <LinearGradient
@@ -137,7 +131,7 @@ function RangePickerModal(props: {
                 </View>
               </>
             )}
-          </BlurView>
+          </GlassView>
         </View>
       </View>
     </Modal>

@@ -121,6 +121,20 @@ export type DashboardBalancesResponse = {
   owedToYou: Array<{ userId: string; amount: number }>;
 };
 
+export type GeminiSummaryPeriod = {
+  summary: string;
+  suggestions: string[];
+  warning?: string | null;
+};
+
+export type GeminiSummaryResponse = {
+  weekly?: GeminiSummaryPeriod;
+  fortnightly?: GeminiSummaryPeriod;
+  monthly?: GeminiSummaryPeriod;
+  historicalComparison?: Record<string, string>;
+  overallObservation?: string;
+};
+
 // Backend sometimes returns envelope or direct payload
 type ApiEnvelope<T> = {
   statusCode: number;
@@ -164,5 +178,13 @@ export const DashboardApi = {
       `/dashboard/balances`
     );
     return unwrap<DashboardBalancesResponse>(res);
+  },
+  
+  async getGeminiSummary() {
+    const res = await apiRequest<ApiEnvelope<GeminiSummaryResponse>>(
+      "GET",
+      `/gemeni/summary`
+    );
+    return unwrap<GeminiSummaryResponse>(res);
   },
 };

@@ -26,6 +26,8 @@ import { WidgetStack } from "./period/WidgetStack";
 import { SmartAlertsCard } from "./period/SmartAlertsCard";
 import { InsightsGridCard } from "./period/InsightsGridCard";
 import { IncomeInsightsCard } from "./period/IncomeInsightsCard";
+import DashboardAiSummaryButton from "./period/DashboardAiSummaryButton";
+import DashboardAiSummaryModal from "./period/DashboardAiSummaryModal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type HouseBase = { _id: string; name: string };
@@ -129,6 +131,7 @@ export default function DashboardWithHouse({
   const refreshing = !!isFetching;
 
   const [viewportH, setViewportH] = useState(0);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const onLayout = (e: LayoutChangeEvent) => {
     const h = e.nativeEvent.layout.height;
     if (h && h !== viewportH) setViewportH(h);
@@ -219,6 +222,8 @@ export default function DashboardWithHouse({
           onNext={onNext}
         />
 
+        <DashboardAiSummaryButton onPress={() => setSummaryOpen(true)} />
+
         <PeriodSummaryCards
           rangeLabel={rangeMeta.label}
           totalCost={summary.totalCost}
@@ -263,6 +268,10 @@ export default function DashboardWithHouse({
 
         <View style={{ flexGrow: 1 }} />
       </ScrollView>
+      <DashboardAiSummaryModal
+        open={summaryOpen}
+        onClose={() => setSummaryOpen(false)}
+      />
     </View>
   );
 }

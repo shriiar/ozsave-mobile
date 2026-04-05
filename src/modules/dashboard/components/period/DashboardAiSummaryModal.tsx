@@ -15,7 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "@/src/context/ThemeContext";
-import { GeminiSummaryResponse } from "../../api";
+import { DashboardApi, GeminiSummaryResponse } from "../../api";
 
 type Props = {
   open: boolean;
@@ -28,7 +28,7 @@ type Status = "idle" | "loading" | "success" | "error";
 const MOCK_SUMMARY_DATA: GeminiSummaryResponse = {
   weekly: {
     summary:
-      "So far this week (now complete), your actual income is $0.00 AUD, but you expect to earn $1,287.00 AUD. Your total costs reached $2,711.81 AUD, heavily driven by utilities ($2,260.16 AUD) and rent ($381.18 AUD). This spending is significantly higher than your typical weekly costs, which averaged around $337.55 AUD in the last four weeks.",
+      "bla bla asdasd So far this week (now complete), your actual income is $0.00 AUD, but you expect to earn $1,287.00 AUD. Your total costs reached $2,711.81 AUD, heavily driven by utilities ($2,260.16 AUD) and rent ($381.18 AUD). This spending is significantly higher than your typical weekly costs, which averaged around $337.55 AUD in the last four weeks.",
     suggestions: [
       "Review recent utility and rent transactions for accuracy, as these costs are exceptionally high this week.",
       "Prioritize tracking actual income to better reflect your financial position, given your high estimated income.",
@@ -64,6 +64,8 @@ const MOCK_SUMMARY_DATA: GeminiSummaryResponse = {
   overallObservation:
     "Your financial data shows high variability in both income and costs, with utilities consistently being a major expenditure across months and fortnights. While estimated income often contributes significantly to your projected net, there's a recurring pattern of zero or low recorded actual income in some periods, contrasting with substantial actual income in others. This suggests income tracking might be inconsistent or income is very sporadic. High utility costs appear to be a structural element of your spending.",
 };
+
+const USE_MOCK_SUMMARY = false;
 
 function AiWaveSkeleton({ isDark }: { isDark: boolean }) {
   const shimmerX = useRef(new Animated.Value(0)).current;
@@ -229,9 +231,15 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
       setStatus("loading");
       setError(null);
 
-      await new Promise((resolve) => setTimeout(resolve, 7000));
+      if (USE_MOCK_SUMMARY) {
+        await new Promise((resolve) => setTimeout(resolve, 7000));
+        setData(MOCK_SUMMARY_DATA);
+        setStatus("success");
+        return;
+      }
 
-      setData(MOCK_SUMMARY_DATA);
+      const res = await DashboardApi.getGeminiSummary();
+      setData(res);
       setStatus("success");
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Failed to generate summary");

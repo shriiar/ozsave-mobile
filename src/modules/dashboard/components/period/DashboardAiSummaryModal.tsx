@@ -7,11 +7,11 @@ import {
   Text,
   View,
   Animated,
+  Platform,
+  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GlassView } from "expo-glass-effect";
-import MaskedView from "@react-native-masked-view/masked-view";
-import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "@/src/context/ThemeContext";
@@ -25,129 +25,107 @@ type Props = {
 
 type Status = "idle" | "loading" | "success" | "error";
 
-const MOCK_SUMMARY_DATA: GeminiSummaryResponse = {
-  weekly: {
-    summary:
-      "bla bla asdasd So far this week (now complete), your actual income is $0.00 AUD, but you expect to earn $1,287.00 AUD. Your total costs reached $2,711.81 AUD, heavily driven by utilities ($2,260.16 AUD) and rent ($381.18 AUD). This spending is significantly higher than your typical weekly costs, which averaged around $337.55 AUD in the last four weeks.",
-    suggestions: [
-      "Review recent utility and rent transactions for accuracy, as these costs are exceptionally high this week.",
-      "Prioritize tracking actual income to better reflect your financial position, given your high estimated income.",
-    ],
-    warning:
-      "Your projected net for the week is significantly negative at -$1,424.81 AUD, and actual income recorded is zero. This large deficit is a major concern.",
-  },
-  fortnightly: {
-    summary:
-      "So far this fortnight (now complete), you have recorded $1,609.61 AUD in actual income and expect an additional $2,714.62 AUD. Your total costs amounted to $3,094.28 AUD, primarily driven by utilities ($2,260.16 AUD) and rent ($381.18 AUD). While your projected net is positive at $1,229.95 AUD, your costs are higher than two of the last three fortnights, though similar to the fortnight ending March 8th ($3,427.07 AUD), which also saw high utility spending.",
-    suggestions: [
-      "Monitor your spending in utilities closely, as it's consistently a top cost category across periods.",
-      "Ensure all expected income is accurately recorded to maintain a clear picture of your net position.",
-    ],
-    warning:
-      "Despite a positive projected net, your actual income recorded is significantly less than your total costs, leading to a manual net deficit of -$1,484.67 AUD. Relying heavily on estimated income could lead to unexpected shortfalls.",
-  },
-  monthly: {
-    summary:
-      "So far this month (5 of 30 days elapsed), your actual income is $0.00 AUD, with an estimated income of $1,045.00 AUD. Your total costs are very low at $17.16 AUD, mainly from utilities and eating out, resulting in a projected net of $1,027.84 AUD. You also have $470.10 AUD in upcoming bills.",
-    suggestions: [
-      "Given only 5 days have passed, actively track all income and expenses to ensure an accurate budget for the remainder of April.",
-      "Prepare for upcoming bills totaling $470.10 AUD, ensuring sufficient funds are available as more costs are likely to emerge.",
-    ],
-    warning:
-      "With only 5 days into the month, your actual income is zero while projected expenses are yet to fully materialise. Ensure estimated income materialises to cover both current and upcoming expenses, especially given your high income variability.",
-  },
-  historicalComparison: {
-    "2026-01": "For January 2026, the data is incomplete with no income or costs recorded.",
-    "2026-02": "In February 2026, actual income was $4,677.86 AUD and estimated income was $3,727.53 AUD, with total costs of $3,649.17 AUD. Top spending categories included utilities ($2,250.00 AUD) and rent ($363.24 AUD).",
-    "2026-03": "For March 2026, actual income reached $4,054.87 AUD and estimated income was $4,832.68 AUD. Total costs were $4,099.31 AUD, with utilities ($2,311.22 AUD), rent ($381.18 AUD), and 'other' ($350.00 AUD) being the primary spending areas.",
-  },
-  overallObservation:
-    "Your financial data shows high variability in both income and costs, with utilities consistently being a major expenditure across months and fortnights. While estimated income often contributes significantly to your projected net, there's a recurring pattern of zero or low recorded actual income in some periods, contrasting with substantial actual income in others. This suggests income tracking might be inconsistent or income is very sporadic. High utility costs appear to be a structural element of your spending.",
-};
-
-const USE_MOCK_SUMMARY = false;
+// const MOCK_SUMMARY_DATA: GeminiSummaryResponse = {
+//   weekly: {
+//     summary:
+//       "bla bla asdasd So far this week (now complete), your actual income is $0.00 AUD, but you expect to earn $1,287.00 AUD. Your total costs reached $2,711.81 AUD, heavily driven by utilities ($2,260.16 AUD) and rent ($381.18 AUD). This spending is significantly higher than your typical weekly costs, which averaged around $337.55 AUD in the last four weeks.",
+//     suggestions: [
+//       "Review recent utility and rent transactions for accuracy, as these costs are exceptionally high this week.",
+//       "Prioritize tracking actual income to better reflect your financial position, given your high estimated income.",
+//     ],
+//     warning:
+//       "Your projected net for the week is significantly negative at -$1,424.81 AUD, and actual income recorded is zero. This large deficit is a major concern.",
+//   },
+//   fortnightly: {
+//     summary:
+//       "So far this fortnight (now complete), you have recorded $1,609.61 AUD in actual income and expect an additional $2,714.62 AUD. Your total costs amounted to $3,094.28 AUD, primarily driven by utilities ($2,260.16 AUD) and rent ($381.18 AUD). While your projected net is positive at $1,229.95 AUD, your costs are higher than two of the last three fortnights, though similar to the fortnight ending March 8th ($3,427.07 AUD), which also saw high utility spending.",
+//     suggestions: [
+//       "Monitor your spending in utilities closely, as it's consistently a top cost category across periods.",
+//       "Ensure all expected income is accurately recorded to maintain a clear picture of your net position.",
+//     ],
+//     warning:
+//       "Despite a positive projected net, your actual income recorded is significantly less than your total costs, leading to a manual net deficit of -$1,484.67 AUD. Relying heavily on estimated income could lead to unexpected shortfalls.",
+//   },
+//   monthly: {
+//     summary:
+//       "So far this month (5 of 30 days elapsed), your actual income is $0.00 AUD, with an estimated income of $1,045.00 AUD. Your total costs are very low at $17.16 AUD, mainly from utilities and eating out, resulting in a projected net of $1,027.84 AUD. You also have $470.10 AUD in upcoming bills.",
+//     suggestions: [
+//       "Given only 5 days have passed, actively track all income and expenses to ensure an accurate budget for the remainder of April.",
+//       "Prepare for upcoming bills totaling $470.10 AUD, ensuring sufficient funds are available as more costs are likely to emerge.",
+//     ],
+//     warning:
+//       "With only 5 days into the month, your actual income is zero while projected expenses are yet to fully materialise. Ensure estimated income materialises to cover both current and upcoming expenses, especially given your high income variability.",
+//   },
+//   historicalComparison: {
+//     "2026-01": "For January 2026, the data is incomplete with no income or costs recorded.",
+//     "2026-02": "In February 2026, actual income was $4,677.86 AUD and estimated income was $3,727.53 AUD, with total costs of $3,649.17 AUD. Top spending categories included utilities ($2,250.00 AUD) and rent ($363.24 AUD).",
+//     "2026-03": "For March 2026, actual income reached $4,054.87 AUD and estimated income was $4,832.68 AUD. Total costs were $4,099.31 AUD, with utilities ($2,311.22 AUD), rent ($381.18 AUD), and 'other' ($350.00 AUD) being the primary spending areas.",
+//   },
+//   overallObservation:
+//     "Your financial data shows high variability in both income and costs, with utilities consistently being a major expenditure across months and fortnights. While estimated income often contributes significantly to your projected net, there's a recurring pattern of zero or low recorded actual income in some periods, contrasting with substantial actual income in others. This suggests income tracking might be inconsistent or income is very sporadic. High utility costs appear to be a structural element of your spending.",
+// };
 
 function AiWaveSkeleton({ isDark }: { isDark: boolean }) {
-  const shimmerX = useRef(new Animated.Value(0)).current;
+  const shimmer = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    shimmerX.setValue(0);
+    shimmer.setValue(0);
 
     const loop = Animated.loop(
-      Animated.timing(shimmerX, {
+      Animated.timing(shimmer, {
         toValue: 1,
-        duration: 2200,
-        useNativeDriver: true,
+        duration: 2500,
+        useNativeDriver: false,
       })
     );
 
     loop.start();
     return () => loop.stop();
-  }, [shimmerX]);
+  }, [shimmer]);
 
   const loadingParagraph =
     "Summarizing your last 3 months of activity, reviewing cost patterns and spending spikes, checking cost, income, and billing pressure, comparing recent periods and warning signals, and generating suggestions with overall observations.";
 
-  const shimmerTranslateX = shimmerX.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-260, 420],
-  });
+  const tokens = loadingParagraph.split(/(\s+)/).filter(Boolean);
+  const tokenCount = Math.max(tokens.length, 1);
+  const band = Platform.OS === "ios" ? 0.12 : 0.14;
 
   return (
     <View style={styles.waveWrap}>
       <View style={styles.loadingTextList}>
-        <Text
-          style={[
-            styles.loadingParagraph,
-            {
-              color: isDark ? "rgba(241,245,249,0.38)" : "rgba(15,23,42,0.40)",
-            },
-          ]}
-        >
-          {loadingParagraph}
-        </Text>
+        <Text style={styles.loadingParagraphWrap}>
+          {tokens.map((token, idx) => {
+            const center = idx / tokenCount;
+            const color = shimmer.interpolate({
+              inputRange: [
+                Math.max(0, center - band),
+                center,
+                Math.min(1, center + band),
+              ],
+              outputRange: isDark
+                ? [
+                  "rgba(241,245,249,0.34)",
+                  "rgba(255,255,255,0.98)",
+                  "rgba(241,245,249,0.34)",
+                ]
+                : [
+                  "rgba(15,23,42,0.34)",
+                  "rgba(15,23,42,0.98)",
+                  "rgba(15,23,42,0.34)",
+                ],
+              extrapolate: "clamp",
+            });
 
-        <MaskedView
-          pointerEvents="none"
-          style={styles.loadingParagraphMaskWrap}
-          maskElement={
-            <Text style={[styles.loadingParagraph, styles.loadingParagraphMaskText]}>
-              {loadingParagraph}
-            </Text>
-          }
-        >
-          <Animated.View
-            style={[
-              styles.loadingShimmerTrack,
-              {
-                transform: [{ translateX: shimmerTranslateX }],
-              },
-            ]}
-          >
-            <LinearGradient
-              colors={
-                isDark
-                  ? [
-                    "rgba(255,255,255,0)",
-                    "rgba(255,255,255,0.18)",
-                    "rgba(255,255,255,1)",
-                    "rgba(255,255,255,0.18)",
-                    "rgba(255,255,255,0)",
-                  ]
-                  : [
-                    "rgba(15,23,42,0)",
-                    "rgba(15,23,42,0.20)",
-                    "rgba(15,23,42,1)",
-                    "rgba(15,23,42,0.20)",
-                    "rgba(15,23,42,0)",
-                  ]
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.loadingShimmerGradient}
-            />
-          </Animated.View>
-        </MaskedView>
+            return (
+              <Animated.Text
+                key={`${token}-${idx}`}
+                style={[styles.loadingParagraph, { color }]}
+              >
+                {token}
+              </Animated.Text>
+            );
+          })}
+        </Text>
       </View>
     </View>
   );
@@ -212,6 +190,81 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const revealReady = status === "success" && !!data;
 
+  const surfaceShift = useRef(new Animated.Value(0)).current;
+  const surfacePulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!open) {
+      surfaceShift.stopAnimation();
+      surfacePulse.stopAnimation();
+      surfaceShift.setValue(0);
+      surfacePulse.setValue(0);
+      return;
+    }
+
+    const shiftLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(surfaceShift, {
+          toValue: 1,
+          duration: 1600,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(surfaceShift, {
+          toValue: 0,
+          duration: 1500,
+          easing: Easing.inOut(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(surfacePulse, {
+          toValue: 1,
+          duration: 2100,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(surfacePulse, {
+          toValue: 0,
+          duration: 2100,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    shiftLoop.start();
+    pulseLoop.start();
+
+    return () => {
+      shiftLoop.stop();
+      pulseLoop.stop();
+    };
+  }, [open, surfacePulse, surfaceShift]);
+
+  const sheetTranslateY = surfaceShift.interpolate({
+    inputRange: [0, 1],
+    outputRange: [22, -10],
+  });
+
+  const sheetTranslateX = surfaceShift.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [-18, 14, -10],
+  });
+
+  const sheetScale = surfacePulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.04],
+  });
+
+  const sheetOpacity = surfacePulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.55, 0.9],
+  });
+
   const T = useMemo(() => {
     return {
       border: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)",
@@ -230,13 +283,6 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
     try {
       setStatus("loading");
       setError(null);
-
-      if (USE_MOCK_SUMMARY) {
-        await new Promise((resolve) => setTimeout(resolve, 7000));
-        setData(MOCK_SUMMARY_DATA);
-        setStatus("success");
-        return;
-      }
 
       const res = await DashboardApi.getGeminiSummary();
       setData(res);
@@ -269,15 +315,79 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
 
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)",
-          }}
-        />
-      </Pressable>
+<Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
+  <View
+    style={{
+      flex: 1,
+      backgroundColor: isDark ? "rgba(0,0,0,0.34)" : "rgba(8,15,35,0.14)",
+      overflow: "hidden",
+    }}
+  >
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.intelligenceSheet,
+        {
+          top: "14%",
+          left: "-18%",
+          backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.52)",
+          opacity: sheetOpacity,
+          transform: [
+            { translateX: sheetTranslateX },
+            { translateY: sheetTranslateY },
+            { scale: sheetScale },
+            { rotate: "-8deg" },
+          ],
+        },
+      ]}
+    />
 
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.intelligenceSheet,
+        {
+          top: "34%",
+          right: "-24%",
+          backgroundColor: isDark ? "rgba(129,140,248,0.11)" : "rgba(191,219,254,0.46)",
+          opacity: sheetOpacity,
+          transform: [
+            { translateX: Animated.multiply(sheetTranslateX, -0.8) },
+            { translateY: Animated.multiply(sheetTranslateY, 0.75) },
+            {
+              scale: surfacePulse.interpolate({
+                inputRange: [0, 1],
+                outputRange: [1, 1.06],
+              }),
+            },
+            { rotate: "7deg" },
+          ],
+        },
+      ]}
+    />
+
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.intelligenceSheetThin,
+        {
+          bottom: "12%",
+          left: "-12%",
+          backgroundColor: isDark ? "rgba(99,102,241,0.10)" : "rgba(165,180,252,0.30)",
+          opacity: surfacePulse.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.35, 0.7],
+          }),
+          transform: [
+            { translateX: Animated.multiply(sheetTranslateX, 0.55) },
+            { translateY: Animated.multiply(sheetTranslateY, -0.6) },
+            { rotate: "-5deg" },
+          ],
+        },
+      ]}
+    />
+  </View>
+</Pressable>
       <View
         style={[
           StyleSheet.absoluteFillObject,
@@ -336,28 +446,34 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
                       },
                     ]}
                   >
-                    <Text style={{ color: T.danger, fontWeight: "800", fontSize: 14 }}>
-                      Failed to generate summary
-                    </Text>
-                    <Text style={{ color: T.danger, marginTop: 6, fontSize: 13 }}>
-                      {error}
-                    </Text>
+                    <RevealBlock visible delay={REVEAL_BASE}>
+                      <Text style={{ color: T.danger, fontWeight: "800", fontSize: 14 }}>
+                        Failed to generate summary
+                      </Text>
+                    </RevealBlock>
 
-                    <Pressable
-                      onPress={loadSummary}
-                      style={({ pressed }) => [
-                        styles.retryBtn,
-                        {
-                          backgroundColor: T.primary,
-                          opacity: pressed ? 0.9 : 1,
-                        },
-                      ]}
-                    >
-                      <Text style={{ color: "#fff", fontWeight: "800" }}>Retry</Text>
-                    </Pressable>
+                    <RevealBlock visible delay={REVEAL_BASE + REVEAL_STEP}>
+                      <Text style={{ color: T.danger, marginTop: 6, fontSize: 13, lineHeight: 19 }}>
+                        {error}
+                      </Text>
+                    </RevealBlock>
+
+                    <RevealBlock visible delay={REVEAL_BASE + REVEAL_STEP * 2}>
+                      <Pressable
+                        onPress={loadSummary}
+                        style={({ pressed }) => [
+                          styles.retryBtn,
+                          {
+                            backgroundColor: T.primary,
+                            opacity: pressed ? 0.9 : 1,
+                          },
+                        ]}
+                      >
+                        <Text style={{ color: "#fff", fontWeight: "800" }}>Retry</Text>
+                      </Pressable>
+                    </RevealBlock>
                   </View>
                 )}
-
                 {status === "success" && data && (
                   <>
                     {!!data.overallObservation && (
@@ -667,17 +783,20 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: "600",
   },
-  loadingParagraphMaskWrap: {
-    ...StyleSheet.absoluteFillObject,
+  loadingParagraphWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
-  loadingParagraphMaskText: {
-    color: "#000",
-  },
-  loadingShimmerTrack: {
-    width: 220,
-    height: "100%",
-  },
-  loadingShimmerGradient: {
-    flex: 1,
-  },
+  intelligenceSheet: {
+  position: "absolute",
+  width: "140%",
+  height: 190,
+  borderRadius: 48,
+},
+intelligenceSheetThin: {
+  position: "absolute",
+  width: "128%",
+  height: 110,
+  borderRadius: 40,
+},
 });

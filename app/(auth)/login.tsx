@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { useAuth } from "../../src/context/AuthContext";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -81,34 +82,74 @@ export default function Login() {
     <View style={styles.container}>
       {/* Background glows */}
       <LinearGradient
-        colors={["rgba(99,102,241,0.25)", "transparent"]}
-        style={[styles.glow, { top: -100, left: -100, width: 400, height: 400 }]}
-      />
-      <LinearGradient
-        colors={["rgba(16,185,129,0.15)", "transparent"]}
-        style={[styles.glow, { bottom: -120, right: -120, width: 440, height: 440 }]}
+        colors={["#EEF2FF", "#F8FAFC", "#FFFFFF"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
       />
 
-      <View style={styles.card}>
-        <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
+      <LinearGradient
+        pointerEvents="none"
+        colors={["rgba(99,102,241,0.10)", "rgba(255,255,255,0.00)"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.topWash}
+      />
+
+      <LinearGradient
+        pointerEvents="none"
+        colors={["rgba(14,165,233,0.08)", "rgba(255,255,255,0.00)"]}
+        start={{ x: 1, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.bottomWash}
+      />
+
+      <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.card}>
+        <BlurView intensity={34} tint="light" style={StyleSheet.absoluteFill} />
 
         <LinearGradient
           pointerEvents="none"
-          colors={["rgba(255,255,255,0.72)", "rgba(255,255,255,0.45)", "rgba(255,255,255,0.25)"]}
+          colors={[
+            "rgba(255,255,255,0.78)",
+            "rgba(255,255,255,0.54)",
+            "rgba(255,255,255,0.30)",
+          ]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFill}
+        />
+
+        <LinearGradient
+          pointerEvents="none"
+          colors={["rgba(255,255,255,0.34)", "rgba(255,255,255,0.00)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+
+        <LinearGradient
+          pointerEvents="none"
+          colors={["rgba(255,255,255,0.16)", "rgba(255,255,255,0.00)"]}
+          start={{ x: 0.1, y: 0 }}
+          end={{ x: 0.9, y: 0.9 }}
+          style={styles.cardSheen}
         />
 
         <View pointerEvents="none" style={styles.cardRing} />
 
         {/* Form */}
         <View style={styles.form}>
+          <View style={styles.formIntro}>
+            <Text style={styles.heading}>Welcome back</Text>
+            <Text style={styles.subheading}>
+              Sign in to continue managing your shared costs and household insights.
+            </Text>
+          </View>
           {/* Email */}
           <View style={{ marginBottom: 14 }}>
             <Text style={styles.label}>Email</Text>
 
-            <View style={styles.inputWrap}>
+            <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.inputWrap}>
               <View style={styles.inputIcon}>
                 <Ionicons name="mail-outline" size={16} color="#64748B" />
               </View>
@@ -123,14 +164,14 @@ export default function Login() {
                 keyboardType="email-address"
                 autoCorrect={false}
               />
-            </View>
+            </GlassView>
           </View>
 
           {/* Password */}
           <View style={{ marginBottom: 10 }}>
             <Text style={styles.label}>Password</Text>
 
-            <View style={styles.inputWrap}>
+            <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.inputWrap}>
               <View style={styles.inputIcon}>
                 <Ionicons name="lock-closed-outline" size={16} color="#64748B" />
               </View>
@@ -152,7 +193,7 @@ export default function Login() {
                   color="#64748B"
                 />
               </Pressable>
-            </View>
+            </GlassView>
           </View>
 
           {error ? (
@@ -169,8 +210,16 @@ export default function Login() {
               pressed && !busy && styles.buttonPressed,
             ]}
           >
-            <Text style={styles.buttonText}>{busy ? "Signing in..." : "Login"}</Text>
-            <Ionicons name="arrow-forward" size={16} color="#FFFFFF" style={{ marginLeft: 6 }} />
+            <LinearGradient
+              colors={["#4F46E5", "#6366F1", "#7C3AED"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.buttonBg}
+            >
+              <View style={styles.buttonInnerGlow} />
+              <Text style={styles.buttonText}>{busy ? "Signing in..." : "Login"}</Text>
+              <Ionicons name="arrow-forward" size={16} color="#FFFFFF" style={{ marginLeft: 6 }} />
+            </LinearGradient>
           </Pressable>
         </View>
 
@@ -183,7 +232,7 @@ export default function Login() {
             </Text>
           </Text>
         </View>
-      </View>
+      </GlassView>
     </View>
   );
 }
@@ -196,10 +245,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
   },
-  glow: {
+  topWash: {
     position: "absolute",
-    borderRadius: 230,
-    transform: [{ rotate: "45deg" }],
+    top: -40,
+    left: 0,
+    right: 0,
+    height: 280,
+  },
+  bottomWash: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: -30,
+    height: 260,
   },
   // card: {
   //   width: "100%",
@@ -217,15 +275,20 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     alignItems: "center",
   },
+  formIntro: {
+    marginBottom: 18,
+  },
   heading: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#1F2937",
+    fontSize: 28,
+    fontWeight: "700",
+    letterSpacing: -0.6,
+    color: "#0F172A",
   },
   subheading: {
     fontSize: 14,
-    color: "#6B7280",
-    marginTop: 4,
+    color: "#64748B",
+    marginTop: 8,
+    lineHeight: 20,
   },
   logo: {
     width: 44,
@@ -244,7 +307,8 @@ const styles = StyleSheet.create({
   },
   form: {
     paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingTop: 26,
+    paddingBottom: 20,
   },
   label: {
     fontSize: 14,
@@ -268,17 +332,33 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   button: {
+    marginTop: 18,
+    borderRadius: 20,
+    overflow: "hidden",
+    shadowColor: "rgba(79,70,229,0.42)",
+    shadowOpacity: 0.42,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 10 },
+  },
+  buttonBg: {
+    minHeight: 52,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 16,
     borderRadius: 20,
-    paddingVertical: 12,
-    backgroundColor: "#4F46E5",
-    shadowColor: "rgba(79,70,229,0.5)",
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
+    paddingHorizontal: 18,
+    position: "relative",
+    overflow: "hidden",
+  },
+  buttonInnerGlow: {
+    position: "absolute",
+    top: -18,
+    left: -10,
+    width: 180,
+    height: 70,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    transform: [{ rotate: "-8deg" }],
   },
   buttonText: {
     color: "#FFFFFF",
@@ -314,16 +394,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 18,
     paddingHorizontal: 12,
-    height: 48,
-
-    backgroundColor: "rgba(255,255,255,0.85)",
+    height: 54,
+    overflow: "hidden",
+    backgroundColor: "rgba(255,255,255,0.16)",
     borderWidth: 1,
-    borderColor: "rgba(15,23,42,0.10)",
-
+    borderColor: "rgba(255,255,255,0.28)",
     shadowColor: "rgba(15,23,42,0.10)",
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.16,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
   },
 
   inputIcon: {
@@ -332,9 +411,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(99,102,241,0.10)",
+    backgroundColor: "rgba(255,255,255,0.14)",
     borderWidth: 1,
-    borderColor: "rgba(99,102,241,0.18)",
+    borderColor: "rgba(255,255,255,0.20)",
     marginRight: 10,
   },
 
@@ -351,22 +430,32 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(2,6,23,0.04)",
+    backgroundColor: "rgba(255,255,255,0.14)",
     borderWidth: 1,
-    borderColor: "rgba(15,23,42,0.08)",
+    borderColor: "rgba(255,255,255,0.18)",
   },
 
   card: {
     width: "100%",
-    maxWidth: 380,
-    borderRadius: 24,
+    maxWidth: 392,
+    borderRadius: 30,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.48)",
+    shadowColor: "rgba(15,23,42,0.10)",
+    shadowOpacity: 0.18,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 14 },
   },
 
   cardRing: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 24,
+    borderRadius: 30,
     borderWidth: 1,
-    borderColor: "rgba(15,23,42,0.10)",
+    borderColor: "rgba(255,255,255,0.26)",
+  },
+
+  cardSheen: {
+    ...StyleSheet.absoluteFillObject,
   },
 });

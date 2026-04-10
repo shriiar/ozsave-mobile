@@ -3,6 +3,7 @@ import React, { useMemo, useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "../../src/context/AuthContext";
@@ -64,23 +65,51 @@ export default function Signup() {
     <View style={styles.container}>
       {/* Background glows */}
       <LinearGradient
-        colors={["rgba(99,102,241,0.25)", "transparent"]}
-        style={[styles.glow, { top: -100, left: -100, width: 400, height: 400 }]}
-      />
-      <LinearGradient
-        colors={["rgba(16,185,129,0.15)", "transparent"]}
-        style={[styles.glow, { bottom: -120, right: -120, width: 440, height: 440 }]}
+        colors={["#EEF2FF", "#F8FAFC", "#FFFFFF"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
       />
 
-      <View style={styles.card}>
+      <LinearGradient
+        pointerEvents="none"
+        colors={["rgba(99,102,241,0.10)", "rgba(255,255,255,0.00)"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.topWash}
+      />
+
+      <LinearGradient
+        pointerEvents="none"
+        colors={["rgba(14,165,233,0.08)", "rgba(255,255,255,0.00)"]}
+        start={{ x: 1, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.bottomWash}
+      />
+
+      <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.card}>
         {/* Glass card layers */}
-        <BlurView intensity={28} tint="light" style={StyleSheet.absoluteFill} />
+        <BlurView intensity={32} tint="light" style={StyleSheet.absoluteFill} />
         <LinearGradient
           pointerEvents="none"
-          colors={["rgba(255,255,255,0.78)", "rgba(255,255,255,0.52)", "rgba(255,255,255,0.28)"]}
+          colors={["rgba(255,255,255,0.78)", "rgba(255,255,255,0.54)", "rgba(255,255,255,0.30)"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFill}
+        />
+        <LinearGradient
+          pointerEvents="none"
+          colors={["rgba(255,255,255,0.34)", "rgba(255,255,255,0.00)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <LinearGradient
+          pointerEvents="none"
+          colors={["rgba(255,255,255,0.16)", "rgba(255,255,255,0.00)"]}
+          start={{ x: 0.1, y: 0 }}
+          end={{ x: 0.9, y: 0.9 }}
+          style={styles.cardSheen}
         />
         <View pointerEvents="none" style={styles.cardRing} />
 
@@ -88,14 +117,16 @@ export default function Signup() {
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <Text style={styles.heading}>Create your account</Text>
-            <Text style={styles.subheading}>Sign up to start tracking shared expenses in OzSave.</Text>
+            <Text style={styles.subheading}>
+              Sign up to start tracking shared expenses and household insights in OzSave.
+            </Text>
           </View>
         </View>
 
         <View style={styles.form}>
           {/* Name */}
           <Text style={styles.label}>Name</Text>
-          <View style={styles.inputWrap}>
+          <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.inputWrap}>
             <View style={styles.inputIcon}>
               <Ionicons name="person-outline" size={16} color="#64748B" />
             </View>
@@ -108,11 +139,11 @@ export default function Signup() {
               autoCapitalize="words"
               autoCorrect={false}
             />
-          </View>
+          </GlassView>
 
           {/* Email */}
           <Text style={[styles.label, { marginTop: 14 }]}>Email</Text>
-          <View style={styles.inputWrap}>
+          <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.inputWrap}>
             <View style={styles.inputIcon}>
               <Ionicons name="mail-outline" size={16} color="#64748B" />
             </View>
@@ -126,11 +157,11 @@ export default function Signup() {
               keyboardType="email-address"
               autoCorrect={false}
             />
-          </View>
+          </GlassView>
 
           {/* Password */}
           <Text style={[styles.label, { marginTop: 14 }]}>Password</Text>
-          <View style={styles.inputWrap}>
+          <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.inputWrap}>
             <View style={styles.inputIcon}>
               <Ionicons name="lock-closed-outline" size={16} color="#64748B" />
             </View>
@@ -147,7 +178,7 @@ export default function Signup() {
             <Pressable onPress={() => setShowPw(p => !p)} hitSlop={10} style={styles.eyeBtn}>
               <Ionicons name={showPw ? "eye-off-outline" : "eye-outline"} size={18} color="#64748B" />
             </Pressable>
-          </View>
+          </GlassView>
 
           <Text style={styles.hint}>Must include uppercase, lowercase and a number.</Text>
 
@@ -162,8 +193,16 @@ export default function Signup() {
               pressed && canSubmit && styles.buttonPressed,
             ]}
           >
-            <Text style={styles.buttonText}>{busy ? "Creating..." : "Create account"}</Text>
-            <Ionicons name="arrow-forward" size={16} color="#FFFFFF" style={{ marginLeft: 6 }} />
+            <LinearGradient
+              colors={["#4F46E5", "#6366F1", "#7C3AED"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.buttonBg}
+            >
+              <View style={styles.buttonInnerGlow} />
+              <Text style={styles.buttonText}>{busy ? "Creating..." : "Create account"}</Text>
+              <Ionicons name="arrow-forward" size={16} color="#FFFFFF" style={{ marginLeft: 6 }} />
+            </LinearGradient>
           </Pressable>
 
           <Text style={styles.footerText}>
@@ -173,7 +212,7 @@ export default function Signup() {
             </Text>
           </Text>
         </View>
-      </View>
+      </GlassView>
 
       <Text style={styles.subfooter}>OzSave • Email verification required</Text>
     </View>
@@ -188,37 +227,60 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
   },
-  glow: {
+  topWash: {
     position: "absolute",
-    borderRadius: 230,
-    transform: [{ rotate: "45deg" }],
+    top: -40,
+    left: 0,
+    right: 0,
+    height: 280,
+  },
+  bottomWash: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: -30,
+    height: 260,
   },
 
   card: {
     width: "100%",
-    maxWidth: 380,
-    borderRadius: 24,
+    maxWidth: 392,
+    borderRadius: 30,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.48)",
+    shadowColor: "rgba(15,23,42,0.10)",
+    shadowOpacity: 0.18,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 14 },
   },
   cardRing: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 24,
+    borderRadius: 30,
     borderWidth: 1,
-    borderColor: "rgba(15,23,42,0.10)",
+    borderColor: "rgba(255,255,255,0.26)",
+  },
+  cardSheen: {
+    ...StyleSheet.absoluteFillObject,
   },
 
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingTop: 20,
-    paddingBottom: 12,
+    paddingTop: 24,
+    paddingBottom: 10,
     paddingHorizontal: 24,
-    // borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(15,23,42,0.10)",
   },
-  heading: { fontSize: 20, fontWeight: "700", color: "#0F172A" },
-  subheading: { fontSize: 13, color: "#475569", marginTop: 4 },
+  heading: {
+    fontSize: 28,
+    fontWeight: "700",
+    letterSpacing: -0.6,
+    color: "#0F172A",
+  },
+  subheading: {
+    fontSize: 14,
+    color: "#64748B",
+    marginTop: 8,
+    lineHeight: 20,
+  },
 
   logo: {
     width: 44,
@@ -232,7 +294,11 @@ const styles = StyleSheet.create({
   },
   logoText: { fontSize: 14, fontWeight: "800", color: "#0F172A" },
 
-  form: { paddingHorizontal: 24, paddingVertical: 18 },
+  form: {
+    paddingHorizontal: 24,
+    paddingTop: 18,
+    paddingBottom: 20,
+  },
 
   label: { fontSize: 14, fontWeight: "700", color: "#334155", marginBottom: 6 },
 
@@ -241,16 +307,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 18,
     paddingHorizontal: 12,
-    height: 48,
-
-    backgroundColor: "rgba(255,255,255,0.88)",
+    height: 54,
+    overflow: "hidden",
+    backgroundColor: "rgba(255,255,255,0.16)",
     borderWidth: 1,
-    borderColor: "rgba(15,23,42,0.10)",
-
+    borderColor: "rgba(255,255,255,0.28)",
     shadowColor: "rgba(15,23,42,0.10)",
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.16,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
   },
 
   inputIcon: {
@@ -259,9 +324,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(99,102,241,0.10)",
+    backgroundColor: "rgba(255,255,255,0.14)",
     borderWidth: 1,
-    borderColor: "rgba(99,102,241,0.18)",
+    borderColor: "rgba(255,255,255,0.20)",
     marginRight: 10,
   },
 
@@ -278,26 +343,42 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(2,6,23,0.04)",
+    backgroundColor: "rgba(255,255,255,0.14)",
     borderWidth: 1,
-    borderColor: "rgba(15,23,42,0.08)",
+    borderColor: "rgba(255,255,255,0.18)",
   },
 
   hint: { marginTop: 8, fontSize: 12, color: "#64748B" },
   errorText: { color: "#DC2626", marginTop: 10, fontSize: 13, fontWeight: "600" },
 
   button: {
+    marginTop: 18,
+    borderRadius: 20,
+    overflow: "hidden",
+    shadowColor: "rgba(79,70,229,0.42)",
+    shadowOpacity: 0.42,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 10 },
+  },
+  buttonBg: {
+    minHeight: 52,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 16,
-    borderRadius: 18,
-    paddingVertical: 12,
-    backgroundColor: "#4F46E5",
-    shadowColor: "rgba(79,70,229,0.45)",
-    shadowOpacity: 0.55,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 7 },
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    position: "relative",
+    overflow: "hidden",
+  },
+  buttonInnerGlow: {
+    position: "absolute",
+    top: -18,
+    left: -10,
+    width: 180,
+    height: 70,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    transform: [{ rotate: "-8deg" }],
   },
   buttonPressed: { transform: [{ scale: 0.99 }] },
   buttonDisabled: { opacity: 0.5 },

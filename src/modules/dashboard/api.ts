@@ -55,6 +55,38 @@ export type SmartAlert = {
   kind: "spend" | "balance" | "income";
 };
 
+export type BillOccurrence = {
+  name: string;
+  category: string;
+  frequency: string;
+  date: string;
+  amount: number;
+  amountCents: number;
+  status: "ran" | "upcoming";
+};
+
+export type BillingSavingsPlanner = {
+  month: string;
+  bills: {
+    ran: BillOccurrence[];
+    upcoming: BillOccurrence[];
+  };
+  totals: {
+    ran: number;
+    upcoming: number;
+    total: number;
+  };
+  budget: {
+    mtdIncome: number;
+    mtdCosts: number;
+    bufferAfterUpcoming: number;
+  };
+  suggestions: Array<{
+    message: string;
+    severity: "good" | "warn" | "bad";
+  }>;
+};
+
 export type PeriodDashboardResponse = {
   range: RangeKey;
   start: string;
@@ -106,6 +138,7 @@ export type PeriodDashboardResponse = {
   costTrends?: CostTrends;
   houseHealth?: HouseHealth;
   smartAlerts?: SmartAlert[];
+  billingSavingsPlanner?: BillingSavingsPlanner;
 };
 
 export type DashboardBalancesResponse = {

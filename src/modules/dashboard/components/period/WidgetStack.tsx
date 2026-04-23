@@ -8,6 +8,7 @@ import Animated, {
   withSpring,
   withTiming,
   Easing,
+  SharedValue,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useTheme } from "../../../../context/ThemeContext";
@@ -52,6 +53,60 @@ function circularDelta(from: number, to: number, total: number) {
   if (d > half) d -= total;
   if (d < -half) d += total;
   return d;
+}
+
+type StackCardProps = {
+  index: number;
+  total: number;
+  active: number;
+  activeSV: SharedValue<number>;
+  y: SharedValue<number>;
+  h: SharedValue<number>;
+  expand: SharedValue<number>;
+  children: React.ReactNode;
+};
+
+function StackCard({ index, total, active, activeSV, y, h, expand, children }: StackCardProps) {
+  const cardStyle = useAnimatedStyle(() => {
+    const hh = h.value || 1;
+    const t = Math.min(1, Math.abs(y.value) / hh);
+    const d = circularDelta(activeSV.value, index, total);
+
+    if (d < -1 || d > 1) {
+      return { opacity: 0, transform: [{ translateY: 0 }, { scale: 1 }] };
+    }
+
+    const isActive = d === 0;
+    const baseY = isActive ? 0 : d === 1 ? hh - STACK_GAP : -hh + STACK_GAP;
+
+    const show = isActive
+      ? 1
+      : d === 1
+        ? (y.value < 0 ? clamp(t * 1.2, 0, 1) : 0)
+        : (y.value > 0 ? clamp(t * 1.2, 0, 1) : 0);
+
+    const scale = isActive ? 1 - t * 0.04 : STACK_SCALE + t * (1 - STACK_SCALE);
+    const inset = isActive ? CARD_INSET * (1 - expand.value) : CARD_INSET;
+    const radius = isActive ? 18 + (24 - 18) * expand.value : 18;
+
+    return {
+      opacity: show,
+      top: inset,
+      left: inset,
+      right: inset,
+      bottom: inset,
+      borderRadius: radius,
+      transform: [{ translateY: baseY + y.value }, { scale }],
+    };
+  });
+
+  const pointerEvents = index === active ? "auto" : "none";
+
+  return (
+    <Animated.View pointerEvents={pointerEvents as any} style={[styles.cardBase, cardStyle]}>
+      {children}
+    </Animated.View>
+  );
 }
 
 export function WidgetStack({
@@ -174,64 +229,20 @@ export function WidgetStack({
         ]}
         onLayout={onLayout}
       >
-        {items.map((node, i) => {
-          const cardStyle = useAnimatedStyle(() => {
-            const hh = h.value || 1;
-            const t = Math.min(1, Math.abs(y.value) / hh);
-
-            const d = circularDelta(activeSV.value, i, total);
-
-            if (d < -1 || d > 1) {
-              return {
-                opacity: 0,
-                transform: [{ translateY: 0 }, { scale: 1 }],
-              };
-            }
-
-            const isActive = d === 0;
-
-            const baseY = isActive ? 0 : d === 1 ? hh - STACK_GAP : -hh + STACK_GAP;
-
-            const show = isActive
-              ? 1
-              : d === 1
-                ? (y.value < 0 ? clamp(t * 1.2, 0, 1) : 0)
-                : (y.value > 0 ? clamp(t * 1.2, 0, 1) : 0);
-
-            const scale = isActive
-              ? 1 - t * 0.04
-              : STACK_SCALE + t * (1 - STACK_SCALE);
-
-            const inset = isActive ? CARD_INSET * (1 - expand.value) : CARD_INSET;
-            const radiusUnder = 18;
-            const radiusTop = 24;
-            const radius = isActive
-              ? radiusUnder + (radiusTop - radiusUnder) * expand.value
-              : radiusUnder;
-
-            return {
-              opacity: show,
-              top: inset,
-              left: inset,
-              right: inset,
-              bottom: inset,
-              borderRadius: radius,
-              transform: [{ translateY: baseY + y.value }, { scale }],
-            };
-          });
-
-          const pointerEvents = i === active ? "auto" : "none";
-
-          return (
-            <Animated.View
-              key={i}
-              pointerEvents={pointerEvents as any}
-              style={[styles.cardBase, cardStyle]}
-            >
-              {node}
-            </Animated.View>
-          );
-        })}
+        {items.map((node, i) => (
+          <StackCard
+            key={i}
+            index={i}
+            total={total}
+            active={active}
+            activeSV={activeSV}
+            y={y}
+            h={h}
+            expand={expand}
+          >
+            {node}
+          </StackCard>
+        ))}
 
         <GestureDetector gesture={gesture}>
           <Animated.View style={StyleSheet.absoluteFillObject} />

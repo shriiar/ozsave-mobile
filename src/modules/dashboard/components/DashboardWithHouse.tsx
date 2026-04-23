@@ -28,6 +28,7 @@ import { InsightsGridCard } from "./period/InsightsGridCard";
 import { IncomeInsightsCard } from "./period/IncomeInsightsCard";
 import DashboardAiSummaryButton from "./period/DashboardAiSummaryButton";
 import DashboardAiSummaryModal from "./period/DashboardAiSummaryModal";
+import { BillingSavingsPlannerCard } from "./period/BillingSavingsPlannerCard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type HouseBase = { _id: string; name: string };
@@ -56,10 +57,10 @@ function rangeMetaOf(range: RangeKey) {
     range === "7d"
       ? "Last 7 days"
       : range === "14d"
-      ? "Last 14 days"
-      : range === "30d"
-      ? "Last 30 days"
-      : "Last 90 days";
+        ? "Last 14 days"
+        : range === "30d"
+          ? "Last 30 days"
+          : "Last 90 days";
 
   return { label };
 }
@@ -233,12 +234,14 @@ export default function DashboardWithHouse({
 
         <DashboardBarChart data={barData} />
 
+        <BillingSavingsPlannerCard data={period?.billingSavingsPlanner} />
+
         <CategorySectionCard
           pie={categoryPie}
           categoryInsights={categoryInsights}
         />
 
-        <DashboardBalancesCard house={house} />
+        {/* <DashboardBalancesCard house={house} /> */}
 
         <TrendVsPreviousCard
           rangeLabel={rangeMeta.label}

@@ -55,6 +55,8 @@ export type PeriodDashboard = {
 
   smartAlerts?: Array<SmartAlert>;
 
+  billingSavingsPlanner?: BillingSavingsPlanner;
+
   // -------------------- NEW: Income widgets --------------------
   incomeMetrics?: {
     coverage: { confirmedPct: number | null; projectedPct: number | null };
@@ -165,6 +167,38 @@ export type SmartAlert = {
   detail?: string;
   severity: "good" | "warn" | "bad";
   kind: "spend" | "balance" | "income";
+};
+
+export type BillOccurrence = {
+  name: string;
+  category: string;
+  frequency: string;
+  date: string;
+  amount: number;
+  amountCents: number;
+  status: "ran" | "upcoming";
+};
+
+export type BillingSavingsPlanner = {
+  month: string;
+  bills: {
+    ran: BillOccurrence[];
+    upcoming: BillOccurrence[];
+  };
+  totals: {
+    ran: number;
+    upcoming: number;
+    total: number;
+  };
+  budget: {
+    mtdIncome: number;
+    mtdCosts: number;
+    bufferAfterUpcoming: number;
+  };
+  suggestions: Array<{
+    message: string;
+    severity: "good" | "warn" | "bad";
+  }>;
 };
 
 // NEW: Income trends block (30d)

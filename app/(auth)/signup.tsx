@@ -87,14 +87,14 @@ export default function Signup() {
           {/* Name */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Name</Text>
-            <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.inputWrap}>
+            <GlassView glassEffectStyle="clear" colorScheme="dark" style={styles.inputWrap}>
               <View style={styles.inputIcon}>
-                <Ionicons name="person-outline" size={16} color="#64748B" />
+                <Ionicons name="person-outline" size={16} color="rgba(148,163,184,0.82)" />
               </View>
               <TextInput
                 style={styles.input}
                 placeholder="Your name"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor="rgba(148,163,184,0.45)"
                 value={name}
                 onChangeText={setName}
                 autoCapitalize="words"
@@ -106,14 +106,14 @@ export default function Signup() {
           {/* Email */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Email</Text>
-            <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.inputWrap}>
+            <GlassView glassEffectStyle="clear" colorScheme="dark" style={styles.inputWrap}>
               <View style={styles.inputIcon}>
-                <Ionicons name="mail-outline" size={16} color="#64748B" />
+                <Ionicons name="mail-outline" size={16} color="rgba(148,163,184,0.82)" />
               </View>
               <TextInput
                 style={styles.input}
                 placeholder="you@example.com"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor="rgba(148,163,184,0.45)"
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
@@ -128,14 +128,14 @@ export default function Signup() {
           {/* Password */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Password</Text>
-            <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.inputWrap}>
+            <GlassView glassEffectStyle="clear" colorScheme="dark" style={styles.inputWrap}>
               <View style={styles.inputIcon}>
-                <Ionicons name="lock-closed-outline" size={16} color="#64748B" />
+                <Ionicons name="lock-closed-outline" size={16} color="rgba(148,163,184,0.82)" />
               </View>
               <TextInput
                 style={styles.input}
                 placeholder="At least 6 characters"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor="rgba(148,163,184,0.45)"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPw}
@@ -145,7 +145,7 @@ export default function Signup() {
                 autoComplete="new-password"
               />
               <Pressable onPress={() => setShowPw(p => !p)} hitSlop={10} style={styles.eyeBtn}>
-                <Ionicons name={showPw ? "eye-off-outline" : "eye-outline"} size={18} color="#64748B" />
+                <Ionicons name={showPw ? "eye-off-outline" : "eye-outline"} size={18} color="rgba(148,163,184,0.82)" />
               </Pressable>
             </GlassView>
             <Text style={styles.hint}>Must include uppercase, lowercase and a number.</Text>
@@ -194,7 +194,7 @@ export default function Signup() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#050814",
   },
   inner: {
     flex: 1,
@@ -217,12 +217,12 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 30,
     fontWeight: "700",
-    color: "#0F172A",
+    color: "rgba(255,255,255,0.92)",
     letterSpacing: -0.8,
   },
   subheading: {
     fontSize: 15,
-    color: "#94A3B8",
+    color: "rgba(148,163,184,0.82)",
     marginTop: 6,
   },
   fields: {
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#374151",
+    color: "rgba(148,163,184,0.82)",
     marginBottom: 8,
     letterSpacing: 0.1,
   },
@@ -245,11 +245,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 54,
     overflow: "hidden",
-    backgroundColor: "#F5F6F8",
+    backgroundColor: "rgba(255,255,255,0.05)",
     borderWidth: 1,
-    borderColor: "#EBEBEB",
-    shadowColor: "rgba(15,23,42,0.10)",
-    shadowOpacity: 0.16,
+    borderColor: "rgba(255,255,255,0.10)",
+    shadowColor: "rgba(0,0,0,0.40)",
+    shadowOpacity: 0.4,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 8 },
   },
@@ -259,15 +259,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.14)",
+    backgroundColor: "rgba(255,255,255,0.07)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.20)",
+    borderColor: "rgba(255,255,255,0.10)",
     marginRight: 10,
   },
   input: {
     flex: 1,
     fontSize: 14,
-    color: "#0F172A",
+    color: "rgba(255,255,255,0.92)",
     paddingVertical: 0,
   },
   eyeBtn: {
@@ -276,14 +276,14 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.14)",
+    backgroundColor: "rgba(255,255,255,0.07)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.18)",
+    borderColor: "rgba(255,255,255,0.10)",
   },
   hint: {
     marginTop: 6,
     fontSize: 12,
-    color: "#94A3B8",
+    color: "rgba(148,163,184,0.60)",
   },
   errorText: {
     color: "#EF4444",
@@ -322,14 +322,14 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: "#6B7280",
+    color: "rgba(148,163,184,0.82)",
   },
   link: {
-    color: "#4F46E5",
+    color: "#818CF8",
     fontWeight: "600",
   },
   subfooter: {
     fontSize: 12,
-    color: "#C4C9D4",
+    color: "rgba(148,163,184,0.40)",
   },
 });

@@ -1,5 +1,5 @@
-import React, { memo, useMemo } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import React, { memo, useMemo, useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../../../../context/ThemeContext";
@@ -43,6 +43,12 @@ function sevColor(sev: Sev): string {
   if (sev === "good") return "#10b981";
   if (sev === "warn") return "#f59e0b";
   return "#ef4444";
+}
+
+function sevLabel(sev: Sev): string {
+  if (sev === "good") return "SAFE";
+  if (sev === "warn") return "NOTE";
+  return "ALERT";
 }
 
 const CAT_COLORS: Record<string, string> = {
@@ -105,10 +111,13 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
   const { mtdIncome, mtdCosts, bufferAfterUpcoming } = budget;
   const { kindMeta, isFuture } = derived;
 
+  const [showPaid, setShowPaid] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
+
   const barTotal = Math.max(mtdIncome, mtdCosts + totals.upcoming, 1);
+  const incomeFlex = Math.min(mtdIncome / barTotal, 1);
   const costFlex = Math.min(mtdCosts / barTotal, 1);
   const upcomingFlex = Math.min(totals.upcoming / barTotal, 1 - costFlex);
-  const bufferFlex = Math.max(0, 1 - costFlex - upcomingFlex);
   const bufferPositive = bufferAfterUpcoming >= 0;
 
   return (
@@ -129,41 +138,41 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
             </View>
           </View>
 
-          <View style={styles.tilesRow}>
-            <Tile label="Paid" value={money2(totals.ran)} accent="#ef4444" ui={ui} />
-            <Tile label="Upcoming" value={money2(totals.upcoming)} accent="#f59e0b" ui={ui} />
-            <Tile label="Total" value={money2(totals.total)} accent={ui.text} ui={ui} />
+          <View style={styles.tilesGrid}>
+            <View style={styles.tilesRow}>
+              <Tile label="Paid" value={money2(totals.ran)} accent="#ef4444" ui={ui} />
+              <Tile label="Upcoming" value={money2(totals.upcoming)} accent="#f59e0b" ui={ui} />
+              <Tile label="Total" value={money2(totals.total)} accent={ui.text} ui={ui} />
+            </View>
+            <View style={styles.tilesRow}>
+              <Tile label="Income" value={money2(mtdIncome)} accent="#10b981" ui={ui} />
+              <Tile label="Monthly costs" value={money2(mtdCosts)} accent="#6366f1" ui={ui} />
+            </View>
           </View>
 
           {!isFuture ? (
             <View style={styles.barSection}>
-              <View style={[styles.barTrack, { backgroundColor: ui.barTrack }]}>
-                {costFlex > 0 && (
-                  <View style={{ flex: costFlex, height: 12, backgroundColor: "#ef4444" }} />
-                )}
-                {upcomingFlex > 0 && (
-                  <View style={{ flex: upcomingFlex, height: 12, backgroundColor: "#f59e0b" }} />
-                )}
-                {bufferFlex > 0 && (
-                  <View
-                    style={{
-                      flex: bufferFlex,
-                      height: 12,
-                      backgroundColor: bufferPositive ? "#10b981" : "#ef4444",
-                      opacity: bufferPositive ? 0.65 : 0.35,
-                    }}
-                  />
-                )}
-              </View>
-              <View style={styles.budgetRow}>
-                <BudgetStat label="Income" value={money2(mtdIncome)} color={ui.sub} ui={ui} />
-                <BudgetStat label="Costs" value={money2(mtdCosts)} color="#ef4444" ui={ui} />
-                <BudgetStat
-                  label="Buffer"
-                  value={`${bufferPositive ? "" : "-"}${money2(Math.abs(bufferAfterUpcoming))}`}
-                  color={bufferPositive ? "#10b981" : "#ef4444"}
-                  ui={ui}
-                />
+              <BarRow label="Income" value={money2(mtdIncome)} valueColor="#10b981" ui={ui}>
+                <View style={[styles.barTrack, { backgroundColor: ui.barTrack }]}>
+                  <View style={{ flex: incomeFlex, height: 14, backgroundColor: "#10b981", opacity: 0.85 }} />
+                  <View style={{ flex: Math.max(0, 1 - incomeFlex), height: 14 }} />
+                </View>
+              </BarRow>
+              <BarRow label="Costs" value={money2(mtdCosts + totals.upcoming)} valueColor="#ef4444" ui={ui}>
+                <View style={[styles.barTrack, { backgroundColor: ui.barTrack }]}>
+                  {costFlex > 0 && <View style={{ flex: costFlex, height: 14, backgroundColor: "#ef4444" }} />}
+                  {upcomingFlex > 0 && <View style={{ flex: upcomingFlex, height: 14, backgroundColor: "#f59e0b" }} />}
+                  <View style={{ flex: Math.max(0, 1 - costFlex - upcomingFlex), height: 14 }} />
+                </View>
+              </BarRow>
+              <View style={styles.bufferRow}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                  <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: bufferPositive ? "#10b981" : "#ef4444" }} />
+                  <Text style={{ fontSize: 11, fontWeight: "600", color: ui.sub }}>Buffer after upcoming</Text>
+                </View>
+                <Text style={{ fontSize: 12, fontWeight: "800", color: bufferPositive ? "#10b981" : "#ef4444" }}>
+                  {bufferPositive ? "+" : "-"}{money2(Math.abs(bufferAfterUpcoming))}
+                </Text>
               </View>
             </View>
           ) : (
@@ -175,22 +184,51 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
           )}
 
           {bills.upcoming.length > 0 && (
-            <BillList title="Upcoming" bills={bills.upcoming} accent="#f59e0b" ui={ui} />
+            <BillList title="Upcoming bills" bills={bills.upcoming} accent="#f59e0b" ui={ui} />
           )}
 
           {bills.ran.length > 0 && (
-            <BillList title="Paid this month" bills={bills.ran} accent="#10b981" ui={ui} />
+            <View style={styles.listSection}>
+              <TouchableOpacity style={styles.collapseHeader} onPress={() => setShowPaid(v => !v)} activeOpacity={0.7}>
+                <Text style={[styles.sectionTitle, { color: ui.sub, marginBottom: 0 }]}>Paid this month</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={{ fontSize: 11, fontWeight: "600", color: ui.sub }}>{bills.ran.length} bills</Text>
+                  <Text style={{ fontSize: 13, color: ui.sub }}>{showPaid ? "▾" : "›"}</Text>
+                </View>
+              </TouchableOpacity>
+              {showPaid && (
+                <ScrollView
+                  style={{ maxHeight: 200, marginTop: 8 }}
+                  contentContainerStyle={{ paddingBottom: 4 }}
+                  showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled
+                >
+                  {bills.ran.map((b, i) => <BillItem key={`${b.name}-${b.date}-${i}`} b={b} accent="#10b981" ui={ui} />)}
+                </ScrollView>
+              )}
+            </View>
           )}
 
           {suggestions.length > 0 && (
             <View style={styles.suggestionsSection}>
-              <Text style={[styles.sectionTitle, { color: ui.sub }]}>Insights</Text>
-              {suggestions.map((s, i) => (
+              <TouchableOpacity style={styles.collapseHeader} onPress={() => setShowInsights(v => !v)} activeOpacity={0.7}>
+                <Text style={[styles.sectionTitle, { color: ui.sub, marginBottom: 0 }]}>Insights</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={{ fontSize: 11, fontWeight: "600", color: ui.sub }}>{suggestions.length} notes</Text>
+                  <Text style={{ fontSize: 13, color: ui.sub }}>{showInsights ? "▾" : "›"}</Text>
+                </View>
+              </TouchableOpacity>
+              {showInsights && suggestions.map((s, i) => (
                 <View key={i} style={[styles.suggestionRow, { backgroundColor: ui.tileBg }]}>
-                  <View style={[styles.dot, { backgroundColor: sevColor(s.severity) }]} />
-                  <Text style={[styles.suggestionText, { color: ui.text }]} numberOfLines={3}>
-                    {s.message}
-                  </Text>
+                  <View style={{ width: 3, borderRadius: 2, alignSelf: "stretch", backgroundColor: sevColor(s.severity) }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 10, fontWeight: "800", color: sevColor(s.severity), marginBottom: 3, letterSpacing: 0.4 }}>
+                      {sevLabel(s.severity)}
+                    </Text>
+                    <Text style={[styles.suggestionText, { color: ui.text }]} numberOfLines={3}>
+                      {s.message}
+                    </Text>
+                  </View>
                 </View>
               ))}
             </View>
@@ -201,21 +239,24 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
   );
 });
 
-function BudgetStat({
+function BarRow({
   label,
   value,
-  color,
+  valueColor,
   ui,
+  children,
 }: {
   label: string;
   value: string;
-  color: string;
+  valueColor: string;
   ui: UiVars;
+  children: React.ReactNode;
 }) {
   return (
-    <View style={{ flex: 1, alignItems: "center" }}>
-      <Text style={{ fontSize: 11, fontWeight: "600", color: ui.sub }}>{label}</Text>
-      <Text style={{ fontSize: 13, fontWeight: "800", color, marginTop: 3 }}>{value}</Text>
+    <View style={styles.barRow}>
+      <Text style={[styles.barRowLabel, { color: ui.sub }]}>{label}</Text>
+      <View style={{ flex: 1 }}>{children}</View>
+      <Text style={[styles.barRowValue, { color: valueColor }]}>{value}</Text>
     </View>
   );
 }
@@ -232,9 +273,29 @@ function Tile({
   ui: UiVars;
 }) {
   return (
-    <View style={[styles.tile, { backgroundColor: ui.tileBg }]}>
+    <View style={[styles.tile, { backgroundColor: ui.tileBg, borderTopColor: accent }]}>
       <Text style={[styles.tileLabel, { color: ui.sub }]}>{label}</Text>
       <Text style={[styles.tileValue, { color: accent }]}>{value}</Text>
+    </View>
+  );
+}
+
+function BillItem({ b, accent, ui }: { b: BillOccurrence; accent: string; ui: UiVars }) {
+  const cc = catColor(b.category);
+  return (
+    <View style={[styles.billRow, { backgroundColor: ui.tileBg }]}>
+      <View style={{ width: 3, borderRadius: 2, alignSelf: "stretch", backgroundColor: accent }} />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={[styles.billName, { color: ui.text }]} numberOfLines={1}>{b.name}</Text>
+        <Text style={[styles.billDate, { color: ui.sub }]}>{fmtDate(b.date)}</Text>
+      </View>
+      <View style={[styles.freqChip, { borderColor: ui.border }]}>
+        <Text style={[styles.freqText, { color: ui.sub }]}>{b.frequency}</Text>
+      </View>
+      <View style={[styles.catBadge, { backgroundColor: cc + "28" }]}>
+        <Text style={[styles.catText, { color: cc }]}>{b.category}</Text>
+      </View>
+      <Text style={[styles.billAmount, { color: ui.text }]}>{money2(b.amount)}</Text>
     </View>
   );
 }
@@ -259,30 +320,9 @@ function BillList({
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled
       >
-        {bills.map((b, i) => {
-          const cc = catColor(b.category);
-          return (
-            <View
-              key={`${b.name}-${b.date}-${i}`}
-              style={[styles.billRow, { backgroundColor: ui.tileBg }]}
-            >
-              <View style={[styles.dot, { backgroundColor: accent }]} />
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={[styles.billName, { color: ui.text }]} numberOfLines={1}>
-                  {b.name}
-                </Text>
-                <Text style={[styles.billDate, { color: ui.sub }]}>{fmtDate(b.date)}</Text>
-              </View>
-              <View style={[styles.freqChip, { backgroundColor: ui.tileBg }]}>
-                <Text style={[styles.freqText, { color: ui.sub }]}>{b.frequency}</Text>
-              </View>
-              <View style={[styles.catBadge, { backgroundColor: cc + "28" }]}>
-                <Text style={[styles.catText, { color: cc }]}>{b.category}</Text>
-              </View>
-              <Text style={[styles.billAmount, { color: ui.text }]}>{money2(b.amount)}</Text>
-            </View>
-          );
-        })}
+        {bills.map((b, i) => (
+          <BillItem key={`${b.name}-${b.date}-${i}`} b={b} accent={accent} ui={ui} />
+        ))}
       </ScrollView>
     </View>
   );
@@ -291,7 +331,7 @@ function BillList({
 const styles = StyleSheet.create({
   wrap: { borderRadius: 18, overflow: "hidden" },
   card: { borderRadius: 18, overflow: "hidden" },
-  inner: { borderRadius: 16, padding: 12, overflow: "hidden" },
+  inner: { borderRadius: 16, padding: 16, overflow: "hidden" },
 
   headerRow: {
     flexDirection: "row",
@@ -300,63 +340,70 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: { fontSize: 14, fontWeight: "700" },
-  subtitle: { marginTop: 6, fontSize: 13, fontWeight: "700" },
+  subtitle: { marginTop: 8, fontSize: 13, fontWeight: "700" },
   kindBadge: {
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     alignSelf: "flex-start",
   },
   kindLabel: { fontSize: 11, fontWeight: "700" },
 
-  tilesRow: { flexDirection: "row", gap: 8, marginTop: 12 },
-  tile: { flex: 1, borderRadius: 12, padding: 10 },
+  tilesGrid: { gap: 10, marginTop: 16 },
+  tilesRow: { flexDirection: "row", gap: 10 },
+  tile: { flex: 1, borderRadius: 12, padding: 14, borderTopWidth: 3 },
   tileLabel: { fontSize: 11, fontWeight: "600" },
-  tileValue: { marginTop: 4, fontSize: 14, fontWeight: "800" },
+  tileValue: { marginTop: 5, fontSize: 15, fontWeight: "800" },
 
-  barSection: { marginTop: 14, gap: 8 },
-  barTrack: { height: 12, borderRadius: 6, overflow: "hidden", flexDirection: "row" },
-  budgetRow: { flexDirection: "row", justifyContent: "space-between" },
+  barSection: { marginTop: 18, gap: 10 },
+  barTrack: { height: 16, borderRadius: 8, overflow: "hidden", flexDirection: "row" },
+  barRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  barRowLabel: { fontSize: 11, fontWeight: "600", width: 52 },
+  barRowValue: { fontSize: 12, fontWeight: "800", width: 64, textAlign: "right" },
+  bufferRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 6 },
 
   futureNote: {
-    marginTop: 12,
+    marginTop: 16,
     borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
-  futureNoteText: { fontSize: 12, fontWeight: "600", lineHeight: 17 },
+  futureNoteText: { fontSize: 12, fontWeight: "600", lineHeight: 18 },
 
-  listSection: { marginTop: 14 },
-  sectionTitle: { fontSize: 12, fontWeight: "700", marginBottom: 8 },
+  listSection: { marginTop: 18 },
+  collapseHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  sectionTitleRow: { borderLeftWidth: 3, paddingLeft: 7, marginBottom: 10 },
+  sectionTitle: { fontSize: 12, fontWeight: "700", marginBottom: 10 },
 
   billRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
     borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    marginBottom: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginBottom: 8,
+    overflow: "hidden",
   },
-  dot: { width: 8, height: 8, borderRadius: 4 },
   billName: { fontSize: 13, fontWeight: "700" },
-  billDate: { fontSize: 12, fontWeight: "500", marginTop: 2 },
-  freqChip: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 3 },
+  billDate: { fontSize: 12, fontWeight: "500", marginTop: 3 },
+  freqChip: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 4, borderWidth: StyleSheet.hairlineWidth },
   freqText: { fontSize: 10, fontWeight: "600" },
-  catBadge: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  catBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
   catText: { fontSize: 11, fontWeight: "700" },
   billAmount: { fontSize: 13, fontWeight: "700" },
 
-  suggestionsSection: { marginTop: 14 },
+  suggestionsSection: { marginTop: 18 },
   suggestionRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "stretch",
     gap: 10,
     borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    marginBottom: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 13,
+    marginBottom: 8,
+    overflow: "hidden",
   },
-  suggestionText: { flex: 1, fontSize: 13, fontWeight: "600", lineHeight: 18 },
+  suggestionText: { flex: 1, fontSize: 13, fontWeight: "600", lineHeight: 19 },
 });

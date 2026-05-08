@@ -2,15 +2,14 @@
 
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
 import { GlassView } from "expo-glass-effect";
 import { useAuth } from "../../src/context/AuthContext";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Login() {
-
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +22,7 @@ export default function Login() {
       return Alert.alert("Required", "Email and password are required.");
     }
 
-    const normalizedEmail = email.trim().toLowerCase(); // ✅ move here
+    const normalizedEmail = email.trim().toLowerCase();
 
     setBusy(true);
     setError("");
@@ -34,7 +33,6 @@ export default function Login() {
     } catch (err: any) {
       const msg = extractMsg(err);
 
-      // ✅ if user not verified -> go verify screen with email
       if (isVerifyPending(err)) {
         router.replace({
           pathname: "/(auth)/verify",
@@ -48,6 +46,7 @@ export default function Login() {
       setBusy(false);
     }
   }
+
   function extractMsg(err: any): string {
     const direct = err?.message;
     if (typeof direct === "string" && direct.trim()) return direct;
@@ -79,81 +78,35 @@ export default function Login() {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Background glows */}
-      <LinearGradient
-        colors={["#EEF2FF", "#F8FAFC", "#FFFFFF"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.inner}>
 
-      <LinearGradient
-        pointerEvents="none"
-        colors={["rgba(99,102,241,0.10)", "rgba(255,255,255,0.00)"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.topWash}
-      />
-
-      <LinearGradient
-        pointerEvents="none"
-        colors={["rgba(14,165,233,0.08)", "rgba(255,255,255,0.00)"]}
-        start={{ x: 1, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.bottomWash}
-      />
-
-      <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.card}>
-        <BlurView intensity={34} tint="light" style={StyleSheet.absoluteFill} />
-
-        <LinearGradient
-          pointerEvents="none"
-          colors={[
-            "rgba(255,255,255,0.78)",
-            "rgba(255,255,255,0.54)",
-            "rgba(255,255,255,0.30)",
-          ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-
-        <LinearGradient
-          pointerEvents="none"
-          colors={["rgba(255,255,255,0.34)", "rgba(255,255,255,0.00)"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-
-        <LinearGradient
-          pointerEvents="none"
-          colors={["rgba(255,255,255,0.16)", "rgba(255,255,255,0.00)"]}
-          start={{ x: 0.1, y: 0 }}
-          end={{ x: 0.9, y: 0.9 }}
-          style={styles.cardSheen}
-        />
-
-        <View pointerEvents="none" style={styles.cardRing} />
-
-        {/* Form */}
-        <View style={styles.form}>
-          <View style={styles.formIntro}>
-            <Text style={styles.heading}>Welcome back</Text>
-            <Text style={styles.subheading}>
-              Sign in to continue managing your shared costs and household insights.
-            </Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.logoMark}>
+            <LinearGradient
+              colors={["#4F46E5", "#7C3AED"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.logoGradient}
+            >
+              <Ionicons name="flash" size={20} color="#fff" />
+            </LinearGradient>
           </View>
-          {/* Email */}
-          <View style={{ marginBottom: 14 }}>
-            <Text style={styles.label}>Email</Text>
+          <Text style={styles.heading}>Welcome back</Text>
+          <Text style={styles.subheading}>Sign in to your account</Text>
+        </View>
 
+        {/* Fields */}
+        <View style={styles.fields}>
+
+          {/* Email */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Email</Text>
             <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.inputWrap}>
               <View style={styles.inputIcon}>
                 <Ionicons name="mail-outline" size={16} color="#64748B" />
               </View>
-
               <TextInput
                 style={styles.input}
                 placeholder="you@example.com"
@@ -163,19 +116,19 @@ export default function Login() {
                 autoCapitalize="none"
                 keyboardType="email-address"
                 autoCorrect={false}
+                textContentType="emailAddress"
+                autoComplete="email"
               />
             </GlassView>
           </View>
 
           {/* Password */}
-          <View style={{ marginBottom: 10 }}>
+          <View style={styles.fieldGroup}>
             <Text style={styles.label}>Password</Text>
-
             <GlassView glassEffectStyle="clear" colorScheme="light" style={styles.inputWrap}>
               <View style={styles.inputIcon}>
                 <Ionicons name="lock-closed-outline" size={16} color="#64748B" />
               </View>
-
               <TextInput
                 style={styles.input}
                 placeholder="••••••••"
@@ -184,41 +137,35 @@ export default function Login() {
                 onChangeText={setPassword}
                 secureTextEntry={!showPw}
                 autoCorrect={false}
+                textContentType="password"
+                autoComplete="current-password"
               />
-
               <Pressable onPress={() => setShowPw(p => !p)} hitSlop={10} style={styles.eyeBtn}>
-                <Ionicons
-                  name={showPw ? "eye-off-outline" : "eye-outline"}
-                  size={18}
-                  color="#64748B"
-                />
+                <Ionicons name={showPw ? "eye-off-outline" : "eye-outline"} size={18} color="#64748B" />
               </Pressable>
             </GlassView>
           </View>
 
-          {error ? (
-            <Text style={styles.errorText}>{error}</Text>
-          ) : null}
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-          {/* Submit button */}
+          {/* Submit */}
           <Pressable
             disabled={busy}
             onPress={onSubmit}
             style={({ pressed }) => [
               styles.button,
               busy && styles.buttonDisabled,
-              pressed && !busy && styles.buttonPressed,
+              pressed && !busy && { opacity: 0.88, transform: [{ scale: 0.99 }] },
             ]}
           >
             <LinearGradient
-              colors={["#4F46E5", "#6366F1", "#7C3AED"]}
+              colors={["#4F46E5", "#7C3AED"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.buttonBg}
             >
-              <View style={styles.buttonInnerGlow} />
-              <Text style={styles.buttonText}>{busy ? "Signing in..." : "Login"}</Text>
-              <Ionicons name="arrow-forward" size={16} color="#FFFFFF" style={{ marginLeft: 6 }} />
+              <Text style={styles.buttonText}>{busy ? "Signing in…" : "Sign in"}</Text>
+              {!busy && <Ionicons name="arrow-forward" size={16} color="#fff" style={{ marginLeft: 6 }} />}
             </LinearGradient>
           </Pressable>
         </View>
@@ -226,14 +173,15 @@ export default function Login() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Don’t have an account?{" "}
-            <Text onPress={() => router.push("/(auth)/signup")} style={styles.link}>
+            Don't have an account?{" "}
+            <Text onPress={() => !busy && router.push("/(auth)/signup")} style={[styles.link, busy && { opacity: 0.4 }]}>
               Sign up
             </Text>
           </Text>
         </View>
-      </GlassView>
-    </View>
+
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -241,153 +189,48 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  inner: {
+    flex: 1,
+    paddingHorizontal: 28,
     justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 16,
   },
-  topWash: {
-    position: "absolute",
-    top: -40,
-    left: 0,
-    right: 0,
-    height: 280,
-  },
-  bottomWash: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: -30,
-    height: 260,
-  },
-  // card: {
-  //   width: "100%",
-  //   maxWidth: 380,
-  //   borderRadius: 24,
-  //   overflow: "hidden",
-  //   backgroundColor: "rgba(255,255,255,0.75)",
-  // },
   header: {
-    flexDirection: "row",
-    paddingTop: 20,
-    paddingBottom: 10,
-    paddingHorizontal: 24,
-    // borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: "#E5E7EB",
-    alignItems: "center",
+    marginBottom: 36,
   },
-  formIntro: {
-    marginBottom: 18,
+  logoMark: {
+    marginBottom: 24,
+  },
+  logoGradient: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   heading: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "700",
-    letterSpacing: -0.6,
     color: "#0F172A",
+    letterSpacing: -0.8,
   },
   subheading: {
-    fontSize: 14,
-    color: "#64748B",
-    marginTop: 8,
-    lineHeight: 20,
+    fontSize: 15,
+    color: "#94A3B8",
+    marginTop: 6,
   },
-  logo: {
-    width: 44,
-    height: 44,
-    borderRadius: 18,
-    backgroundColor: "rgba(99,102,241,0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.1)",
-    alignItems: "center",
-    justifyContent: "center",
+  fields: {
+    gap: 6,
   },
-  logoText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1F2937",
-  },
-  form: {
-    paddingHorizontal: 24,
-    paddingTop: 26,
-    paddingBottom: 20,
+  fieldGroup: {
+    marginBottom: 14,
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
     color: "#374151",
-    marginBottom: 4,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.1)",
-    backgroundColor: "rgba(255,255,255,0.55)",
-  },
-  errorText: {
-    color: "#DC2626",
-    marginTop: 8,
-    fontSize: 13,
-  },
-  button: {
-    marginTop: 18,
-    borderRadius: 20,
-    overflow: "hidden",
-    shadowColor: "rgba(79,70,229,0.42)",
-    shadowOpacity: 0.42,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 10 },
-  },
-  buttonBg: {
-    minHeight: 52,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    position: "relative",
-    overflow: "hidden",
-  },
-  buttonInnerGlow: {
-    position: "absolute",
-    top: -18,
-    left: -10,
-    width: 180,
-    height: 70,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    transform: [{ rotate: "-8deg" }],
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 16,
-    alignItems: "center",
-  },
-  footerText: {
-    fontSize: 13,
-    color: "#6B7280",
-  },
-  link: {
-    color: "#4F46E5",
-    fontWeight: "600",
-  },
-  subfooter: {
-    marginTop: 8,
-    fontSize: 12,
-    color: "#9CA3AF",
-  },
-  buttonPressed: {
-    transform: [{ scale: 0.99 }],
-  },
-  buttonDisabled: {
-    opacity: 0.5,
+    marginBottom: 8,
+    letterSpacing: 0.1,
   },
   inputWrap: {
     flexDirection: "row",
@@ -396,15 +239,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 54,
     overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.16)",
+    backgroundColor: "#F5F6F8",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.28)",
+    borderColor: "#EBEBEB",
     shadowColor: "rgba(15,23,42,0.10)",
     shadowOpacity: 0.16,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 8 },
   },
-
   inputIcon: {
     width: 34,
     height: 34,
@@ -416,14 +258,12 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.20)",
     marginRight: 10,
   },
-
   input: {
     flex: 1,
     fontSize: 14,
     color: "#0F172A",
-    paddingVertical: 0, // prevents weird vertical drift on Android
+    paddingVertical: 0,
   },
-
   eyeBtn: {
     width: 38,
     height: 38,
@@ -434,28 +274,46 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.18)",
   },
-
-  card: {
-    width: "100%",
-    maxWidth: 392,
-    borderRadius: 30,
+  errorText: {
+    color: "#EF4444",
+    fontSize: 13,
+    marginTop: 4,
+    marginBottom: 6,
+  },
+  button: {
+    marginTop: 10,
+    borderRadius: 14,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.48)",
-    shadowColor: "rgba(15,23,42,0.10)",
-    shadowOpacity: 0.18,
-    shadowRadius: 28,
-    shadowOffset: { width: 0, height: 14 },
+    shadowColor: "#4F46E5",
+    shadowOpacity: 0.32,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
   },
-
-  cardRing: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.26)",
+  buttonBg: {
+    height: 52,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 14,
   },
-
-  cardSheen: {
-    ...StyleSheet.absoluteFillObject,
+  buttonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  footer: {
+    marginTop: 32,
+    alignItems: "center",
+  },
+  footerText: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  link: {
+    color: "#4F46E5",
+    fontWeight: "600",
   },
 });

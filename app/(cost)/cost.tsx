@@ -14,6 +14,7 @@ import {
     Text,
     View,
 } from "react-native";
+
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler";
 
@@ -245,7 +246,6 @@ export default function CostScreen() {
     const headerGap = 8;
 
     const swipeRefs = useRef<Record<string, () => void>>({});
-
     // draft filters (UI)
     const [draft, setDraft] = useState<CostFiltersDraft>({
         paidBy: "all",

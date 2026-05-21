@@ -14,6 +14,7 @@ import {
     Text,
     View,
 } from "react-native";
+
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -287,7 +288,6 @@ export default function IncomeScreen() {
 
     const swipeRefs = useRef<Record<string, () => void>>({});
     const openSwipe = useRef<{ id: string; close: () => void } | null>(null);
-
     function closeOpenSwipe() {
         openSwipe.current?.close?.();
         openSwipe.current = null;

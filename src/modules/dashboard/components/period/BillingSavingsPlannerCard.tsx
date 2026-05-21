@@ -105,14 +105,14 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
     return { kind, kindMeta: monthKindLabel(kind), isFuture: kind === "future" };
   }, [data?.month]);
 
+  const [showPaid, setShowPaid] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
+
   if (!data || !derived) return null;
 
   const { month, bills, totals, budget, suggestions } = data;
   const { mtdIncome, mtdCosts, bufferAfterUpcoming } = budget;
   const { kindMeta, isFuture } = derived;
-
-  const [showPaid, setShowPaid] = useState(false);
-  const [showInsights, setShowInsights] = useState(false);
 
   const barTotal = Math.max(mtdIncome, mtdCosts + totals.upcoming, 1);
   const incomeFlex = Math.min(mtdIncome / barTotal, 1);

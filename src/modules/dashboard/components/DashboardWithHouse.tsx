@@ -200,6 +200,7 @@ export default function DashboardWithHouse({
         scrollEventThrottle={16}
         alwaysBounceVertical
         bounces
+        showsVerticalScrollIndicator={false}
         overScrollMode="always"
         refreshControl={
           <RefreshControl

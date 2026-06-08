@@ -23,7 +23,7 @@ function AppShell() {
     <View
       style={[
         styles.root,
-        { backgroundColor: resolvedTheme === "dark" ? "#020617" : "#ffffff" }
+        { backgroundColor: resolvedTheme === "dark" ? "#0a0a0a" : "#ffffff" }
       ]}
     >
       <Stack

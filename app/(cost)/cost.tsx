@@ -21,6 +21,7 @@ import { Swipeable } from "react-native-gesture-handler";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import DashboardShell from "../../src/modules/shell/DashboardShell";
+import { useScrollToTop } from "../../src/hooks/useScrollToTop";
 
 import CostFilterModal, { CostFiltersDraft } from "@/src/modules/cost/CostFilterModal";
 import AddCostModal from "@/src/modules/cost/AddCostModal";
@@ -65,7 +66,7 @@ function CostCard({
 
     const T = useMemo(() => {
         const cardGrad = isDark
-            ? ["rgba(15,23,42,0.55)", "rgba(2,6,23,0.35)"]
+            ? ["rgba(22,22,22,0.60)", "rgba(8,8,8,0.40)"]
             : ["rgba(255,255,255,0.72)", "rgba(255,255,255,0.48)"];
 
         const ring = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
@@ -234,6 +235,8 @@ function CostCard({
 
 export default function CostScreen() {
 
+    const listRef = useScrollToTop<FlatList>();
+
     const { user } = useAuth();
     const members = useMemo(() => ((user as any)?.house?.members ?? []), [user]);
 
@@ -291,7 +294,7 @@ export default function CostScreen() {
     const { refreshing, refreshUser } = useAuth();
 
     const spinner = isDark ? "rgba(255,255,255,0.92)" : "rgba(15,23,42,0.85)";
-    const androidBg = isDark ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.95)";
+    const androidBg = isDark ? "rgba(10,10,10,0.90)" : "rgba(255,255,255,0.95)";
 
     const [limit] = useState(10);
     const [addOpen, setAddOpen] = useState(false);
@@ -425,7 +428,7 @@ export default function CostScreen() {
 
     return (
         <DashboardShell>
-            <View style={styles.screen}>
+            <View style={[styles.screen, isDark && { backgroundColor: "#0a0a0a" }]}>
                 <GlassView
                     glassEffectStyle="regular"
                     colorScheme={isDark ? "dark" : "light"}
@@ -519,6 +522,7 @@ export default function CostScreen() {
                     </View>
                 ) : (
                     <FlatList
+                        ref={listRef}
                         style={{ flex: 1 }}
                         data={rows}
                         keyExtractor={(item) => item._id}

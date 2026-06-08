@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -18,6 +19,7 @@ import { GlassView } from "expo-glass-effect";
 
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { fireScrollToTop } from "../../lib/scrollToTop";
 import { ThemeToggle } from "../../components/ThemeToggle";
 
 type NavItem = {
@@ -125,7 +127,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   }
 
   function go(href: string) {
-    if (isActive(href)) return;
+    if (isActive(href)) {
+      fireScrollToTop();
+      return;
+    }
     router.push(href as any);
   }
 
@@ -248,8 +253,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   // ===== TOKENS =====
   const TOKENS = useMemo(() => {
-    const shellBg = isDark ? "#020617" : "#F5F7FB";
-    const glassFallback = isDark ? "rgba(15,23,42,0.82)" : "rgba(255,255,255,0.88)";
+    const shellBg = isDark ? "#0a0a0a" : "#F5F7FB";
+    const glassFallback = isDark ? "rgba(18,18,18,0.92)" : "rgba(255,255,255,0.88)";
     const ring = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)";
 
     const shadow = isDark
@@ -271,7 +276,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     const textPrimary = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
     const textMuted = isDark ? "rgba(148,163,184,0.95)" : "#475569";
 
-    const btnBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
+    const btnBg = isDark ? "rgba(22,22,22,0.70)" : "rgba(0,0,0,0.05)";
     const btnBgHover = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
 
     const activeBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0, 0, 0, 0.05)";
@@ -430,23 +435,44 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 </View>
 
                 {/* Footer (fixed) */}
-                <View style={[styles.footer, { borderTopColor: TOKENS.divider }]}> 
+                <View style={[styles.footer, { borderTopColor: TOKENS.divider }]}>
                   <ThemeToggle />
 
-                  <Pressable
-                    onPress={handleLogout}
-                    style={({ pressed }) => [
-                      styles.logoutBtn,
-                      {
-                        backgroundColor: TOKENS.dangerBg,
-                        borderColor: TOKENS.dangerBorder,
-                        opacity: pressed ? 0.95 : 1,
-                      },
-                    ]}
-                  >
-                    <Ionicons name="log-out-outline" size={18} color={TOKENS.dangerText} />
-                    <Text style={[styles.logoutText, { color: TOKENS.dangerText }]}>Logout</Text>
-                  </Pressable>
+                  {/* User card */}
+                  <View style={[styles.userCard, { backgroundColor: TOKENS.btnBg }]}>
+                    {/* Avatar */}
+                    {user.imageUrl ? (
+                      <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
+                    ) : (
+                      <View style={styles.avatarFallback}>
+                        <Text style={styles.avatarInitial}>
+                          {user.name?.charAt(0).toUpperCase() ?? "?"}
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Name + email */}
+                    <View style={styles.userInfo}>
+                      <Text style={[styles.userName, { color: TOKENS.textPrimary }]} numberOfLines={1}>
+                        {user.name}
+                      </Text>
+                      <Text style={[styles.userEmail, { color: TOKENS.textMuted }]} numberOfLines={1}>
+                        {user.email}
+                      </Text>
+                    </View>
+
+                    {/* Logout icon */}
+                    <Pressable
+                      onPress={handleLogout}
+                      hitSlop={8}
+                      style={({ pressed }) => [
+                        styles.logoutIcon,
+                        { backgroundColor: pressed ? TOKENS.dangerBg : "transparent" },
+                      ]}
+                    >
+                      <Ionicons name="log-out-outline" size={18} color={TOKENS.dangerText} />
+                    </Pressable>
+                  </View>
                 </View>
               </Animated.View>
             )}
@@ -525,7 +551,7 @@ const styles = StyleSheet.create({
   },
 
   pill: {
-    width: "94%",
+    width: "80%",
     borderRadius: PILL_RADIUS,
     overflow: "hidden",
     position: "relative",
@@ -597,16 +623,52 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 
-  logoutBtn: {
+  userCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    // borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 14,
   },
-  logoutText: { fontSize: 13, fontWeight: "700" },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  avatarFallback: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#4F46E5",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarInitial: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  userInfo: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  userName: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  userEmail: {
+    fontSize: 11,
+    fontWeight: "500",
+  },
+  logoutIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
   // bottom tabs row
   row: {

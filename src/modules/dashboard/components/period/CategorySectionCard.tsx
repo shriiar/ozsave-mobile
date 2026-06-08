@@ -61,14 +61,14 @@ export function CategorySectionCard(props: Props) {
     const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
 
     const cardGrad = isDark
-      ? ["rgba(2,6,23,0.58)", "rgba(15,23,42,0.46)", "rgba(2,6,23,0.38)"]
+      ? ["rgba(5,5,5,0.58)", "rgba(18,18,18,0.46)", "rgba(5,5,5,0.38)"]
       : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.62)", "rgba(255,255,255,0.52)"];
 
     const innerGrad = isDark
-      ? ["rgba(15,23,42,0.35)", "rgba(2,6,23,0.20)"]
+      ? ["rgba(22,22,22,0.55)", "rgba(12,12,12,0.40)"]
       : ["rgba(237,237,237,0.90)", "rgba(255,255,255,0.65)"];
 
-    const tileBg = isDark ? "rgba(15,23,42,0.35)" : "rgba(237,237,237,0.90)";
+    const tileBg = isDark ? "rgba(22,22,22,0.60)" : "rgba(237,237,237,0.90)";
 
     return { text, sub, border, cardGrad, innerGrad, tileBg };
   }, [isDark]);
@@ -139,7 +139,7 @@ export function CategorySectionCard(props: Props) {
                       styles.tooltip,
                       {
                         borderColor: ui.border,
-                        backgroundColor: isDark ? "rgba(2,6,23,0.94)" : "rgba(255,255,255,0.98)",
+                        backgroundColor: isDark ? "rgba(5,5,5,0.94)" : "rgba(255,255,255,0.98)",
                       },
                     ]}
                   >

@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import DashboardShell from "../../src/modules/shell/DashboardShell";
+import { useScrollToTop } from "../../src/hooks/useScrollToTop";
 
 import type { BillingRow } from "../../src/modules/billing/api";
 import { useInfiniteBillings } from "../../src/modules/billing/hooks/useBillingApi";
@@ -67,7 +68,7 @@ function BillingCard({
 
   const T = useMemo(() => {
     const cardGrad = isDark
-      ? ["rgba(15,23,42,0.55)", "rgba(2,6,23,0.35)"]
+      ? ["rgba(22,22,22,0.60)", "rgba(8,8,8,0.40)"]
       : ["rgba(255,255,255,0.72)", "rgba(255,255,255,0.48)"];
 
     const ring = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
@@ -256,6 +257,8 @@ function BillingCard({
 }
 
 export default function BillingScreen() {
+  const listRef = useScrollToTop<FlatList>();
+
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const { refreshing, refreshUser } = useAuth();
@@ -267,7 +270,7 @@ export default function BillingScreen() {
   const headerGap = 8;
 
   const spinner = isDark ? "rgba(255,255,255,0.92)" : "rgba(15,23,42,0.85)";
-  const androidBg = isDark ? "rgba(15,23,42,0.85)" : "rgba(255,255,255,0.95)";
+  const androidBg = isDark ? "rgba(10,10,10,0.90)" : "rgba(255,255,255,0.95)";
 
   const [limit] = useState(10);
   const [addOpen, setAddOpen] = useState(false);
@@ -391,7 +394,7 @@ export default function BillingScreen() {
 
   return (
     <DashboardShell>
-      <View style={styles.screen}>
+      <View style={[styles.screen, isDark && { backgroundColor: "#0a0a0a" }]}>
         <GlassView
           glassEffectStyle="regular"
           colorScheme={isDark ? "dark" : "light"}
@@ -457,6 +460,7 @@ export default function BillingScreen() {
           </View>
         ) : (
           <FlatList
+            ref={listRef}
             style={{ flex: 1 }}
             data={rows}
             keyExtractor={(item) => item._id}

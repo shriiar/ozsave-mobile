@@ -1,71 +1,76 @@
-// src/components/ThemeTransitionOverlay.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet } from "react-native";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from "react-native-reanimated";
-import { useTheme } from "../context/ThemeContext";
+import { Animated, Image, StyleSheet, TurboModuleRegistry } from "react-native";
+import { registerThemeTransitionHandler } from "../lib/themeTransition";
 
-const DURATION = 260;
+const DURATION = 330;
 
-function GlassBackdrop({ theme }: { theme: "light" | "dark" }) {
-  const isDark = theme === "dark";
-
-  return (
-    <>
-      <BlurView intensity={isDark ? 70 : 90} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
-      <LinearGradient
-        colors={
-          isDark
-            ? ["rgba(2,6,23,0.58)", "rgba(15,23,42,0.46)", "rgba(2,6,23,0.38)"]
-            : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.62)", "rgba(255,255,255,0.52)"]
-        }
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-    </>
-  );
-}
+// Use the non-throwing .get() to check availability before ever touching the module.
+// TurboModuleRegistry.getEnforcing (used inside react-native-view-shot) throws an
+// Invariant Violation that bypasses try/catch in Hermes when the native binary doesn't
+// have RNViewShot (e.g. Expo Go). .get() returns null safely instead.
+const VIEW_SHOT_AVAILABLE = !!TurboModuleRegistry.get("RNViewShot");
 
 export default function ThemeTransitionOverlay() {
-  const { resolvedTheme, mounted } = useTheme();
-  const current = (resolvedTheme ?? "light") as "light" | "dark";
-
-  const prevRef = useRef<"light" | "dark">(current);
-  const [overlayTheme, setOverlayTheme] = useState<"light" | "dark">(current);
-  const [visible, setVisible] = useState(false);
-
-  const opacity = useSharedValue(0);
+  const [snapUri, setSnapUri] = useState<string | null>(null);
+  const opacity = useRef(new Animated.Value(0)).current;
+  const animating = useRef(false);
 
   useEffect(() => {
-    if (!mounted) return;
+    const captureScreen: ((opts: any) => Promise<string>) | null = VIEW_SHOT_AVAILABLE
+      ? require("react-native-view-shot").captureScreen
+      : null;
 
-    const prev = prevRef.current;
-    if (prev === current) return;
+    return registerThemeTransitionHandler(({ apply }) => {
+      if (!captureScreen || animating.current) {
+        apply();
+        return;
+      }
 
-    // Show old theme overlay on top
-    setOverlayTheme(prev);
-    setVisible(true);
+      animating.current = true;
 
-    // Overlay fully visible immediately
-    opacity.value = 1;
+      captureScreen({ format: "jpg", quality: 0.92 })
+        .then((uri: string) => {
+          apply();
+          opacity.setValue(1);
+          setSnapUri(uri);
 
-    // Now fade it out, revealing the new theme underneath
-    opacity.value = withTiming(0, { duration: DURATION }, (finished) => {
-      if (finished) runOnJS(setVisible)(false);
+          setTimeout(() => {
+            Animated.timing(opacity, {
+              toValue: 0,
+              duration: DURATION,
+              useNativeDriver: true,
+            }).start(({ finished }) => {
+              if (finished) {
+                setSnapUri(null);
+                animating.current = false;
+              }
+            });
+          }, 32);
+        })
+        .catch(() => {
+          apply();
+          animating.current = false;
+        });
     });
-
-    prevRef.current = current;
-  }, [current, mounted, opacity]);
-
-  const anim = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
-  if (!visible) return null;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, anim]}>
-      <GlassBackdrop theme={overlayTheme} />
+    <Animated.View
+      pointerEvents="none"
+      style={[StyleSheet.absoluteFill, styles.overlay, { opacity }]}
+    >
+      {snapUri ? (
+        <Image
+          source={{ uri: snapUri }}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          fadeDuration={0}
+        />
+      ) : null}
     </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  overlay: { zIndex: 9999 },
+});

@@ -225,7 +225,7 @@ export function WidgetStack({
         style={[
           styles.surface,
           // ✅ theme-aware widget background
-          { backgroundColor: isDark ? "rgba(2,6,23,0.58)" : "rgba(237,237,237,1)" },
+          { backgroundColor: isDark ? "rgba(5,5,5,0.58)" : "rgba(237,237,237,1)" },
         ]}
         onLayout={onLayout}
       >

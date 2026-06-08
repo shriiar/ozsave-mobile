@@ -1,5 +1,5 @@
 // src/modules/dashboard/GetStarted.tsx
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -21,6 +21,7 @@ import {
 } from "../../user/hooks/useHouseInvitations";
 import { RefreshControl } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
+import { registerScrollToTop } from "../../../lib/scrollToTop";
 
 export default function GetStarted() {
   const [showCreate, setShowCreate] = useState(false);
@@ -62,8 +63,14 @@ export default function GetStarted() {
   const scrollRef = useRef<ScrollView | null>(null);
   const invitesYRef = useRef(0);
 
+  useEffect(() => {
+    return registerScrollToTop(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    });
+  }, []);
+
   const T = useMemo(() => {
-    const shellBg = isDark ? "#020617" : "#F5F7FB";
+    const shellBg = isDark ? "#080808" : "#F5F7FB";
 
     const textPrimary = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
     const textMuted = isDark ? "rgba(148,163,184,0.95)" : "#475569";
@@ -101,7 +108,7 @@ export default function GetStarted() {
 
     // Glass gradients (best-effort RN)
     const panelGrad = isDark
-      ? ["rgba(2,6,23,0.35)", "rgba(15,23,42,0.28)", "rgba(2,6,23,0.22)"]
+      ? ["rgba(5,5,5,0.35)", "rgba(18,18,18,0.28)", "rgba(5,5,5,0.22)"]
       : ["rgba(255,255,255,0.72)", "rgba(255,255,255,0.58)", "rgba(255,255,255,0.46)"];
 
     const headerGlowA = isDark

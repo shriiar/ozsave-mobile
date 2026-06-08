@@ -32,7 +32,7 @@ export default function CreateHouseModal({ open, onClose }: Props) {
 
   const T = useMemo(() => {
     const modalBgGrad = isDark
-      ? ["rgba(2,6,23,0.58)", "rgba(15,23,42,0.46)", "rgba(2,6,23,0.38)"]
+      ? ["rgba(5,5,5,0.58)", "rgba(18,18,18,0.46)", "rgba(5,5,5,0.38)"]
       : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.62)", "rgba(255,255,255,0.52)"];
 
     const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";

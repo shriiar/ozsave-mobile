@@ -1,7 +1,8 @@
 // src/context/ThemeContext.tsx
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Appearance, ColorSchemeName } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { fireThemeTransition } from "../lib/themeTransition";
 
 type Theme = "light" | "dark" | "system";
 
@@ -25,13 +26,13 @@ function resolveTheme(theme: Theme, systemScheme: ColorSchemeName): "light" | "d
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [theme, setThemeState] = useState<Theme>("system");
-  const [systemScheme, setSystemScheme] = useState<ColorSchemeName>(Appearance.getColorScheme() ?? "light");
+  const [systemScheme, setSystemScheme] = useState<ColorSchemeName>(
+    Appearance.getColorScheme() ?? "light"
+  );
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
 
-  // init from storage
   useEffect(() => {
     let alive = true;
-
     (async () => {
       try {
         const saved = (await AsyncStorage.getItem(STORAGE_KEY)) as Theme | null;
@@ -43,13 +44,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         if (alive) setMounted(true);
       }
     })();
-
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
-  // listen to OS theme changes (only matters if theme === "system")
   useEffect(() => {
     const sub = Appearance.addChangeListener(({ colorScheme }) => {
       setSystemScheme(colorScheme);
@@ -57,26 +54,39 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => sub.remove();
   }, []);
 
-  // resolve whenever theme or system changes (after mounted)
   useEffect(() => {
     if (!mounted) return;
-    const r = resolveTheme(theme, systemScheme);
-    setResolvedTheme(r);
+    setResolvedTheme(resolveTheme(theme, systemScheme));
   }, [theme, systemScheme, mounted]);
 
-  const setTheme = (t: Theme) => {
-    setThemeState(t);
-    AsyncStorage.setItem(STORAGE_KEY, t).catch(() => {});
-  };
+  const setTheme = useCallback(
+    (t: Theme) => {
+      const nextResolved = resolveTheme(t, systemScheme);
 
-  const toggle = () => {
-    const next = resolvedTheme === "dark" ? "light" : "dark";
-    setTheme(next);
-  };
+      const apply = () => {
+        setThemeState(t);
+        AsyncStorage.setItem(STORAGE_KEY, t).catch(() => {});
+      };
+
+      // Only animate when the visible theme actually changes
+      if (nextResolved !== resolvedTheme) {
+        if (!fireThemeTransition({ apply })) {
+          apply(); // overlay not mounted — apply immediately
+        }
+      } else {
+        apply(); // no visual change (e.g. switching to "system" when system matches current)
+      }
+    },
+    [resolvedTheme, systemScheme]
+  );
+
+  const toggle = useCallback(() => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  }, [resolvedTheme, setTheme]);
 
   const value = useMemo(
     () => ({ theme, resolvedTheme, setTheme, toggle, mounted }),
-    [theme, resolvedTheme, mounted]
+    [theme, resolvedTheme, setTheme, toggle, mounted]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

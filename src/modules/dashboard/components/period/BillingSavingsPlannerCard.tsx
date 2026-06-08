@@ -29,12 +29,12 @@ function buildUi(isDark: boolean): UiVars {
     sub: isDark ? "rgba(148,163,184,0.82)" : "rgba(100,116,139,0.92)",
     border: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)",
     cardGrad: isDark
-      ? ["rgba(2,6,23,0.58)", "rgba(15,23,42,0.46)", "rgba(2,6,23,0.38)"]
+      ? ["rgba(5,5,5,0.58)", "rgba(18,18,18,0.46)", "rgba(5,5,5,0.38)"]
       : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.62)", "rgba(255,255,255,0.52)"],
     innerGrad: isDark
-      ? ["rgba(15,23,42,0.35)", "rgba(2,6,23,0.20)"]
+      ? ["rgba(22,22,22,0.55)", "rgba(12,12,12,0.40)"]
       : ["rgba(237,237,237,0.90)", "rgba(255,255,255,0.65)"],
-    tileBg: isDark ? "rgba(15,23,42,0.35)" : "rgba(237,237,237,0.90)",
+    tileBg: isDark ? "rgba(22,22,22,0.60)" : "rgba(237,237,237,0.90)",
     barTrack: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
   };
 }
@@ -152,13 +152,13 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
 
           {!isFuture ? (
             <View style={styles.barSection}>
-              <BarRow label="Income" value={money2(mtdIncome)} valueColor="#10b981" ui={ui}>
+              <BarRow label="Income" value={money2(mtdIncome)} ui={ui}>
                 <View style={[styles.barTrack, { backgroundColor: ui.barTrack }]}>
                   <View style={{ flex: incomeFlex, height: 14, backgroundColor: "#10b981", opacity: 0.85 }} />
                   <View style={{ flex: Math.max(0, 1 - incomeFlex), height: 14 }} />
                 </View>
               </BarRow>
-              <BarRow label="Costs" value={money2(mtdCosts + totals.upcoming)} valueColor="#ef4444" ui={ui}>
+              <BarRow label="Costs" value={money2(mtdCosts + totals.upcoming)} ui={ui}>
                 <View style={[styles.barTrack, { backgroundColor: ui.barTrack }]}>
                   {costFlex > 0 && <View style={{ flex: costFlex, height: 14, backgroundColor: "#ef4444" }} />}
                   {upcomingFlex > 0 && <View style={{ flex: upcomingFlex, height: 14, backgroundColor: "#f59e0b" }} />}
@@ -167,10 +167,10 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
               </BarRow>
               <View style={styles.bufferRow}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                  <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: bufferPositive ? "#10b981" : "#ef4444" }} />
+                  <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: ui.sub }} />
                   <Text style={{ fontSize: 11, fontWeight: "600", color: ui.sub }}>Buffer after upcoming</Text>
                 </View>
-                <Text style={{ fontSize: 12, fontWeight: "800", color: bufferPositive ? "#10b981" : "#ef4444" }}>
+                <Text style={{ fontSize: 12, fontWeight: "800", color: ui.text }}>
                   {bufferPositive ? "+" : "-"}{money2(Math.abs(bufferAfterUpcoming))}
                 </Text>
               </View>
@@ -242,13 +242,11 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
 function BarRow({
   label,
   value,
-  valueColor,
   ui,
   children,
 }: {
   label: string;
   value: string;
-  valueColor: string;
   ui: UiVars;
   children: React.ReactNode;
 }) {
@@ -256,7 +254,7 @@ function BarRow({
     <View style={styles.barRow}>
       <Text style={[styles.barRowLabel, { color: ui.sub }]}>{label}</Text>
       <View style={{ flex: 1 }}>{children}</View>
-      <Text style={[styles.barRowValue, { color: valueColor }]}>{value}</Text>
+      <Text style={[styles.barRowValue, { color: ui.text }]}>{value}</Text>
     </View>
   );
 }
@@ -273,7 +271,7 @@ function Tile({
   ui: UiVars;
 }) {
   return (
-    <View style={[styles.tile, { backgroundColor: ui.tileBg, borderTopColor: accent }]}>
+    <View style={[styles.tile, { backgroundColor: ui.tileBg }]}>
       <Text style={[styles.tileLabel, { color: ui.sub }]}>{label}</Text>
       <Text style={[styles.tileValue, { color: accent }]}>{value}</Text>
     </View>
@@ -352,7 +350,7 @@ const styles = StyleSheet.create({
 
   tilesGrid: { gap: 10, marginTop: 16 },
   tilesRow: { flexDirection: "row", gap: 10 },
-  tile: { flex: 1, borderRadius: 12, padding: 14, borderTopWidth: 3 },
+  tile: { flex: 1, borderRadius: 12, padding: 14 },
   tileLabel: { fontSize: 11, fontWeight: "600" },
   tileValue: { marginTop: 5, fontSize: 15, fontWeight: "800" },
 

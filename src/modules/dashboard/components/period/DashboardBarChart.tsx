@@ -70,11 +70,11 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
         const legend = isDark ? "rgba(226,232,240,0.92)" : "rgba(15,23,42,0.92)";
 
         const cardGrad = isDark
-            ? ["rgba(2,6,23,0.58)", "rgba(15,23,42,0.46)", "rgba(2,6,23,0.38)"]
+            ? ["rgba(5,5,5,0.58)", "rgba(18,18,18,0.46)", "rgba(5,5,5,0.38)"]
             : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.62)", "rgba(255,255,255,0.52)"];
 
         const innerGrad = isDark
-            ? ["rgba(15,23,42,0.35)", "rgba(2,6,23,0.20)"]
+            ? ["rgba(22,22,22,0.55)", "rgba(12,12,12,0.40)"]
             : ["rgba(237,237,237,0.90)", "rgba(255,255,255,0.65)"];
 
         const border = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
@@ -89,7 +89,7 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
             cost: "#ef4444",
             manual: "#10b981",
             estimate: "#f59e0b",
-            tooltipBg: isDark ? "rgba(2,6,23,0.94)" : "rgba(255,255,255,0.98)",
+            tooltipBg: isDark ? "rgba(5,5,5,0.94)" : "rgba(255,255,255,0.98)",
         };
     }, [isDark]);
 

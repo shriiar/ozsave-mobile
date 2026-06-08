@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import Toast from "react-native-toast-message";
 import {
+  Animated,
   View,
   Text,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
   LayoutChangeEvent,
 } from "react-native";
 import { useTheme } from "../../../context/ThemeContext";
+import { useScrollToTop } from "../../../hooks/useScrollToTop";
 import { DashboardHeader } from "./period/DashboardHeader";
 import type { RangeKey } from "./period/DashboardHeader";
 import { DashboardBarChart } from "./period/DashboardBarChart";
@@ -65,11 +67,61 @@ function rangeMetaOf(range: RangeKey) {
   return { label };
 }
 
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
 function shortLabel(ymd: string) {
   if (!ymd || typeof ymd !== "string") return "";
   const mm = ymd.slice(5, 7);
   const dd = ymd.slice(8, 10);
   return mm && dd ? `${mm}/${dd}` : ymd;
+}
+
+function fmtDate(ymd: string) {
+  if (!ymd || typeof ymd !== "string") return "";
+  const parts = ymd.split("-");
+  if (parts.length < 3) return ymd;
+  const day = parseInt(parts[2], 10);
+  const mon = MONTHS[parseInt(parts[1], 10) - 1] ?? parts[1];
+  const yr = parts[0].slice(2);
+  return `${day} ${mon} ${yr}`;
+}
+
+function AnimatedCard({
+  children,
+  delay = 0,
+  revision,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  revision: number;
+}) {
+  const opacity = useRef(new Animated.Value(revision === 0 ? 1 : 0)).current;
+  const scale = useRef(new Animated.Value(revision === 0 ? 1 : 0.93)).current;
+
+  useEffect(() => {
+    if (revision === 0) return;
+    opacity.setValue(0);
+    scale.setValue(0.93);
+    const t = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.spring(scale, {
+          toValue: 1,
+          useNativeDriver: true,
+          damping: 13,
+          mass: 0.8,
+          stiffness: 160,
+        }),
+      ]).start();
+    }, delay);
+    return () => clearTimeout(t);
+  }, [revision]);
+
+  return (
+    <Animated.View style={{ opacity, transform: [{ scale }] }}>
+      {children}
+    </Animated.View>
+  );
 }
 
 export default function DashboardWithHouse({
@@ -89,7 +141,17 @@ export default function DashboardWithHouse({
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
+  const scrollRef = useScrollToTop<ScrollView>();
   const shownErrorRef = useRef<string | null>(null);
+
+  const [revision, setRevision] = useState(0);
+  const prevPeriodRef = useRef<any>(null);
+  useEffect(() => {
+    if (period && period !== prevPeriodRef.current) {
+      prevPeriodRef.current = period;
+      setRevision((r) => r + 1);
+    }
+  }, [period]);
 
   useEffect(() => {
     if (!error) {
@@ -116,7 +178,7 @@ export default function DashboardWithHouse({
   const bottomSpace = TOPBAR_H + insets.bottom + 16;
 
   const T = useMemo(() => {
-    const bg = isDark ? "#050814" : "#F6F7FB";
+    const bg = isDark ? "#0a0a0a" : "#F6F7FB";
     const text = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
     const muted = isDark ? "rgba(148,163,184,0.82)" : "#64748B";
     return { bg, text, muted };
@@ -125,13 +187,14 @@ export default function DashboardWithHouse({
   const rangeMeta = useMemo(() => rangeMetaOf(range), [range]);
 
   const subtitle = useMemo(() => {
-    if (period?.start && period?.end) return `${period.start} → ${period.end}`;
+    if (period?.start && period?.end) return `${fmtDate(period.start)} → ${fmtDate(period.end)}`;
     return " ";
   }, [period?.start, period?.end]);
 
   const refreshing = !!isFetching;
 
   const [viewportH, setViewportH] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const onLayout = (e: LayoutChangeEvent) => {
     const h = e.nativeEvent.layout.height;
@@ -192,9 +255,24 @@ export default function DashboardWithHouse({
 
   return (
     <View style={[styles.screen, { backgroundColor: T.bg }]} onLayout={onLayout}>
+      <DashboardHeader
+        range={range}
+        onRangeChange={onRangeChange}
+        title={rangeMeta.label}
+        subtitle={subtitle}
+        canGoForward={canGoForward}
+        onPrev={onPrev}
+        onNext={onNext}
+        onLayout={(e) => {
+          const h = Math.ceil(e.nativeEvent.layout.height);
+          if (h > 0 && h !== headerHeight) setHeaderHeight(h);
+        }}
+      />
+
       <ScrollView
+        ref={scrollRef}
         style={{ flex: 1 }}
-        contentInsetAdjustmentBehavior="always"
+        contentInsetAdjustmentBehavior="never"
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         scrollEventThrottle={16}
@@ -206,68 +284,72 @@ export default function DashboardWithHouse({
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            progressViewOffset={Platform.OS === "ios" ? 16 : 0}
+            progressViewOffset={headerHeight}
           />
         }
         contentContainerStyle={[
           styles.container,
-          { minHeight: viewportH || undefined, paddingBottom: bottomSpace },
+          { minHeight: viewportH || undefined, paddingBottom: bottomSpace, paddingTop: headerHeight + 8 },
         ]}
       >
-        <DashboardHeader
-          range={range}
-          onRangeChange={onRangeChange}
-          title={rangeMeta.label}
-          subtitle={subtitle}
-          canGoForward={canGoForward}
-          onPrev={onPrev}
-          onNext={onNext}
-        />
+        <AnimatedCard delay={0} revision={revision}>
+          <DashboardAiSummaryButton onPress={() => setSummaryOpen(true)} />
+        </AnimatedCard>
 
-        <DashboardAiSummaryButton onPress={() => setSummaryOpen(true)} />
+        <AnimatedCard delay={30} revision={revision}>
+          <PeriodSummaryCards
+            rangeLabel={rangeMeta.label}
+            totalCost={summary.totalCost}
+            manualIncome={summary.manualIncome}
+            estimatedIncome={summary.estimatedIncome}
+          />
+        </AnimatedCard>
 
-        <PeriodSummaryCards
-          rangeLabel={rangeMeta.label}
-          totalCost={summary.totalCost}
-          manualIncome={summary.manualIncome}
-          estimatedIncome={summary.estimatedIncome}
-        />
+        <AnimatedCard delay={60} revision={revision}>
+          <DashboardBarChart data={barData} />
+        </AnimatedCard>
 
-        <DashboardBarChart data={barData} />
+        <AnimatedCard delay={90} revision={revision}>
+          <BillingSavingsPlannerCard data={period?.billingSavingsPlanner} />
+        </AnimatedCard>
 
-        <BillingSavingsPlannerCard data={period?.billingSavingsPlanner} />
+        <AnimatedCard delay={120} revision={revision}>
+          <CategorySectionCard
+            pie={categoryPie}
+            categoryInsights={categoryInsights}
+          />
+        </AnimatedCard>
 
-        <CategorySectionCard
-          pie={categoryPie}
-          categoryInsights={categoryInsights}
-        />
-
-        {/* <DashboardBalancesCard house={house} /> */}
-
-        <TrendVsPreviousCard
-          rangeLabel={rangeMeta.label}
-          summary={
-            period?.summary ?? {
-              cost: 0,
-              income: { manual: 0, estimate: 0 },
+        <AnimatedCard delay={150} revision={revision}>
+          <TrendVsPreviousCard
+            rangeLabel={rangeMeta.label}
+            summary={
+              period?.summary ?? {
+                cost: 0,
+                income: { manual: 0, estimate: 0 },
+              }
             }
-          }
-          comparison={period?.comparison ?? null}
-        />
+            comparison={period?.comparison ?? null}
+          />
+        </AnimatedCard>
 
-        <WidgetStack height={400}>
-          <SmartAlertsCard alerts={period?.smartAlerts ?? []} />
-          <InsightsGridCard insights={period?.insights ?? []} />
-          <IncomeInsightsCard data={period ?? {}} />
-        </WidgetStack>
+        <AnimatedCard delay={180} revision={revision}>
+          <WidgetStack height={400}>
+            <SmartAlertsCard alerts={period?.smartAlerts ?? []} />
+            <InsightsGridCard insights={period?.insights ?? []} />
+            <IncomeInsightsCard data={period ?? {}} />
+          </WidgetStack>
+        </AnimatedCard>
 
         {!period ? (
-          <View style={styles.emptyState}>
-            <Text style={[styles.emptyTitle, { color: T.text }]}>No analytics yet</Text>
-            <Text style={[styles.emptySub, { color: T.muted }]}>
-              Start adding costs and income to see your dashboard fill up.
-            </Text>
-          </View>
+          <AnimatedCard delay={0} revision={revision}>
+            <View style={styles.emptyState}>
+              <Text style={[styles.emptyTitle, { color: T.text }]}>No analytics yet</Text>
+              <Text style={[styles.emptySub, { color: T.muted }]}>
+                Start adding costs and income to see your dashboard fill up.
+              </Text>
+            </View>
+          </AnimatedCard>
         ) : null}
 
         <View style={{ flexGrow: 1 }} />

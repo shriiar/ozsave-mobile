@@ -109,9 +109,9 @@ function AiWaveSkeleton({ isDark }: { isDark: boolean }) {
                   "rgba(241,245,249,0.34)",
                 ]
                 : [
-                  "rgba(15,23,42,0.34)",
-                  "rgba(15,23,42,0.98)",
-                  "rgba(15,23,42,0.34)",
+                  "rgba(18,18,18,0.34)",
+                  "rgba(18,18,18,0.98)",
+                  "rgba(18,18,18,0.34)",
                 ],
               extrapolate: "clamp",
             });

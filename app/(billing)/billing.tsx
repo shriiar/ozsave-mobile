@@ -46,6 +46,28 @@ function capitalize(s?: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+function AnimatedListItem({ index, children }: { index: number; children: React.ReactNode }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.94)).current;
+
+  useEffect(() => {
+    const delay = Math.min(index, 6) * 55;
+    const t = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 14, mass: 0.7, stiffness: 180 }),
+      ]).start();
+    }, delay);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity, transform: [{ scale }] }}>
+      {children}
+    </Animated.View>
+  );
+}
+
 function BillingCard({
   item,
   isDark,
@@ -475,16 +497,18 @@ export default function BillingScreen() {
             bounces
             onScrollBeginDrag={closeAllSwipes}
             onMomentumScrollBegin={closeAllSwipes}
-            renderItem={({ item }) => (
-              <BillingCard
-                item={item}
-                isDark={isDark}
-                onPress={openEdit}
-                onDelete={openDelete}
-                onSwipeStart={onSwipeStart}
-                onSwipeOpen={onSwipeOpen}
-                onSwipeClose={onSwipeClose}
-              />
+            renderItem={({ item, index }) => (
+              <AnimatedListItem index={index}>
+                <BillingCard
+                  item={item}
+                  isDark={isDark}
+                  onPress={openEdit}
+                  onDelete={openDelete}
+                  onSwipeStart={onSwipeStart}
+                  onSwipeOpen={onSwipeOpen}
+                  onSwipeClose={onSwipeClose}
+                />
+              </AnimatedListItem>
             )}
             refreshControl={
               <RefreshControl

@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Animated,
   Image,
+  PanResponder,
   Pressable,
   StyleSheet,
   Text,
@@ -131,8 +132,108 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       fireScrollToTop();
       return;
     }
-    router.push(href as any);
+    router.navigate(href as any);
   }
+
+  const tabs = navItems.slice(0, 4);
+
+  const pathnameRef = useRef(pathname);
+  useEffect(() => { pathnameRef.current = pathname; }, [pathname]);
+
+  const tabsRef = useRef(tabs);
+  useEffect(() => { tabsRef.current = tabs; }, [tabs]);
+
+  const [tabsAreaWidth, setTabsAreaWidth] = useState(0);
+  const tabsAreaWidthRef = useRef(0);
+
+  const activeIdxNow = () => {
+    const current = tabsRef.current;
+    return current.findIndex(
+      (t) => pathnameRef.current === t.href ||
+        (t.href !== ROUTES.home && pathnameRef.current.startsWith(t.href))
+    );
+  };
+
+  const initialIdx = tabs.findIndex(
+    (t) => pathname === t.href || (t.href !== ROUTES.home && pathname.startsWith(t.href))
+  );
+  const indicatorAnim = useRef(new Animated.Value(Math.max(0, initialIdx))).current;
+
+  // Sync indicator when route changes via tap (not swipe)
+  useEffect(() => {
+    const idx = activeIdxNow();
+    if (idx >= 0) {
+      Animated.spring(indicatorAnim, {
+        toValue: idx,
+        useNativeDriver: true,
+        damping: 20,
+        mass: 0.5,
+        stiffness: 260,
+      }).start();
+    }
+  }, [pathname]);
+
+  const swipePan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponderCapture: (_, { dx, dy }) =>
+        Math.abs(dx) > 15 && Math.abs(dx) > Math.abs(dy) * 2,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: () => {
+        indicatorAnim.stopAnimation();
+        Animated.spring(pillScale, { toValue: 1.03, useNativeDriver: true, damping: 8, mass: 0.4, stiffness: 300 }).start();
+      },
+      onPanResponderMove: (_, { dx }) => {
+        const w = tabsAreaWidthRef.current;
+        if (!w) return;
+        const tabW = w / tabsRef.current.length;
+        const baseIdx = activeIdxNow();
+        if (baseIdx === -1) return;
+        const rawTarget = baseIdx + dx / tabW;
+        const clamped = Math.max(0, Math.min(tabsRef.current.length - 1, rawTarget));
+        indicatorAnim.setValue(clamped);
+
+        // Rubber-band stretch when dragging past first or last tab
+        const overflow = rawTarget < 0 ? -rawTarget : rawTarget > tabsRef.current.length - 1 ? rawTarget - (tabsRef.current.length - 1) : 0;
+        const stretch = 1 + Math.min(overflow * 0.04, 0.07);
+        pillScaleX.setValue(stretch);
+      },
+      onPanResponderRelease: (_, { dx, vx }) => {
+        const current = tabsRef.current;
+        const baseIdx = activeIdxNow();
+        if (baseIdx === -1) return;
+
+        const w = tabsAreaWidthRef.current;
+        const tabW = w ? w / current.length : 80;
+
+        // Calculate target from actual drag distance — supports skipping multiple tabs
+        const rawTarget = baseIdx + dx / tabW;
+        let targetIdx: number;
+        if (Math.abs(dx) < 15 && Math.abs(vx) < 0.3) {
+          targetIdx = baseIdx; // tiny movement — snap back
+        } else {
+          // Round toward the direction of movement; velocity nudges past the midpoint
+          targetIdx = Math.round(rawTarget + vx * 0.15);
+          targetIdx = Math.max(0, Math.min(current.length - 1, targetIdx));
+        }
+
+        Animated.spring(indicatorAnim, {
+          toValue: targetIdx,
+          useNativeDriver: true,
+          damping: 20,
+          mass: 0.5,
+          stiffness: 260,
+        }).start();
+
+        if (targetIdx !== baseIdx) go(current[targetIdx].href);
+        Animated.spring(pillScale, { toValue: 1, useNativeDriver: true, damping: 9, mass: 0.5, stiffness: 200 }).start();
+        Animated.spring(pillScaleX, { toValue: 1, useNativeDriver: true, damping: 8, mass: 0.5, stiffness: 220 }).start();
+      },
+      onPanResponderTerminate: () => {
+        Animated.spring(pillScale, { toValue: 1, useNativeDriver: true, damping: 9, mass: 0.5, stiffness: 200 }).start();
+        Animated.spring(pillScaleX, { toValue: 1, useNativeDriver: true, damping: 8, mass: 0.5, stiffness: 220 }).start();
+      },
+    })
+  ).current;
 
   async function handleLogout() {
     try {
@@ -140,6 +241,30 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     } finally {
       router.replace(ROUTES.login as any);
     }
+  }
+
+  // ===== Pill bounce + stretch physics =====
+  const pillScale = useRef(new Animated.Value(1)).current;
+  const pillScaleX = useRef(new Animated.Value(1)).current;
+
+  function expandPill() {
+    Animated.spring(pillScale, {
+      toValue: 1.03,
+      useNativeDriver: true,
+      damping: 8,
+      mass: 0.4,
+      stiffness: 300,
+    }).start();
+  }
+
+  function shrinkPill() {
+    Animated.spring(pillScale, {
+      toValue: 1,
+      useNativeDriver: true,
+      damping: 9,
+      mass: 0.5,
+      stiffness: 200,
+    }).start();
   }
 
   // ===== Bottom sheet expansion (CLEAN VERSION) =====
@@ -343,11 +468,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           style={[
             styles.pill,
             TOKENS.shadow,
-            {
-              height: sheetH,
-            },
+            { height: sheetH },
           ]}
         >
+          <Animated.View style={{ flex: 1, transform: [{ scale: pillScale }, { scaleX: pillScaleX }] }}>
           <GlassSurface
             key={`glass-${resolvedTheme}`}
             isDark={isDark}
@@ -477,37 +601,59 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               </Animated.View>
             )}
 
-            <Animated.View style={styles.row}>
-              {navItems.slice(0, 4).map((it) => {
-                const active = isActive(it.href);
-                return (
-                  <Pressable
-                    key={it.href}
-                    onPress={() => go(it.href)}
-                    style={({ pressed }) => [
-                      styles.tabBtn,
+            <Animated.View style={styles.row} {...swipePan.panHandlers}>
+              {/* Sliding active indicator */}
+              <View
+                style={styles.tabsContainer}
+                onLayout={(e) => {
+                  const w = e.nativeEvent.layout.width;
+                  tabsAreaWidthRef.current = w;
+                  setTabsAreaWidth(w);
+                }}
+              >
+                {tabsAreaWidth > 0 && (
+                  <Animated.View
+                    style={[
+                      styles.tabIndicator,
                       {
-                        backgroundColor: active
-                          ? TOKENS.activeBg
-                          : pressed
-                            ? TOKENS.btnBgHover
-                            : "transparent",
-                        // borderWidth: active ? StyleSheet.hairlineWidth : 0,
-                        borderColor: active ? TOKENS.activeRing : "transparent",
+                        backgroundColor: TOKENS.activeBg,
+                        width: tabsAreaWidth / tabs.length - 6,
+                        transform: [{
+                          translateX: indicatorAnim.interpolate({
+                            inputRange: tabs.map((_, i) => i),
+                            outputRange: tabs.map((_, i) => i * (tabsAreaWidth / tabs.length)),
+                            extrapolate: "clamp",
+                          }),
+                        }],
                       },
                     ]}
-                  >
-                    <Ionicons
-                      name={it.icon}
-                      size={22}
-                      color={active ? TOKENS.textPrimary : TOKENS.textMuted}
-                    />
-                  </Pressable>
-                );
-              })}
+                  />
+                )}
+
+                {tabs.map((it) => {
+                  const active = isActive(it.href);
+                  return (
+                    <Pressable
+                      key={it.href}
+                      onPress={() => go(it.href)}
+                      onPressIn={expandPill}
+                      onPressOut={shrinkPill}
+                      style={styles.tabBtn}
+                    >
+                      <Ionicons
+                        name={it.icon}
+                        size={22}
+                        color={active ? TOKENS.textPrimary : TOKENS.textMuted}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </View>
 
               <Pressable
                 onPress={() => (open ? closeSheet() : openSheet())}
+                onPressIn={expandPill}
+                onPressOut={shrinkPill}
                 style={({ pressed }) => [
                   styles.menuBtn,
                   { backgroundColor: pressed ? TOKENS.btnBgHover : TOKENS.btnBg },
@@ -524,6 +670,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               </Pressable>
             </Animated.View>
           </GlassSurface>
+          </Animated.View>
         </Animated.View>
       </View>
     </View>
@@ -682,6 +829,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 6,
+  },
+  tabsContainer: {
+    flex: 1,
+    flexDirection: "row",
+    position: "relative",
+  },
+  tabIndicator: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 3,
+    borderRadius: 16,
   },
   tabBtn: {
     flex: 1,

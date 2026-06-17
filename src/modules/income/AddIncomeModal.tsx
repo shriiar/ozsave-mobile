@@ -13,9 +13,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
 import { GlassView } from "expo-glass-effect";
-import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -185,12 +183,6 @@ function DateField({
         Platform.OS === "ios" ? (
           <Modal transparent animationType="fade" onRequestClose={() => setShow(false)}>
             <View style={StyleSheet.absoluteFill}>
-              <BlurView
-                intensity={isDark ? 70 : 90}
-                tint={isDark ? "dark" : "light"}
-                style={StyleSheet.absoluteFill}
-              />
-
               <Pressable style={StyleSheet.absoluteFill} onPress={() => setShow(false)}>
                 <View
                   style={{
@@ -201,22 +193,11 @@ function DateField({
               </Pressable>
 
               <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}>
-                <BlurView
-                  intensity={isDark ? 28 : 45}
-                  tint={isDark ? "dark" : "light"}
+                <GlassView
+                  glassEffectStyle="regular"
+                  colorScheme={isDark ? "dark" : "light"}
                   style={[styles.dateSheet, { borderColor }]}
                 >
-                  <LinearGradient
-                    colors={
-                      isDark
-                        ? ["rgba(2,6,23,0.55)", "rgba(15,23,42,0.35)", "rgba(2,6,23,0.25)"]
-                        : ["rgba(255,255,255,0.78)", "rgba(255,255,255,0.60)", "rgba(255,255,255,0.50)"]
-                    }
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-
                   <View style={[styles.selectHeader, { borderBottomColor: borderColor }]}>
                     <Text style={{ color: textColor, fontSize: 15, fontWeight: "600" }}>Select date</Text>
                     <Text style={{ color: mutedColor, marginTop: 2, fontSize: 12, fontWeight: "400" }}>
@@ -230,17 +211,22 @@ function DateField({
                       mode="date"
                       display="spinner"
                       onChange={onChange}
-                      // @ts-ignore
                       themeVariant={isDark ? "dark" : "light"}
                     />
                   </View>
 
                   <View style={[styles.selectFooter, { borderTopColor: borderColor }]}>
-                    <Pressable onPress={() => setShow(false)} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
-                      <Text style={{ color: textColor, fontSize: 14, fontWeight: "600" }}>Done</Text>
+                    <Pressable
+                      onPress={() => setShow(false)}
+                      style={({ pressed }) => [
+                        styles.doneBtn,
+                        { backgroundColor: isDark ? "#2a2a2a" : "#e2e4e8", opacity: pressed ? 0.88 : 1 },
+                      ]}
+                    >
+                      <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
                     </Pressable>
                   </View>
-                </BlurView>
+                </GlassView>
               </View>
             </View>
           </Modal>
@@ -663,9 +649,18 @@ const styles = StyleSheet.create({
   selectHeader: { padding: 14, 
     // borderBottomWidth: StyleSheet.hairlineWidth 
   },
-  selectFooter: { padding: 12, 
-    // borderTopWidth: StyleSheet.hairlineWidth, 
-    alignItems: "flex-end" },
+  selectFooter: { padding: 12 },
+  doneBtn: {
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  doneBtnText: {
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+  },
 
   dateSheet: {
     borderRadius: 16,

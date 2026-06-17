@@ -15,7 +15,6 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 import { GlassView } from "expo-glass-effect";
-import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -280,13 +279,12 @@ function CategorySelect({
                     if (Platform.OS === "ios") onChange(draft);
                     setOpen(false);
                   }}
-                  style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+                  style={({ pressed }) => [
+                    styles.doneBtn,
+                    { backgroundColor: isDark ? "#2a2a2a" : "#e2e4e8", opacity: pressed ? 0.88 : 1 },
+                  ]}
                 >
-                  <Text
-                    style={{ color: textColor, fontSize: 14, fontWeight: "600" }}
-                  >
-                    Done
-                  </Text>
+                  <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
                 </Pressable>
               </View>
             </GlassView>
@@ -471,13 +469,12 @@ function FrequencySelect({
                     if (Platform.OS === "ios") onChange(draft);
                     setOpen(false);
                   }}
-                  style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+                  style={({ pressed }) => [
+                    styles.doneBtn,
+                    { backgroundColor: isDark ? "#2a2a2a" : "#e2e4e8", opacity: pressed ? 0.88 : 1 },
+                  ]}
                 >
-                  <Text
-                    style={{ color: textColor, fontSize: 14, fontWeight: "600" }}
-                  >
-                    Done
-                  </Text>
+                  <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
                 </Pressable>
               </View>
             </GlassView>
@@ -614,13 +611,12 @@ function DateField({
                   >
                     <Pressable
                       onPress={() => setShow(false)}
-                      style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+                      style={({ pressed }) => [
+                        styles.doneBtn,
+                        { backgroundColor: isDark ? "#2a2a2a" : "#e2e4e8", opacity: pressed ? 0.88 : 1 },
+                      ]}
                     >
-                      <Text
-                        style={{ color: textColor, fontSize: 14, fontWeight: "600" }}
-                      >
-                        Done
-                      </Text>
+                      <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
                     </Pressable>
                   </View>
                 </GlassView>
@@ -1197,23 +1193,6 @@ export default function EditBillingModal({
                             form.endDate ? dateFromYmd(form.endDate) : undefined
                           }
                         />
-                        {form.nextRunAt ? (
-                          <Pressable
-                            disabled={saving}
-                            onPress={() => update("nextRunAt", "")}
-                            style={({ pressed }) => [
-                              {
-                                opacity: pressed ? 0.85 : 1,
-                                marginTop: 10,
-                                alignSelf: "flex-start",
-                              },
-                            ]}
-                          >
-                            <Text style={{ color: T.text, fontWeight: "600" }}>
-                              Clear skip date
-                            </Text>
-                          </Pressable>
-                        ) : null}
                       </View>
 
                       <View>
@@ -1735,7 +1714,17 @@ const styles = StyleSheet.create({
   selectFooter: {
     padding: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    alignItems: "flex-end",
+  },
+  doneBtn: {
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  doneBtnText: {
+    fontSize: 15,
+    fontWeight: "700" as const,
+    letterSpacing: 0.2,
   },
   dateSheet: {
     borderRadius: 16,

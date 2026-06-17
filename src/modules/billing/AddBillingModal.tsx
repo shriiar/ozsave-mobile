@@ -206,15 +206,18 @@ function CategorySelect({
                 </ScrollView>
               )}
 
-              <View style={[styles.selectFooter, { borderTopColor: borderColor }]}> 
+              <View style={[styles.selectFooter, { borderTopColor: borderColor }]}>
                 <Pressable
                   onPress={() => {
                     if (Platform.OS === "ios") onChange(draft);
                     setOpen(false);
                   }}
-                  style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+                  style={({ pressed }) => [
+                    styles.doneBtn,
+                    { backgroundColor: isDark ? "#2a2a2a" : "#e2e4e8", opacity: pressed ? 0.88 : 1 },
+                  ]}
                 >
-                  <Text style={{ color: textColor, fontSize: 14, fontWeight: "600" }}>Done</Text>
+                  <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
                 </Pressable>
               </View>
             </GlassView>
@@ -338,15 +341,18 @@ function FrequencySelect({
                 </ScrollView>
               )}
 
-              <View style={[styles.selectFooter, { borderTopColor: borderColor }]}> 
+              <View style={[styles.selectFooter, { borderTopColor: borderColor }]}>
                 <Pressable
                   onPress={() => {
                     if (Platform.OS === "ios") onChange(draft);
                     setOpen(false);
                   }}
-                  style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+                  style={({ pressed }) => [
+                    styles.doneBtn,
+                    { backgroundColor: isDark ? "#2a2a2a" : "#e2e4e8", opacity: pressed ? 0.88 : 1 },
+                  ]}
                 >
-                  <Text style={{ color: textColor, fontSize: 14, fontWeight: "600" }}>Done</Text>
+                  <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
                 </Pressable>
               </View>
             </GlassView>
@@ -451,9 +457,15 @@ function DateField({
                   />
                 </View>
 
-                <View style={[styles.selectFooter, { borderTopColor: borderColor }]}> 
-                  <Pressable onPress={() => setShow(false)} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}> 
-                    <Text style={{ color: textColor, fontSize: 14, fontWeight: "600" }}>Done</Text>
+                <View style={[styles.selectFooter, { borderTopColor: borderColor }]}>
+                  <Pressable
+                    onPress={() => setShow(false)}
+                    style={({ pressed }) => [
+                      styles.doneBtn,
+                      { backgroundColor: isDark ? "#2a2a2a" : "#e2e4e8", opacity: pressed ? 0.88 : 1 },
+                    ]}
+                  >
+                    <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
                   </Pressable>
                 </View>
               </GlassView>
@@ -1134,7 +1146,17 @@ const styles = StyleSheet.create({
   selectFooter: {
     padding: 12,
     // borderTopWidth: StyleSheet.hairlineWidth,
-    alignItems: "flex-end",
+  },
+  doneBtn: {
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  doneBtnText: {
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: 0.2,
   },
   dateSheet: {
     borderRadius: 16,

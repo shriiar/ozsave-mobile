@@ -95,25 +95,37 @@ function AnimatedCard({
   delay?: number;
   revision: number;
 }) {
-  const opacity = useRef(new Animated.Value(revision === 0 ? 1 : 0)).current;
-  const scale = useRef(new Animated.Value(revision === 0 ? 1 : 0.93)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.94)).current;
 
-  useEffect(() => {
-    if (revision === 0) return;
+  function animate() {
     opacity.setValue(0);
-    scale.setValue(0.93);
+    scale.setValue(0.94);
     const t = setTimeout(() => {
       Animated.parallel([
         Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
         Animated.spring(scale, {
           toValue: 1,
           useNativeDriver: true,
-          damping: 13,
-          mass: 0.8,
-          stiffness: 160,
+          damping: 14,
+          mass: 0.7,
+          stiffness: 180,
         }),
       ]).start();
     }, delay);
+    return t;
+  }
+
+  // Mount — wave in on first render
+  useEffect(() => {
+    const t = animate();
+    return () => clearTimeout(t);
+  }, []);
+
+  // Data refresh — re-wave when new data arrives
+  useEffect(() => {
+    if (revision === 0) return;
+    const t = animate();
     return () => clearTimeout(t);
   }, [revision]);
 

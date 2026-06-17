@@ -48,6 +48,7 @@ export type EditBillingPayload = {
   amount?: number;
   category?: CostCategory;
   endDate?: string | null;
+  nextRunAt?: string;
   isActive?: boolean;
   paidBy?: string;
   sharedBy?: string[];

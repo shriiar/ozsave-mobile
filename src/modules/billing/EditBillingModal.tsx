@@ -47,6 +47,7 @@ type BillingForm = {
   frequency: Frequency;
   startDate: string;
   endDate: string;
+  nextRunAt: string;
   paidBy: string;
   sharedBy: string[];
   notes: string;
@@ -91,6 +92,12 @@ function ymdFromDate(d: Date) {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
+}
+
+function ymdTomorrow() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return ymdFromDate(d);
 }
 
 function dateFromYmd(ymd: string) {
@@ -493,6 +500,7 @@ function DateField({
   title = "Select date",
   subtitle = "Pick a day",
   minimumDate,
+  maximumDate,
 }: {
   valueYmd: string;
   onChangeYmd: (v: string) => void;
@@ -505,6 +513,7 @@ function DateField({
   title?: string;
   subtitle?: string;
   minimumDate?: Date;
+  maximumDate?: Date;
 }) {
   const [show, setShow] = React.useState(false);
   const valueDate = React.useMemo(
@@ -596,6 +605,7 @@ function DateField({
                       onChange={onChange}
                       themeVariant={isDark ? "dark" : "light"}
                       minimumDate={minimumDate}
+                      maximumDate={maximumDate}
                     />
                   </View>
 
@@ -624,6 +634,7 @@ function DateField({
             display="default"
             onChange={onChange}
             minimumDate={minimumDate}
+            maximumDate={maximumDate}
           />
         )
       ) : null}
@@ -658,6 +669,7 @@ export default function EditBillingModal({
     frequency: "monthly",
     startDate: "",
     endDate: "",
+    nextRunAt: "",
     paidBy: currentUserId ?? "",
     sharedBy: currentUserId ? [currentUserId] : [],
     notes: "",
@@ -689,6 +701,7 @@ export default function EditBillingModal({
       frequency: (billing.frequency as Frequency) ?? "monthly",
       startDate: billing.startDate?.slice(0, 10) ?? "",
       endDate: billing.endDate?.slice(0, 10) ?? "",
+      nextRunAt: billing.nextRunAt?.slice(0, 10) ?? "",
       paidBy: paidById,
       sharedBy: sharedIds.filter(Boolean),
       notes: billing.notes ?? "",
@@ -837,6 +850,9 @@ export default function EditBillingModal({
         category: form.category,
         endDate: form.endDate
           ? new Date(form.endDate).toISOString()
+          : undefined,
+        nextRunAt: form.nextRunAt
+          ? new Date(form.nextRunAt).toISOString()
           : undefined,
         paidBy: form.paidBy,
         sharedBy: form.sharedBy,
@@ -1145,6 +1161,56 @@ export default function EditBillingModal({
                           >
                             <Text style={{ color: T.text, fontWeight: "600" }}>
                               Clear end date
+                            </Text>
+                          </Pressable>
+                        ) : null}
+
+                        <Text
+                          style={[styles.label, { color: T.muted, marginTop: 18 }]}
+                        >
+                          Skip to next run date (optional)
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontWeight: "400",
+                            color: T.muted,
+                            marginTop: 4,
+                            lineHeight: 15,
+                          }}
+                        >
+                          Choosing a future date skips all billing cycles until then. The next charge will run on this date instead.
+                        </Text>
+                        <DateField
+                          valueYmd={form.nextRunAt}
+                          onChangeYmd={(v) => update("nextRunAt", v)}
+                          disabled={saving}
+                          isDark={isDark}
+                          borderColor={T.inputBorder}
+                          bgColor={T.inputBg}
+                          textColor={T.text}
+                          mutedColor={T.muted}
+                          title="Skip to next run date"
+                          subtitle="Next charge will run on this date"
+                          minimumDate={dateFromYmd(ymdTomorrow())}
+                          maximumDate={
+                            form.endDate ? dateFromYmd(form.endDate) : undefined
+                          }
+                        />
+                        {form.nextRunAt ? (
+                          <Pressable
+                            disabled={saving}
+                            onPress={() => update("nextRunAt", "")}
+                            style={({ pressed }) => [
+                              {
+                                opacity: pressed ? 0.85 : 1,
+                                marginTop: 10,
+                                alignSelf: "flex-start",
+                              },
+                            ]}
+                          >
+                            <Text style={{ color: T.text, fontWeight: "600" }}>
+                              Clear skip date
                             </Text>
                           </Pressable>
                         ) : null}

@@ -18,13 +18,18 @@
     },
     "icon": "./assets/images/icon.png",
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/icon-dark.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shriiar.ozsave",
+      "icon": {
+        "light": "./assets/images/icon.png",
+        "dark": "./assets/images/icon-dark.png",
+        "tinted": "./assets/images/icon-tinted.png"
+      },
       "infoPlist": {
         "CFBundleDisplayName": "OzSave",
         "ITSAppUsesNonExemptEncryption": false

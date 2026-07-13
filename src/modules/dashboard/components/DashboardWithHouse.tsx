@@ -304,9 +304,9 @@ export default function DashboardWithHouse({
           { minHeight: viewportH || undefined, paddingBottom: bottomSpace, paddingTop: headerHeight + 8 },
         ]}
       >
-        <AnimatedCard delay={0} revision={revision}>
+        {/* <AnimatedCard delay={0} revision={revision}>
           <DashboardAiSummaryButton onPress={() => setSummaryOpen(true)} />
-        </AnimatedCard>
+        </AnimatedCard> */}
 
         <AnimatedCard delay={30} revision={revision}>
           <PeriodSummaryCards

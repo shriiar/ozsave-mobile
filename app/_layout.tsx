@@ -3,8 +3,9 @@ import "react-native-gesture-handler";
 import React, { useEffect, useState } from "react";
 import { Stack } from "expo-router/stack";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { View, StyleSheet, ActivityIndicator } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import * as SplashScreen from "expo-splash-screen";
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "../src/context/AuthContext";
@@ -14,6 +15,8 @@ import ThemeTransitionOverlay from "../src/components/ThemeTransitionOverlay";
 import Toast from "react-native-toast-message";
 import { createToastConfig } from "../src/components/toastConfig";
 import { queryClient, initQueryPersistence } from "../src/lib/queryClient";
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AppShell() {
   const insets = useSafeAreaInsets();
@@ -32,6 +35,7 @@ function AppShell() {
           animation: "fade",
           gestureEnabled: false,
           animationDuration: 260,
+          contentStyle: { backgroundColor: resolvedTheme === "dark" ? "#0a0a0a" : "#ffffff" },
         }}
       />
 
@@ -60,13 +64,9 @@ export default function RootLayout() {
   }, []);
 
   if (!ready) {
-    return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <View style={styles.loader}>
-          <ActivityIndicator />
-        </View>
-      </GestureHandlerRootView>
-    );
+    // Native splash screen (icon on flat background) stays on top until this
+    // resolves — no JS loading UI needed.
+    return null;
   }
 
   return (
@@ -87,5 +87,4 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  loader: { flex: 1, alignItems: "center", justifyContent: "center" },
 });

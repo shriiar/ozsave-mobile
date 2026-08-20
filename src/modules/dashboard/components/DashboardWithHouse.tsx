@@ -345,13 +345,13 @@ export default function DashboardWithHouse({
           />
         </AnimatedCard>
 
-        <AnimatedCard delay={180} revision={revision}>
+        {/* <AnimatedCard delay={180} revision={revision}>
           <WidgetStack height={400}>
             <SmartAlertsCard alerts={period?.smartAlerts ?? []} />
             <InsightsGridCard insights={period?.insights ?? []} />
             <IncomeInsightsCard data={period ?? {}} />
           </WidgetStack>
-        </AnimatedCard>
+        </AnimatedCard> */}
 
         {!period ? (
           <AnimatedCard delay={0} revision={revision}>

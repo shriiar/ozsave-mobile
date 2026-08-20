@@ -126,8 +126,8 @@ function CostCard({
         });
 
         const scale = progress.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0.9, 1],
+            inputRange: [0, 0.6, 1],
+            outputRange: [0.3, 1.15, 1],
             extrapolate: "clamp",
         });
 

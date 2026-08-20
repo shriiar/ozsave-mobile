@@ -2,11 +2,19 @@
 import React from "react";
 import { Stack } from "expo-router";
 import DashboardShell from "../../src/modules/shell/DashboardShell";
+import { useTheme } from "../../src/context/ThemeContext";
 
 export default function UserLayout() {
+  const { resolvedTheme } = useTheme();
+
   return (
     <DashboardShell>
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: resolvedTheme === "dark" ? "#0a0a0a" : "#ffffff" },
+        }}
+      />
     </DashboardShell>
   );
 }

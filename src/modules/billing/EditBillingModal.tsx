@@ -1559,7 +1559,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     // borderWidth: StyleSheet.hairlineWidth,
-    maxHeight: "40%",
+    maxHeight: "70%",
     width: "100%",
   },
   center: {

@@ -29,7 +29,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [systemScheme, setSystemScheme] = useState<ColorSchemeName>(
     Appearance.getColorScheme() ?? "light"
   );
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">(() =>
+    (Appearance.getColorScheme() ?? "light") === "dark" ? "dark" : "light"
+  );
 
   useEffect(() => {
     let alive = true;

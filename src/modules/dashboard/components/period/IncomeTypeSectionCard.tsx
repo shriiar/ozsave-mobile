@@ -5,7 +5,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { PieChart } from "react-native-gifted-charts";
 import { useTheme } from "../../../../context/ThemeContext";
 
-const PIE_COLORS = ["#3b82f6", "#8b5cf6", "#14b8a6", "#f59e0b", "#ec4899", "#10b981", "#ef4444"];
+const INCOME_TYPE_COLORS: Record<string, string> = {
+  tfn: "#22c55e",
+  abn: "#ef4444",
+  cash: "#eab308",
+};
+const FALLBACK_PIE_COLORS = ["#3b82f6", "#8b5cf6", "#14b8a6", "#f59e0b", "#ec4899", "#10b981", "#ef4444"];
+
+function colorForIncomeType(raw: string, fallbackIndex: number) {
+  const key = String(raw ?? "").trim().toLowerCase();
+  return INCOME_TYPE_COLORS[key] ?? FALLBACK_PIE_COLORS[fallbackIndex % FALLBACK_PIE_COLORS.length];
+}
 
 function money(n: number) {
   const v = Number(n ?? 0);
@@ -78,7 +88,7 @@ export function IncomeTypeSectionCard(props: Props) {
     return pie.map((p, i) => ({
       value: Number(p.amount ?? 0),
       text: `${Math.round(Number(p.percent ?? 0))}%`,
-      color: PIE_COLORS[i % PIE_COLORS.length],
+      color: colorForIncomeType(p.incomeType, i),
       incomeType: p.incomeType,
       amount: Number(p.amount ?? 0),
       percent: Number(p.percent ?? 0),
@@ -162,7 +172,7 @@ export function IncomeTypeSectionCard(props: Props) {
               <View style={{ paddingHorizontal: 12, marginTop: 10 }}>
                 <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
                   {pie.map((c, i) => {
-                    const color = PIE_COLORS[i % PIE_COLORS.length];
+                    const color = colorForIncomeType(c.incomeType, i);
                     const active = selectedIndex === i;
 
                     return (

@@ -10,6 +10,7 @@ import {
   type LayoutChangeEvent,
 } from "react-native";
 import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 
 import CreateHouseModal from "./CreateHouseModal";
@@ -326,11 +327,15 @@ export default function GetStarted() {
                       </Text>
                     </View>
 
-                    <Pressable style={[styles.btnGhost, { backgroundColor: T.btnGhostBg }]} disabled>
-                      <Text style={[styles.btnGhostText, { color: T.btnGhostText }]}>
+                    <GlassView
+                      glassEffectStyle="clear"
+                      colorScheme={isDark ? "dark" : "light"}
+                      style={styles.btnGhost}
+                    >
+                      <Text style={[styles.btnGhostText, { color: T.btnGhostText, opacity: 0.6 }]}>
                         Nothing to do
                       </Text>
-                    </Pressable>
+                    </GlassView>
                   </View>
                 ) : (
                   <View style={{ gap: 10 }}>
@@ -364,28 +369,42 @@ export default function GetStarted() {
                               onPress={() => acceptInvitation(inv._id)}
                               disabled={accepting || declining}
                               style={({ pressed }) => [
-                                styles.btnSuccess,
                                 pressed && { transform: [{ translateY: 1 }] },
                                 (accepting || declining) && { opacity: 0.6 },
                               ]}
                             >
-                              <Text style={styles.btnPrimaryText}>
-                                {accepting ? "Accepting..." : "Accept"}
-                              </Text>
+                              <GlassView
+                                glassEffectStyle="regular"
+                                isInteractive={!accepting && !declining}
+                                tintColor="#059669"
+                                colorScheme={isDark ? "dark" : "light"}
+                                style={styles.btnSuccess}
+                              >
+                                <Text style={styles.btnPrimaryText}>
+                                  {accepting ? "Accepting..." : "Accept"}
+                                </Text>
+                              </GlassView>
                             </Pressable>
 
                             <Pressable
                               onPress={() => declineInvitation(inv._id)}
                               disabled={declining || accepting}
                               style={({ pressed }) => [
-                                styles.btnDanger,
                                 pressed && { transform: [{ translateY: 1 }] },
                                 (declining || accepting) && { opacity: 0.6 },
                               ]}
                             >
-                              <Text style={styles.btnPrimaryText}>
-                                {declining ? "Rejecting..." : "Reject"}
-                              </Text>
+                              <GlassView
+                                glassEffectStyle="regular"
+                                isInteractive={!declining && !accepting}
+                                tintColor="#DC2626"
+                                colorScheme={isDark ? "dark" : "light"}
+                                style={styles.btnDanger}
+                              >
+                                <Text style={styles.btnPrimaryText}>
+                                  {declining ? "Rejecting..." : "Reject"}
+                                </Text>
+                              </GlassView>
                             </Pressable>
                           </View>
                         </View>
@@ -428,12 +447,17 @@ export default function GetStarted() {
 
                     <Pressable
                       onPress={() => setShowCreate(true)}
-                      style={({ pressed }) => [
-                        styles.btnPrimary,
-                        pressed && { transform: [{ translateY: 1 }] },
-                      ]}
+                      style={({ pressed }) => [pressed && { transform: [{ translateY: 1 }] }]}
                     >
-                      <Text style={styles.btnPrimaryText}>Create house</Text>
+                      <GlassView
+                        glassEffectStyle="regular"
+                        isInteractive
+                        tintColor="#4F46E5"
+                        colorScheme={isDark ? "dark" : "light"}
+                        style={styles.btnPrimary}
+                      >
+                        <Text style={styles.btnPrimaryText}>Create house</Text>
+                      </GlassView>
                     </Pressable>
                   </View>
                 </View>
@@ -470,14 +494,15 @@ export default function GetStarted() {
                           <Text style={[styles.badgeText, badgeTextStyle("slate")]}>No invites</Text>
                         </View>
 
-                        <Pressable
-                          style={[styles.btnGhost, { backgroundColor: T.btnGhostBg, opacity: 0.6 }]}
-                          disabled
+                        <GlassView
+                          glassEffectStyle="clear"
+                          colorScheme={isDark ? "dark" : "light"}
+                          style={styles.btnGhost}
                         >
-                          <Text style={[styles.btnGhostText, { color: T.btnGhostText }]}>
+                          <Text style={[styles.btnGhostText, { color: T.btnGhostText, opacity: 0.6 }]}>
                             No invitations
                           </Text>
-                        </Pressable>
+                        </GlassView>
                       </View>
                     </>
                   ) : (
@@ -497,15 +522,18 @@ export default function GetStarted() {
 
                         <Pressable
                           onPress={scrollToInvites}
-                          style={({ pressed }) => [
-                            styles.btnGhost,
-                            { backgroundColor: T.btnGhostBg },
-                            pressed && { opacity: 0.9 },
-                          ]}
+                          style={({ pressed }) => [pressed && { opacity: 0.9 }]}
                         >
-                          <Text style={[styles.btnGhostText, { color: T.btnGhostText }]}>
-                            View invites
-                          </Text>
+                          <GlassView
+                            glassEffectStyle="clear"
+                            isInteractive
+                            colorScheme={isDark ? "dark" : "light"}
+                            style={styles.btnGhost}
+                          >
+                            <Text style={[styles.btnGhostText, { color: T.btnGhostText }]}>
+                              View invites
+                            </Text>
+                          </GlassView>
                         </Pressable>
                       </View>
                     </>
@@ -633,24 +661,33 @@ const styles = StyleSheet.create({
   },
 
   btnPrimary: {
+    minHeight: 40,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: "#4F46E5",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
 
   btnSuccess: {
+    minHeight: 40,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: "#059669",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
 
   btnDanger: {
+    minHeight: 40,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: "#DC2626",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
 
   btnPrimaryText: {
@@ -660,9 +697,13 @@ const styles = StyleSheet.create({
   },
 
   btnGhost: {
+    minHeight: 40,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
 
   btnGhostText: {

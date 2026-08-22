@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { BlurView } from "expo-blur";
+import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { useMutation } from "@tanstack/react-query";
 
@@ -158,14 +159,17 @@ export default function CreateHouseModal({ open, onClose }: Props) {
                 <Pressable
                   onPress={handleClose}
                   disabled={busy}
-                  style={({ pressed }) => [
-                    styles.iconBtn,
-                    { backgroundColor: pressed ? T.ghostBgHover : T.ghostBg },
-                    busy && { opacity: 0.5 },
-                  ]}
+                  style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }, busy && { opacity: 0.5 }]}
                   hitSlop={10}
                 >
-                  <Text style={[styles.iconBtnText, { color: T.text }]}>✕</Text>
+                  <GlassView
+                    glassEffectStyle="clear"
+                    isInteractive={!busy}
+                    colorScheme={isDark ? "dark" : "light"}
+                    style={styles.iconBtn}
+                  >
+                    <Text style={[styles.iconBtnText, { color: T.text }]}>✕</Text>
+                  </GlassView>
                 </Pressable>
               </View>
 
@@ -208,32 +212,42 @@ export default function CreateHouseModal({ open, onClose }: Props) {
                   <Pressable
                     onPress={handleClose}
                     disabled={busy}
-                    style={({ pressed }) => [
-                      styles.btnGhost,
-                      { backgroundColor: pressed ? T.ghostBgHover : T.ghostBg },
-                      busy && { opacity: 0.5 },
-                    ]}
+                    style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }, busy && { opacity: 0.5 }]}
                   >
-                    <Text style={[styles.btnGhostText, { color: T.text }]}>Cancel</Text>
+                    <GlassView
+                      glassEffectStyle="clear"
+                      isInteractive={!busy}
+                      colorScheme={isDark ? "dark" : "light"}
+                      style={styles.btnGhost}
+                    >
+                      <Text style={[styles.btnGhostText, { color: T.text }]}>Cancel</Text>
+                    </GlassView>
                   </Pressable>
 
                   <Pressable
                     onPress={handleCreate}
                     disabled={!name.trim() || busy}
                     style={({ pressed }) => [
-                      styles.btnPrimary,
                       pressed && { transform: [{ translateY: 1 }] },
                       (!name.trim() || busy) && { opacity: 0.55 },
                     ]}
                   >
-                    {busy ? (
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                        <ActivityIndicator size="small" color="#fff" />
-                        <Text style={styles.btnPrimaryText}>Creating...</Text>
-                      </View>
-                    ) : (
-                      <Text style={styles.btnPrimaryText}>Create</Text>
-                    )}
+                    <GlassView
+                      glassEffectStyle="regular"
+                      isInteractive={!!name.trim() && !busy}
+                      tintColor="#4F46E5"
+                      colorScheme={isDark ? "dark" : "light"}
+                      style={styles.btnPrimary}
+                    >
+                      {busy ? (
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                          <ActivityIndicator size="small" color="#fff" />
+                          <Text style={styles.btnPrimaryText}>Creating...</Text>
+                        </View>
+                      ) : (
+                        <Text style={styles.btnPrimaryText}>Create</Text>
+                      )}
+                    </GlassView>
                   </Pressable>
                 </View>
               </View>
@@ -306,6 +320,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
 
   iconBtnText: {
@@ -370,9 +385,13 @@ const styles = StyleSheet.create({
   },
 
   btnGhost: {
+    minHeight: 40,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
 
   btnGhostText: {
@@ -381,10 +400,13 @@ const styles = StyleSheet.create({
   },
 
   btnPrimary: {
+    minHeight: 40,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 14,
-    backgroundColor: "#4F46E5",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
 
   btnPrimaryText: {

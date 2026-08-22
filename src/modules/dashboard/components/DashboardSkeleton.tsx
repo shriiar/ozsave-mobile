@@ -1,10 +1,14 @@
 // src/modules/dashboard/components/DashboardSkeleton.tsx
 import React from "react";
 import { View, StyleSheet } from "react-native";
+import { useTheme } from "../../../context/ThemeContext";
 
 export default function DashboardSkeleton() {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isDark ? "#0a0a0a" : "#F6F7FB" }]}>
       <View style={[styles.block, { height: 22, width: 160 }]} />
       <View style={[styles.block, { height: 14, width: 240, marginTop: 10 }]} />
 

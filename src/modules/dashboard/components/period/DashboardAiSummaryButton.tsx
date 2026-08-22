@@ -32,6 +32,7 @@ export default function DashboardAiSummaryButton({
     >
       <GlassView
         glassEffectStyle="regular"
+        isInteractive={!disabled}
         colorScheme={isDark ? "dark" : "light"}
         style={[styles.btn, { borderColor: T.border, backgroundColor: T.mutedBg }]}
       >
@@ -44,6 +45,7 @@ export default function DashboardAiSummaryButton({
 
 const styles = StyleSheet.create({
   btn: {
+    minHeight: 44,
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 14,
@@ -52,6 +54,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+    overflow: "hidden",
   },
   text: {
     fontSize: 13,

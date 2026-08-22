@@ -199,12 +199,16 @@ function CategorySelect({
                                         if (Platform.OS === "ios") onChange(draft);
                                         setOpen(false);
                                     }}
-                                    style={({ pressed }) => [
-                                        styles.doneBtn,
-                                        { backgroundColor: isDark ? "#2a2a2a" : "#e2e4e8", opacity: pressed ? 0.88 : 1 },
-                                    ]}
+                                    style={({ pressed }) => [{ opacity: pressed ? 0.88 : 1 }]}
                                 >
-                                    <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
+                                    <GlassView
+                                        glassEffectStyle="clear"
+                                        isInteractive
+                                        colorScheme={isDark ? "dark" : "light"}
+                                        style={styles.doneBtn}
+                                    >
+                                        <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
+                                    </GlassView>
                                 </Pressable>
                             </View>
                         </GlassView>
@@ -305,12 +309,16 @@ function DateField({
                                     <View style={[styles.selectFooter, { borderTopColor: borderColor }]}>
                                         <Pressable
                                             onPress={() => setShow(false)}
-                                            style={({ pressed }) => [
-                                                styles.doneBtn,
-                                                { backgroundColor: isDark ? "#2a2a2a" : "#e2e4e8", opacity: pressed ? 0.88 : 1 },
-                                            ]}
+                                            style={({ pressed }) => [{ opacity: pressed ? 0.88 : 1 }]}
                                         >
-                                            <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
+                                            <GlassView
+                                                glassEffectStyle="clear"
+                                                isInteractive
+                                                colorScheme={isDark ? "dark" : "light"}
+                                                style={styles.doneBtn}
+                                            >
+                                                <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
+                                            </GlassView>
                                         </Pressable>
                                     </View>
                                 </GlassView>
@@ -553,7 +561,12 @@ export default function AddCostModal({ open, onClose }: Props) {
                                         }}
                                         style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
                                     >
-                                        <View style={[styles.toggleBtn, { borderColor: T.border, backgroundColor: T.inputBg }]}>
+                                        <GlassView
+                                            glassEffectStyle="clear"
+                                            isInteractive={!saving}
+                                            colorScheme={isDark ? "dark" : "light"}
+                                            style={[styles.toggleBtn, { borderColor: T.border }]}
+                                        >
                                             <View
                                                 style={[
                                                     styles.checkbox,
@@ -564,12 +577,12 @@ export default function AddCostModal({ open, onClose }: Props) {
                                             <Text style={[styles.toggleHint, { color: T.muted }]}>
                                                 {categorized ? "Multiple items" : "Single item"}
                                             </Text>
-                                        </View>
+                                        </GlassView>
                                     </Pressable>
                                 </View>
 
                                 {/* Body */}
-                                <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+                                <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
                                     {items.map((item, index) => (
                                         <View key={index}>
                                             <View style={styles.blockHeader}>
@@ -629,13 +642,14 @@ export default function AddCostModal({ open, onClose }: Props) {
                                                             onPress={() => updateItem(index, { paidBy: m._id })}
                                                             style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
                                                         >
-                                                            <View
+                                                            <GlassView
+                                                                glassEffectStyle={active ? "regular" : "clear"}
+                                                                isInteractive={!saving}
+                                                                tintColor={active ? "rgba(79,70,229,0.55)" : undefined}
+                                                                colorScheme={isDark ? "dark" : "light"}
                                                                 style={[
                                                                     styles.memberChip,
-                                                                    {
-                                                                        borderColor: active ? "rgba(79,70,229,0.45)" : T.border,
-                                                                        backgroundColor: active ? "rgba(79,70,229,0.10)" : T.inputBg,
-                                                                    },
+                                                                    { borderColor: active ? "rgba(79,70,229,0.45)" : T.border },
                                                                 ]}
                                                             >
                                                                 <View style={[styles.avatar, { borderColor: T.border }]}>
@@ -652,7 +666,7 @@ export default function AddCostModal({ open, onClose }: Props) {
                                                                         {m.email}
                                                                     </Text>
                                                                 </View>
-                                                            </View>
+                                                            </GlassView>
                                                         </Pressable>
                                                     );
                                                 })}
@@ -696,13 +710,14 @@ export default function AddCostModal({ open, onClose }: Props) {
                                                             onPress={() => toggleSharedMember(index, m._id)}
                                                             style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
                                                         >
-                                                            <View
+                                                            <GlassView
+                                                                glassEffectStyle={checked ? "regular" : "clear"}
+                                                                isInteractive={!saving}
+                                                                tintColor={checked ? "rgba(16,185,129,0.55)" : undefined}
+                                                                colorScheme={isDark ? "dark" : "light"}
                                                                 style={[
                                                                     styles.sharedChip,
-                                                                    {
-                                                                        borderColor: checked ? "rgba(16,185,129,0.45)" : T.border,
-                                                                        backgroundColor: checked ? "rgba(16,185,129,0.10)" : T.inputBg,
-                                                                    },
+                                                                    { borderColor: checked ? "rgba(16,185,129,0.45)" : T.border },
                                                                 ]}
                                                             >
                                                                 <View
@@ -718,7 +733,7 @@ export default function AddCostModal({ open, onClose }: Props) {
                                                                     ]}
                                                                 />
                                                                 <Text style={{ color: T.text, fontWeight: "600", fontSize: 13 }}>{m.name}</Text>
-                                                            </View>
+                                                            </GlassView>
                                                         </Pressable>
                                                     );
                                                 })}
@@ -769,10 +784,15 @@ export default function AddCostModal({ open, onClose }: Props) {
 
                                     {categorized ? (
                                         <Pressable disabled={saving} onPress={addItem} style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}>
-                                            <View style={[styles.addItemBtn, { borderColor: T.inputBorder, backgroundColor: T.inputBg }]}>
+                                            <GlassView
+                                                glassEffectStyle="clear"
+                                                isInteractive={!saving}
+                                                colorScheme={isDark ? "dark" : "light"}
+                                                style={[styles.addItemBtn, { borderColor: T.inputBorder }]}
+                                            >
                                                 <Ionicons name="add-circle-outline" size={18} color={T.text} />
                                                 <Text style={{ color: T.text, fontWeight: "600" }}>Add another item</Text>
-                                            </View>
+                                            </GlassView>
                                         </Pressable>
                                     ) : null}
 
@@ -790,34 +810,40 @@ export default function AddCostModal({ open, onClose }: Props) {
                                         styles.footer,
                                         {
                                             borderTopColor: T.headerBorder,
-                                            paddingBottom: Math.max(insets.bottom, 10) + 10,
+                                            paddingTop: 14,
+                                            paddingBottom: 40,
                                         },
                                     ]}
                                 >
                                     <Pressable
                                         onPress={() => !saving && onClose()}
                                         disabled={saving}
-                                        style={({ pressed }) => [
-                                            styles.footerBtn,
-                                            {
-                                                borderColor: T.border,
-                                                backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
-                                                opacity: pressed ? 0.9 : 1,
-                                            },
-                                        ]}
+                                        style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.9 : 1 }]}
                                     >
-                                        <Text style={{ color: T.text, fontWeight: "600" }}>Cancel</Text>
+                                        <GlassView
+                                            glassEffectStyle="clear"
+                                            isInteractive={!saving}
+                                            colorScheme={isDark ? "dark" : "light"}
+                                            style={[styles.footerBtn, { borderColor: T.border }]}
+                                        >
+                                            <Text style={{ color: T.text, fontWeight: "600" }}>Cancel</Text>
+                                        </GlassView>
                                     </Pressable>
 
                                     <Pressable
                                         onPress={handleSave}
                                         disabled={saving}
-                                        style={({ pressed }) => [
-                                            styles.footerBtnPrimary,
-                                            { backgroundColor: T.primary, opacity: pressed ? 0.92 : 1 },
-                                        ]}
+                                        style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.92 : 1 }]}
                                     >
-                                        {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "600" }}>Save</Text>}
+                                        <GlassView
+                                            glassEffectStyle="regular"
+                                            isInteractive={!saving}
+                                            tintColor={T.primary}
+                                            colorScheme={isDark ? "dark" : "light"}
+                                            style={styles.footerBtnPrimary}
+                                        >
+                                            {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "600" }}>Save</Text>}
+                                        </GlassView>
                                     </Pressable>
                                 </View>
                             </GlassView>
@@ -902,13 +928,15 @@ const styles = StyleSheet.create({
 
     toggleRow: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 },
     toggleBtn: {
-        paddingVertical: 10,
+        minHeight: 34,
+        paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 16,
         // borderWidth: StyleSheet.hairlineWidth,
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
+        overflow: "hidden",
     },
     checkbox: { height: 14, width: 14, borderRadius: 5, 
         // borderWidth: StyleSheet.hairlineWidth 
@@ -944,10 +972,12 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
-        paddingVertical: 11,
+        minHeight: 44,
+        paddingVertical: 7,
         paddingHorizontal: 12,
         borderRadius: 14,
         // borderWidth: StyleSheet.hairlineWidth,
+        overflow: "hidden",
     },
     avatar: {
         height: 30,
@@ -962,23 +992,27 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 8,
-        paddingVertical: 9,
+        minHeight: 30,
+        paddingVertical: 5,
         paddingHorizontal: 12,
         borderRadius: 999,
         // borderWidth: StyleSheet.hairlineWidth,
+        overflow: "hidden",
     },
     dot: { height: 8, width: 8, borderRadius: 999 },
 
     addItemBtn: {
         marginTop: 4,
+        minHeight: 38,
         borderRadius: 16,
         // borderWidth: StyleSheet.hairlineWidth,
-        paddingVertical: 12,
+        paddingVertical: 8,
         paddingHorizontal: 12,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
+        overflow: "hidden",
     },
     itemDivider: {
         height: StyleSheet.hairlineWidth,
@@ -992,25 +1026,30 @@ const styles = StyleSheet.create({
         padding: 12 },
 
     footer: {
-        padding: 14,
+        paddingHorizontal: 14,
         // borderTopWidth: StyleSheet.hairlineWidth,
         flexDirection: "row",
+        alignItems: "center",
         gap: 10,
     },
     footerBtn: {
         flex: 1,
+        minHeight: 46,
         borderRadius: 14,
         // borderWidth: StyleSheet.hairlineWidth,
         paddingVertical: 12,
         alignItems: "center",
         justifyContent: "center",
+        overflow: "hidden",
     },
     footerBtnPrimary: {
         flex: 1,
+        minHeight: 46,
         borderRadius: 14,
         paddingVertical: 12,
         alignItems: "center",
         justifyContent: "center",
+        overflow: "hidden",
     },
 
     // ---- Category/date select modal styles ----
@@ -1059,10 +1098,12 @@ const styles = StyleSheet.create({
         // borderTopWidth: StyleSheet.hairlineWidth,
     },
     doneBtn: {
+        minHeight: 40,
         borderRadius: 14,
-        paddingVertical: 15,
+        paddingVertical: 10,
         alignItems: "center",
         justifyContent: "center",
+        overflow: "hidden",
     },
     doneBtnText: {
         fontSize: 15,

@@ -418,9 +418,14 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
                 </View>
 
                 <Pressable onPress={onClose} style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}>
-                  <View style={[styles.closeBtn, { borderColor: T.border, backgroundColor: T.bg }]}>
+                  <GlassView
+                    glassEffectStyle="clear"
+                    isInteractive
+                    colorScheme={isDark ? "dark" : "light"}
+                    style={[styles.closeBtn, { borderColor: T.border }]}
+                  >
                     <Ionicons name="close" size={18} color={T.text} />
-                  </View>
+                  </GlassView>
                 </Pressable>
               </View>
 
@@ -459,17 +464,16 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
                     </RevealBlock>
 
                     <RevealBlock visible delay={REVEAL_BASE + REVEAL_STEP * 2}>
-                      <Pressable
-                        onPress={loadSummary}
-                        style={({ pressed }) => [
-                          styles.retryBtn,
-                          {
-                            backgroundColor: T.primary,
-                            opacity: pressed ? 0.9 : 1,
-                          },
-                        ]}
-                      >
-                        <Text style={{ color: "#fff", fontWeight: "800" }}>Retry</Text>
+                      <Pressable onPress={loadSummary} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
+                        <GlassView
+                          glassEffectStyle="regular"
+                          isInteractive
+                          tintColor={T.primary}
+                          colorScheme={isDark ? "dark" : "light"}
+                          style={styles.retryBtn}
+                        >
+                          <Text style={{ color: "#fff", fontWeight: "800" }}>Retry</Text>
+                        </GlassView>
                       </Pressable>
                     </RevealBlock>
                   </View>
@@ -658,6 +662,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
   h1: {
     fontSize: 16,
@@ -769,9 +774,13 @@ const styles = StyleSheet.create({
   retryBtn: {
     marginTop: 14,
     alignSelf: "flex-start",
+    minHeight: 40,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
   loadingTextList: {
     marginTop: 10,

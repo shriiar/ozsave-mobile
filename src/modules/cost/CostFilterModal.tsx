@@ -329,14 +329,18 @@ export default function CostFilterModal({
 
                                     <Pressable
                                         onPress={() => setDraft({ ...draft, sortOrder: draft.sortOrder === -1 ? 1 : -1 })}
-                                        style={({ pressed }) => [
-                                            styles.sortDirBtn,
-                                            { backgroundColor: T.tile, borderColor: T.ring, opacity: pressed ? 0.85 : 1 },
-                                        ]}
+                                        style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
                                     >
-                                        <Text style={[styles.sortDirText, { color: T.text }]}>
-                                            {draft.sortOrder === -1 ? "↓" : "↑"}
-                                        </Text>
+                                        <GlassView
+                                            glassEffectStyle="clear"
+                                            isInteractive
+                                            colorScheme={isDark ? "dark" : "light"}
+                                            style={[styles.sortDirBtn, { borderColor: T.ring }]}
+                                        >
+                                            <Text style={[styles.sortDirText, { color: T.text }]}>
+                                                {draft.sortOrder === -1 ? "↓" : "↑"}
+                                            </Text>
+                                        </GlassView>
                                     </Pressable>
                                 </View>
                             </View>
@@ -348,7 +352,7 @@ export default function CostFilterModal({
                                 styles.footer,
                                 {
                                     borderTopColor: T.ring,
-                                    paddingBottom: Math.max(insets.bottom, 10) + 10,
+                                    paddingBottom: Math.max(insets.bottom, 10) + 22,
                                 },
                             ]}
                         >
@@ -357,12 +361,16 @@ export default function CostFilterModal({
                                     closePicker();
                                     onClear();
                                 }}
-                                style={({ pressed }) => [
-                                    styles.btnGhost,
-                                    { backgroundColor: T.tile, borderColor: T.ring, opacity: pressed ? 0.85 : 1 },
-                                ]}
+                                style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.85 : 1 }]}
                             >
-                                <Text style={[styles.btnGhostText, { color: T.text }]}>Clear</Text>
+                                <GlassView
+                                    glassEffectStyle="clear"
+                                    isInteractive
+                                    colorScheme={isDark ? "dark" : "light"}
+                                    style={[styles.btnGhost, { borderColor: T.ring }]}
+                                >
+                                    <Text style={[styles.btnGhostText, { color: T.text }]}>Clear</Text>
+                                </GlassView>
                             </Pressable>
 
                             <Pressable
@@ -371,12 +379,17 @@ export default function CostFilterModal({
                                     closePicker();
                                     onApply();
                                 }}
-                                style={({ pressed }) => [
-                                    styles.btnPrimary,
-                                    { backgroundColor: T.primary, opacity: invalidRange ? 0.4 : pressed ? 0.88 : 1 },
-                                ]}
+                                style={({ pressed }) => [{ flex: 1 }, { opacity: invalidRange ? 0.4 : pressed ? 0.88 : 1 }]}
                             >
-                                <Text style={styles.btnPrimaryText}>Apply</Text>
+                                <GlassView
+                                    glassEffectStyle="regular"
+                                    isInteractive={!invalidRange}
+                                    tintColor={T.primary}
+                                    colorScheme={isDark ? "dark" : "light"}
+                                    style={styles.btnPrimary}
+                                >
+                                    <Text style={styles.btnPrimaryText}>Apply</Text>
+                                </GlassView>
                             </Pressable>
                         </View>
                     </GlassView>
@@ -494,11 +507,12 @@ const styles = StyleSheet.create({
 
     sortDirBtn: {
         width: 56,
-        height: 44,
+        minHeight: 44,
         borderRadius: 16,
         // borderWidth: StyleSheet.hairlineWidth,
         alignItems: "center",
         justifyContent: "center",
+        overflow: "hidden",
     },
     sortDirText: { fontSize: 16, fontWeight: "700" },
 
@@ -520,20 +534,24 @@ const styles = StyleSheet.create({
 
     btnGhost: {
         flex: 1,
-        height: 44,
+        minHeight: 38,
         borderRadius: 16,
         // borderWidth: StyleSheet.hairlineWidth,
+        paddingVertical: 8,
         alignItems: "center",
         justifyContent: "center",
+        overflow: "hidden",
     },
     btnGhostText: { fontSize: 13, fontWeight: "700" },
 
     btnPrimary: {
         flex: 1,
-        height: 44,
+        minHeight: 38,
         borderRadius: 16,
+        paddingVertical: 8,
         alignItems: "center",
         justifyContent: "center",
+        overflow: "hidden",
     },
     btnPrimaryText: { color: "#fff", fontSize: 13, fontWeight: "700" },
 });

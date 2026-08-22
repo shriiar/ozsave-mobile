@@ -19,7 +19,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import DashboardShell from "@/src/modules/shell/DashboardShell";
+// Old pill nav bar shell — replaced by the native tab bar at app/(user)/_layout.tsx.
+// Kept for reference/rollback, not currently used.
+// import DashboardShell from "@/src/modules/shell/DashboardShell";
 import { useScrollToTop } from "@/src/hooks/useScrollToTop";
 import { useTheme } from "@/src/context/ThemeContext";
 import { useAuth } from "@/src/context/AuthContext";
@@ -48,22 +50,21 @@ function formatDate(iso: string) {
 }
 
 function AnimatedListItem({ index, children }: { index: number; children: React.ReactNode }) {
-    const opacity = useRef(new Animated.Value(0)).current;
+    // Only animates `transform`, never `opacity` — animating opacity on an
+    // ancestor of a GlassView permanently breaks its native glass rendering
+    // on iOS 26.1+ (https://github.com/expo/expo/issues/41024).
     const scale = useRef(new Animated.Value(0.94)).current;
 
     useEffect(() => {
         const delay = Math.min(index, 6) * 55;
         const t = setTimeout(() => {
-            Animated.parallel([
-                Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-                Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 14, mass: 0.7, stiffness: 180 }),
-            ]).start();
+            Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 14, mass: 0.7, stiffness: 180 }).start();
         }, delay);
         return () => clearTimeout(t);
     }, []);
 
     return (
-        <Animated.View style={{ opacity, transform: [{ scale }] }}>
+        <Animated.View style={{ transform: [{ scale }] }}>
             {children}
         </Animated.View>
     );
@@ -185,6 +186,8 @@ function IncomeCard({
                 <View style={styles.cardWrap}>
                     <GlassView
                         glassEffectStyle="clear"
+                        isInteractive
+                        tintColor={isDark ? "rgba(0,0,0,0.55)" : undefined}
                         colorScheme={isDark ? "dark" : "light"}
                         style={[styles.card, { borderColor: T.ring }]}
                     >
@@ -458,7 +461,7 @@ export default function IncomeScreen() {
     }
 
     return (
-        <DashboardShell>
+        <>
             <View style={[styles.screen, isDark && { backgroundColor: "#0a0a0a" }]}>
                 <GlassView
                     glassEffectStyle="regular"
@@ -491,6 +494,7 @@ export default function IncomeScreen() {
                         >
                             <GlassView
                                 glassEffectStyle="clear"
+                                isInteractive
                                 colorScheme={isDark ? "dark" : "light"}
                                 style={[
                                     styles.filterBtn,
@@ -519,6 +523,7 @@ export default function IncomeScreen() {
                         >
                             <GlassView
                                 glassEffectStyle="clear"
+                                isInteractive
                                 colorScheme={isDark ? "dark" : "light"}
                                 style={[
                                     styles.addBtn,
@@ -635,7 +640,7 @@ export default function IncomeScreen() {
                     onClose={() => setDeleting(null)}
                 />
             </View>
-        </DashboardShell>
+        </>
     );
 }
 
@@ -664,9 +669,12 @@ const styles = StyleSheet.create({
     h2: { marginTop: 2, fontSize: 13, lineHeight: 18 },
 
     addBtn: {
+        minHeight: 40,
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 14,
+        alignItems: "center",
+        justifyContent: "center",
         overflow: "hidden",
         // borderWidth: StyleSheet.hairlineWidth,
     },
@@ -675,7 +683,9 @@ const styles = StyleSheet.create({
     filterBtn: {
         flexDirection: "row",
         alignItems: "center",
+        justifyContent: "center",
         gap: 6,
+        minHeight: 40,
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 14,

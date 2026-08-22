@@ -158,12 +158,16 @@ function DateField({
                   <View style={[styles.selectFooter, { borderTopColor: borderColor }]}>
                     <Pressable
                       onPress={() => setShow(false)}
-                      style={({ pressed }) => [
-                        styles.doneBtn,
-                        { backgroundColor: isDark ? "#2a2a2a" : "#e2e4e8", opacity: pressed ? 0.88 : 1 },
-                      ]}
+                      style={({ pressed }) => [{ opacity: pressed ? 0.88 : 1 }]}
                     >
-                      <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
+                      <GlassView
+                        glassEffectStyle="clear"
+                        isInteractive
+                        colorScheme={isDark ? "dark" : "light"}
+                        style={styles.doneBtn}
+                      >
+                        <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
+                      </GlassView>
                     </Pressable>
                   </View>
                 </GlassView>
@@ -433,7 +437,7 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                 </View>
 
                 {/* Body */}
-                <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+                <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
                   {showLoading ? (
                     <View style={styles.loadingWrap}>
                       <ActivityIndicator color={T.primary} />
@@ -551,34 +555,40 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                     styles.footer,
                     {
                       borderTopColor: T.headerBorder,
-                      paddingBottom: Math.max(insets.bottom, 10) + 10,
+                      paddingTop: 14,
+                      paddingBottom: 40,
                     },
                   ]}
                 >
                   <Pressable
                     onPress={() => !saving && onClose()}
                     disabled={saving}
-                    style={({ pressed }) => [
-                      styles.footerBtn,
-                      {
-                        borderColor: T.border,
-                        backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
-                        opacity: pressed ? 0.9 : 1,
-                      },
-                    ]}
+                    style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.9 : 1 }]}
                   >
-                    <Text style={{ color: T.text, fontWeight: "600" }}>Cancel</Text>
+                    <GlassView
+                      glassEffectStyle="clear"
+                      isInteractive={!saving}
+                      colorScheme={isDark ? "dark" : "light"}
+                      style={[styles.footerBtn, { borderColor: T.border }]}
+                    >
+                      <Text style={{ color: T.text, fontWeight: "600" }}>Cancel</Text>
+                    </GlassView>
                   </Pressable>
 
                   <Pressable
                     onPress={handleSave}
                     disabled={saving || showLoading}
-                    style={({ pressed }) => [
-                      styles.footerBtnPrimary,
-                      { backgroundColor: T.primary, opacity: pressed ? 0.92 : 1 },
-                    ]}
+                    style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.92 : 1 }]}
                   >
-                    {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "600" }}>Save changes</Text>}
+                    <GlassView
+                      glassEffectStyle="regular"
+                      isInteractive={!saving && !showLoading}
+                      tintColor={T.primary}
+                      colorScheme={isDark ? "dark" : "light"}
+                      style={styles.footerBtnPrimary}
+                    >
+                      {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "600" }}>Save changes</Text>}
+                    </GlassView>
                   </Pressable>
                 </View>
               </GlassView>
@@ -596,27 +606,20 @@ const styles = StyleSheet.create({
 
   center: {
     flex: 1,
-    alignItems: "stretch",
+    alignItems: "center",
     justifyContent: "flex-end",
-    padding: 0,
   },
 
   modalWrap: {
     width: "100%",
     flex: 1,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+    borderRadius: 24,
     overflow: "hidden",
   },
 
   modal: {
     flex: 1,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+    borderRadius: 24,
     overflow: "hidden",
     // borderWidth: StyleSheet.hairlineWidth,
   },
@@ -681,25 +684,30 @@ const styles = StyleSheet.create({
   },
 
   footer: {
-    padding: 14,
+    paddingHorizontal: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   footerBtn: {
     flex: 1,
+    minHeight: 46,
     borderRadius: 14,
     // borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
   footerBtnPrimary: {
     flex: 1,
+    minHeight: 46,
     borderRadius: 14,
     paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
 
   // date picker sheet shared styles
@@ -737,10 +745,12 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   doneBtn: {
+    minHeight: 40,
     borderRadius: 14,
-    paddingVertical: 15,
+    paddingVertical: 10,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
   doneBtnText: {
     fontSize: 15,

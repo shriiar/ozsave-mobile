@@ -24,7 +24,7 @@ import { useScrollToTop } from "@/src/hooks/useScrollToTop";
 import { useTheme } from "@/src/context/ThemeContext";
 import { useAuth } from "@/src/context/AuthContext";
 
-import type { IncomeRow, IncomeSource } from "@/src/modules/income/api";
+import type { IncomeRow, IncomeSource, IncomeType } from "@/src/modules/income/api";
 import { useInfiniteIncomes } from "@/src/modules/income/hooks/useIncomeApi";
 
 import IncomeFilterModal, { IncomeFiltersDraft } from "@/src/modules/income/IncomeFilterModal";
@@ -101,7 +101,24 @@ function IncomeCard({
         const manualChipBg = isDark ? "rgba(0, 102, 37, 0.8)" : "rgba(0, 215, 79, 0.46)";
         const estimateChipBg = isDark ? "rgb(185, 117, 0)" : "rgba(255, 162, 0, 0.38)";
 
-        return { cardGrad, ring, text, muted, defaultChipBg, manualChipBg, estimateChipBg };
+        const tfnChipBg = isDark ? "rgba(37, 99, 235, 0.75)" : "rgba(59, 130, 246, 0.32)";
+        const abnChipBg = isDark ? "rgba(147, 51, 234, 0.75)" : "rgba(168, 85, 247, 0.30)";
+        const cashChipBg = isDark ? "rgba(13, 148, 136, 0.75)" : "rgba(20, 184, 166, 0.30)";
+        const unclassifiedChipBg = defaultChipBg;
+
+        return {
+            cardGrad,
+            ring,
+            text,
+            muted,
+            defaultChipBg,
+            manualChipBg,
+            estimateChipBg,
+            tfnChipBg,
+            abnChipBg,
+            cashChipBg,
+            unclassifiedChipBg,
+        };
     }, [isDark]);
 
     function renderRightActions(
@@ -230,6 +247,28 @@ function IncomeCard({
                                             {item.source.charAt(0).toUpperCase() + item.source.slice(1)}
                                         </Text>
                                     </View>
+
+                                    <View
+                                        style={[
+                                            styles.miniPill,
+                                            {
+                                                backgroundColor:
+                                                    item.incomeType === "tfn"
+                                                        ? T.tfnChipBg
+                                                        : item.incomeType === "abn"
+                                                        ? T.abnChipBg
+                                                        : item.incomeType === "cash"
+                                                        ? T.cashChipBg
+                                                        : T.unclassifiedChipBg,
+                                            },
+                                        ]}
+                                    >
+                                        <Text style={[styles.miniPillText, { color: T.text }]} numberOfLines={1}>
+                                            {item.incomeType
+                                                ? item.incomeType.toUpperCase()
+                                                : "Unclassified"}
+                                        </Text>
+                                    </View>
                                 </View>
                             </View>
 
@@ -276,6 +315,7 @@ export default function IncomeScreen() {
     const [draft, setDraft] = useState<IncomeFiltersDraft>({
         name: "",
         source: "all",
+        incomeType: "all",
         from: "",
         to: "",
         sortBy: "date",
@@ -285,6 +325,7 @@ export default function IncomeScreen() {
     const [applied, setApplied] = useState<IncomeFiltersDraft>({
         name: "",
         source: "all",
+        incomeType: "all",
         from: "",
         to: "",
         sortBy: "date",
@@ -294,6 +335,7 @@ export default function IncomeScreen() {
     const emptyFilters: IncomeFiltersDraft = {
         name: "",
         source: "all",
+        incomeType: "all",
         from: "",
         to: "",
         sortBy: "date",
@@ -304,6 +346,7 @@ export default function IncomeScreen() {
         return (
             a.name === b.name &&
             a.source === b.source &&
+            a.incomeType === b.incomeType &&
             a.from === b.from &&
             a.to === b.to &&
             a.sortBy === b.sortBy &&
@@ -356,6 +399,7 @@ export default function IncomeScreen() {
         limit: PAGE_SIZE,
         name: applied.name?.trim() ? applied.name.trim() : undefined,
         source: applied.source === "all" ? undefined : (applied.source as IncomeSource),
+        incomeType: applied.incomeType === "all" ? undefined : (applied.incomeType as IncomeType),
         from: applied.from || undefined,
         to: applied.to || undefined,
         sortBy: applied.sortBy,

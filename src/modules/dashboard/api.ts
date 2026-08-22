@@ -25,6 +25,33 @@ export type CategoryInsights = {
   top3: CategoryInsightTop[];
 };
 
+export type IncomeType = "tfn" | "abn" | "cash";
+
+export type IncomeByTypeItem = {
+  incomeType: IncomeType;
+  amount: number;
+  percent: number;
+};
+
+export type IncomeTypeInsightTop = {
+  incomeType: IncomeType;
+  current: number;
+  previous: number;
+  delta: number;
+  deltaPct: number | null;
+  currentSharePct: number;
+};
+
+export type IncomeTypeInsights = {
+  headline?: string | null;
+  top3: IncomeTypeInsightTop[];
+};
+
+export type IncomeTypeInsightsBySource = {
+  manual: IncomeTypeInsights;
+  estimate: IncomeTypeInsights;
+};
+
 export type CostTrends = {
   range: "30d";
   labels: string[];
@@ -108,6 +135,10 @@ export type PeriodDashboardResponse = {
 
   breakdown?: {
     costByCategory: { category: string; amount: number; percent: number }[];
+    incomeByType?: {
+      manual: IncomeByTypeItem[];
+      estimate: IncomeByTypeItem[];
+    };
   };
 
   comparison?: {
@@ -135,6 +166,7 @@ export type PeriodDashboardResponse = {
 
   insights?: Insight[];
   categoryInsights?: CategoryInsights;
+  incomeTypeInsights?: IncomeTypeInsightsBySource;
   costTrends?: CostTrends;
   houseHealth?: HouseHealth;
   smartAlerts?: SmartAlert[];

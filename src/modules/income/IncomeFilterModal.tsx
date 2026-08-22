@@ -17,7 +17,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import type { IncomeSource } from "@/src/modules/income/api";
+import type { IncomeSource, IncomeType } from "@/src/modules/income/api";
 
 export type SortBy = "date" | "amount" | "name";
 export type SortOrder = 1 | -1;
@@ -25,6 +25,7 @@ export type SortOrder = 1 | -1;
 export type IncomeFiltersDraft = {
   name: string;
   source: IncomeSource | "all";
+  incomeType: IncomeType | "all";
   from: string; // YYYY-MM-DD
   to: string;   // YYYY-MM-DD
   sortBy: SortBy;
@@ -202,6 +203,25 @@ export default function IncomeFilterModal({
                     <Picker.Item label="Manual" value="manual" />
                     <Picker.Item label="Import" value="import" />
                     <Picker.Item label="Estimate" value="estimate" />
+                  </Picker>
+                </View>
+              </View>
+
+              {/* Income type */}
+              <View>
+                <Text style={[styles.label, { color: T.muted }]}>Income type</Text>
+                <View style={[styles.tile, { backgroundColor: T.tile, borderColor: T.ring }]}>
+                  <Picker
+                    selectedValue={draft.incomeType}
+                    onValueChange={(v) => setDraft({ ...draft, incomeType: String(v) as any })}
+                    dropdownIconColor={isDark ? "rgba(255,255,255,0.8)" : "rgba(15,23,42,0.7)"}
+                    style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" }}
+                    itemStyle={{ color: isDark ? "#FFFFFF" : "#0F172A", fontSize: 16 }}
+                  >
+                    <Picker.Item label="All" value="all" />
+                    <Picker.Item label="TFN" value="tfn" />
+                    <Picker.Item label="ABN" value="abn" />
+                    <Picker.Item label="Cash" value="cash" />
                   </Picker>
                 </View>
               </View>

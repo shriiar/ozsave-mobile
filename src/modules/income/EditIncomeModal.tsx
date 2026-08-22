@@ -15,10 +15,11 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { GlassView } from "expo-glass-effect";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker";
 import { useQuery } from "@tanstack/react-query";
 
 import { useTheme } from "@/src/context/ThemeContext";
-import { IncomeApi, FullIncome, IncomeSource, IncomeStatus } from "./api";
+import { IncomeApi, FullIncome, IncomeSource, IncomeStatus, IncomeType } from "./api";
 import { useUpdateIncome } from "./hooks/useIncomeApi";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -28,6 +29,7 @@ type FormState = {
   date: string; // YYYY-MM-DD
   status: IncomeStatus;
   source: IncomeSource;
+  incomeType: IncomeType;
   tagsInput: string; // comma separated
   notes: string;
 };
@@ -176,6 +178,41 @@ function DateField({
   );
 }
 
+function IncomeTypeSelect({
+  value,
+  onChange,
+  disabled,
+  isDark,
+  borderColor,
+  bgColor,
+  textColor,
+}: {
+  value: IncomeType;
+  onChange: (v: IncomeType) => void;
+  disabled: boolean;
+  isDark: boolean;
+  borderColor: string;
+  bgColor: string;
+  textColor: string;
+}) {
+  return (
+    <View style={[styles.pickerWrap, { borderColor, backgroundColor: bgColor }]}>
+      <Picker
+        enabled={!disabled}
+        selectedValue={value}
+        onValueChange={(v) => onChange(String(v) as IncomeType)}
+        dropdownIconColor={isDark ? "rgba(255,255,255,0.8)" : "rgba(15,23,42,0.7)"}
+        style={{ color: textColor }}
+        itemStyle={{ color: textColor, fontSize: 16 }}
+      >
+        <Picker.Item label="TFN" value="tfn" />
+        <Picker.Item label="ABN" value="abn" />
+        <Picker.Item label="Cash" value="cash" />
+      </Picker>
+    </View>
+  );
+}
+
 export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -191,6 +228,7 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
       date: ymdToday(),
       status: "confirmed",
       source: "manual",
+      incomeType: "tfn",
       tagsInput: "",
       notes: "",
     }),
@@ -233,7 +271,7 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
     return { border, headerBorder, text, muted, inputBg, inputBorder, primary, danger, shadow };
   }, [isDark]);
 
-  const { data: income, isLoading, isFetching, isError } = useQuery({
+  const { data: income, isLoading, isError } = useQuery({
     queryKey: ["income", incomeId],
     enabled: open && !!incomeId,
     queryFn: async () => {
@@ -263,6 +301,7 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
       date: i.date ? new Date(i.date).toISOString().slice(0, 10) : ymdToday(),
       status: (i.status as IncomeStatus) ?? "confirmed",
       source: (i.source as IncomeSource) ?? "manual",
+      incomeType: (i.incomeType as IncomeType) ?? "tfn",
       tagsInput: (i.tags ?? []).join(", "),
       notes: i.notes ?? "",
     });
@@ -299,6 +338,7 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
         date: dateIso,
         status: form.status,
         source: form.source,
+        incomeType: form.incomeType,
         tags: parseTags(form.tagsInput),
         notes: form.notes.trim() || null,
       },
@@ -321,7 +361,7 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
     }
   }
 
-  const showLoading = isLoading || isFetching || (open && !!incomeId && !income);
+  const showLoading = isLoading || (open && !!incomeId && !income);
   useEffect(() => {
     if (!open) {
       formOpacity.setValue(0);
@@ -449,6 +489,17 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                           </Text>
                           <Ionicons name="lock-closed-outline" size={16} color={T.muted} />
                         </View>
+
+                        <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Income type</Text>
+                        <IncomeTypeSelect
+                          value={form.incomeType}
+                          onChange={(v) => updateField("incomeType", v)}
+                          disabled={disabled}
+                          isDark={isDark}
+                          borderColor={T.inputBorder}
+                          bgColor={T.inputBg}
+                          textColor={T.text}
+                        />
 
                         <Text style={[styles.label, { color: T.muted, marginTop: 14 }]}>Tags (optional)</Text>
                         <TextInput
@@ -668,6 +719,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "center",
     padding: 18,
+  },
+
+  pickerWrap: {
+    marginTop: 8,
+    // borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 12,
+    overflow: "hidden",
   },
 
   selectHeader: {

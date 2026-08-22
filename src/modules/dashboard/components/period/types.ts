@@ -19,6 +19,10 @@ export type PeriodDashboard = {
 
   breakdown?: {
     costByCategory: { category: string; amount: number; percent: number }[];
+    incomeByType?: {
+      manual: IncomeByTypeItem[];
+      estimate: IncomeByTypeItem[];
+    };
   };
 
   comparison?: {
@@ -48,6 +52,7 @@ export type PeriodDashboard = {
 
   // -------------------- C, D, E, F (cost-side) --------------------
   categoryInsights?: CategoryInsights;
+  incomeTypeInsights?: IncomeTypeInsightsBySource;
 
   costTrends?: CostTrends;
 
@@ -137,6 +142,33 @@ export type CategoryInsightTop = {
 export type CategoryInsights = {
   headline?: string | null;
   top3: CategoryInsightTop[];
+};
+
+export type IncomeType = "tfn" | "abn" | "cash";
+
+export type IncomeByTypeItem = {
+  incomeType: IncomeType;
+  amount: number;
+  percent: number;
+};
+
+export type IncomeTypeInsightTop = {
+  incomeType: IncomeType;
+  current: number;
+  previous: number;
+  delta: number;
+  deltaPct: number | null;
+  currentSharePct: number;
+};
+
+export type IncomeTypeInsights = {
+  headline?: string | null;
+  top3: IncomeTypeInsightTop[];
+};
+
+export type IncomeTypeInsightsBySource = {
+  manual: IncomeTypeInsights;
+  estimate: IncomeTypeInsights;
 };
 
 export type CostTrends = {

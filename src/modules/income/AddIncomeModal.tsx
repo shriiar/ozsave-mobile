@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "@/src/context/ThemeContext";
 import { useAddIncome } from "@/src/modules/income/hooks/useIncomeApi";
-import type { AddIncomePayload, IncomeSource, IncomeStatus } from "@/src/modules/income/api";
+import type { AddIncomePayload, IncomeSource, IncomeStatus, IncomeType } from "@/src/modules/income/api";
 
 type Props = { open: boolean; onClose: () => void };
 
@@ -50,6 +50,7 @@ type FormState = {
   amount: string;
   date: string; // YYYY-MM-DD
   source: IncomeSource;
+  incomeType: IncomeType;
   status: IncomeStatus;
   tagsText: string;
   notes: string;
@@ -86,6 +87,43 @@ function SourceSelect({
       >
         <Picker.Item label="Manual" value="manual" />
         <Picker.Item label="Estimate" value="estimate" />
+      </Picker>
+    </View>
+  );
+}
+
+function IncomeTypeSelect({
+  value,
+  onChange,
+  disabled,
+  isDark,
+  borderColor,
+  bgColor,
+  textColor,
+  mutedColor,
+}: {
+  value: IncomeType;
+  onChange: (v: IncomeType) => void;
+  disabled: boolean;
+  isDark: boolean;
+  borderColor: string;
+  bgColor: string;
+  textColor: string;
+  mutedColor: string;
+}) {
+  return (
+    <View style={[styles.pickerWrap, { borderColor, backgroundColor: bgColor }]}>
+      <Picker
+        enabled={!disabled}
+        selectedValue={value}
+        onValueChange={(v) => onChange(String(v) as IncomeType)}
+        dropdownIconColor={isDark ? "rgba(255,255,255,0.8)" : "rgba(15,23,42,0.7)"}
+        style={{ color: textColor }}
+        itemStyle={{ color: textColor, fontSize: 16 }}
+      >
+        <Picker.Item label="TFN" value="tfn" />
+        <Picker.Item label="ABN" value="abn" />
+        <Picker.Item label="Cash" value="cash" />
       </Picker>
     </View>
   );
@@ -251,6 +289,7 @@ export default function AddIncomeModal({ open, onClose }: Props) {
     amount: "",
     date: ymdToday(),
     source: "manual",
+    incomeType: "tfn",
     status: "confirmed",
     tagsText: "",
     notes: "",
@@ -343,6 +382,7 @@ export default function AddIncomeModal({ open, onClose }: Props) {
       amount: amountNum,
       date: dateIso,
       source: form.source,
+      incomeType: form.incomeType,
       status: form.status,
       tags,
       notes: form.notes.trim() || undefined,
@@ -449,6 +489,18 @@ export default function AddIncomeModal({ open, onClose }: Props) {
                     <SourceSelect
                       value={form.source}
                       onChange={(v) => update("source", v)}
+                      disabled={saving}
+                      isDark={isDark}
+                      borderColor={T.inputBorder}
+                      bgColor={T.inputBg}
+                      textColor={T.text}
+                      mutedColor={T.muted}
+                    />
+
+                    <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Income type</Text>
+                    <IncomeTypeSelect
+                      value={form.incomeType}
+                      onChange={(v) => update("incomeType", v)}
                       disabled={saving}
                       isDark={isDark}
                       borderColor={T.inputBorder}

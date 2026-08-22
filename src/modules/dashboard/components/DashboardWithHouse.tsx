@@ -21,6 +21,11 @@ import {
   CategoryPieItem,
   CategorySectionCard,
 } from "./period/CategorySectionCard";
+import {
+  IncomeTypeInsights,
+  IncomeTypePieItem,
+  IncomeTypeSectionCard,
+} from "./period/IncomeTypeSectionCard";
 import { PeriodSummaryCards } from "./period/PeriodSummaryCards";
 import DashboardBalancesCard from "./period/DashboardBalancesCard";
 import { TrendVsPreviousCard } from "./period/TrendVsPreviousCard";
@@ -249,6 +254,40 @@ export default function DashboardWithHouse({
     return ci;
   }, [period]);
 
+  function toIncomeTypePie(raw: any): IncomeTypePieItem[] {
+    if (!Array.isArray(raw)) return [];
+
+    return raw
+      .filter((x: any) => x && x.incomeType != null)
+      .map((x: any) => ({
+        incomeType: String(x.incomeType),
+        amount: Number(x.amount ?? 0),
+        percent: Number(x.percent ?? 0),
+      }));
+  }
+
+  const incomeTypePieManual: IncomeTypePieItem[] = useMemo(
+    () => toIncomeTypePie(period?.breakdown?.incomeByType?.manual),
+    [period]
+  );
+
+  const incomeTypePieEstimate: IncomeTypePieItem[] = useMemo(
+    () => toIncomeTypePie(period?.breakdown?.incomeByType?.estimate),
+    [period]
+  );
+
+  const incomeTypeInsightsManual: IncomeTypeInsights | undefined = useMemo(() => {
+    const iti = period?.incomeTypeInsights?.manual;
+    if (!iti || typeof iti !== "object") return undefined;
+    return iti;
+  }, [period]);
+
+  const incomeTypeInsightsEstimate: IncomeTypeInsights | undefined = useMemo(() => {
+    const iti = period?.incomeTypeInsights?.estimate;
+    if (!iti || typeof iti !== "object") return undefined;
+    return iti;
+  }, [period]);
+
   const summary = useMemo(() => {
     return {
       totalCost: Number(period?.summary?.cost ?? 0),
@@ -329,6 +368,24 @@ export default function DashboardWithHouse({
           <CategorySectionCard
             pie={categoryPie}
             categoryInsights={categoryInsights}
+          />
+        </AnimatedCard>
+
+        <AnimatedCard delay={135} revision={revision}>
+          <IncomeTypeSectionCard
+            title="Manual/Received income (by type)"
+            emptyMessage="No received income recorded for this period."
+            pie={incomeTypePieManual}
+            incomeTypeInsights={incomeTypeInsightsManual}
+          />
+        </AnimatedCard>
+
+        <AnimatedCard delay={140} revision={revision}>
+          <IncomeTypeSectionCard
+            title="Estimated income (by type)"
+            emptyMessage="No estimated income recorded for this period."
+            pie={incomeTypePieEstimate}
+            incomeTypeInsights={incomeTypeInsightsEstimate}
           />
         </AnimatedCard>
 

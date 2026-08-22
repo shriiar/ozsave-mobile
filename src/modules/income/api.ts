@@ -2,6 +2,7 @@ import { apiRequest } from "../../lib/api";
 
 export type IncomeStatus = "confirmed" | "pending" | "ignored";
 export type IncomeSource = "manual" | "import" | "estimate";
+export type IncomeType = "tfn" | "abn" | "cash";
 
 export type IncomeRow = {
   _id: string;
@@ -11,6 +12,7 @@ export type IncomeRow = {
   amountCents: number;
   status: IncomeStatus;
   source: IncomeSource;
+  incomeType?: IncomeType;
   tags: string[];
 };
 
@@ -29,6 +31,7 @@ export type GetIncomesCursorParams = {
 
   name?: string;
   source?: IncomeSource;
+  incomeType?: IncomeType;
 
   from?: string;
   to?: string;
@@ -43,6 +46,7 @@ export type GetIncomesParams = {
 
   name?: string;
   source?: IncomeSource | "all";
+  incomeType?: IncomeType | "all";
 
   from?: string; // YYYY-MM-DD
   to?: string; // YYYY-MM-DD
@@ -59,6 +63,7 @@ export type FullIncome = {
   amount: number;
   status: IncomeStatus;
   source: IncomeSource;
+  incomeType?: IncomeType;
   tags: string[];
   notes?: string | null;
 
@@ -76,6 +81,7 @@ export type AddIncomePayload = {
   date?: string;
   status?: IncomeStatus;
   source?: IncomeSource;
+  incomeType?: IncomeType;
   tags?: string[];
   notes?: string;
 };
@@ -86,6 +92,7 @@ export type EditIncomePayload = {
   date?: string;
   status?: IncomeStatus;
   source?: IncomeSource;
+  incomeType?: IncomeType;
   tags?: string[];
   notes?: string | null;
 };

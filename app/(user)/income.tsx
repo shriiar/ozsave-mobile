@@ -492,15 +492,24 @@ export default function IncomeScreen() {
                             style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
                             onPress={() => setFiltersOpen(true)}
                         >
-                            <GlassView
-                                glassEffectStyle="clear"
-                                isInteractive
-                                colorScheme={isDark ? "dark" : "light"}
-                                style={[
-                                    styles.filterBtn,
-                                    { borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)" },
-                                ]}
-                            >
+                            <View style={styles.filterBtn}>
+                                <GlassView
+                                    glassEffectStyle="regular"
+                                    isInteractive
+                                    colorScheme={isDark ? "dark" : "light"}
+                                    style={StyleSheet.absoluteFillObject}
+                                />
+                                <View
+                                    pointerEvents="none"
+                                    style={[
+                                        StyleSheet.absoluteFillObject,
+                                        {
+                                            borderRadius: 14,
+                                            borderWidth: StyleSheet.hairlineWidth,
+                                            borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)",
+                                        },
+                                    ]}
+                                />
                                 <Ionicons
                                     name="options-outline"
                                     size={16}
@@ -514,22 +523,31 @@ export default function IncomeScreen() {
                                 >
                                     Filters
                                 </Text>
-                            </GlassView>
+                            </View>
                         </Pressable>
 
                         <Pressable
                             style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
                             onPress={() => setAddOpen(true)}
                         >
-                            <GlassView
-                                glassEffectStyle="clear"
-                                isInteractive
-                                colorScheme={isDark ? "dark" : "light"}
-                                style={[
-                                    styles.addBtn,
-                                    { borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)" },
-                                ]}
-                            >
+                            <View style={styles.addBtn}>
+                                <GlassView
+                                    glassEffectStyle="regular"
+                                    isInteractive
+                                    colorScheme={isDark ? "dark" : "light"}
+                                    style={StyleSheet.absoluteFillObject}
+                                />
+                                <View
+                                    pointerEvents="none"
+                                    style={[
+                                        StyleSheet.absoluteFillObject,
+                                        {
+                                            borderRadius: 14,
+                                            borderWidth: StyleSheet.hairlineWidth,
+                                            borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)",
+                                        },
+                                    ]}
+                                />
                                 <Text
                                     style={[
                                         styles.addBtnText,
@@ -538,7 +556,7 @@ export default function IncomeScreen() {
                                 >
                                     Add
                                 </Text>
-                            </GlassView>
+                            </View>
                         </Pressable>
                     </View>
                 </GlassView>

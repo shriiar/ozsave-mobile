@@ -51,14 +51,25 @@ export function DashboardHeader(props: {
           onPress={props.onPrev}
           style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
         >
-          <GlassView
-            glassEffectStyle="clear"
-            isInteractive
-            colorScheme={isDark ? "dark" : "light"}
-            style={[styles.iconBtn, { borderColor: btnBorder }]}
-          >
+          <View style={styles.iconBtn}>
+            <GlassView
+              glassEffectStyle="regular"
+              isInteractive
+              colorScheme={isDark ? "dark" : "light"}
+              style={StyleSheet.absoluteFillObject}
+            />
+            {/* Plain-View border overlay: GlassView's own border rim has the
+                same native attach-timing flash the fill used to have, so the
+                border is drawn here instead, on an ordinary layer. */}
+            <View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFillObject,
+                { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, borderColor: btnBorder },
+              ]}
+            />
             <Ionicons name="chevron-back" size={16} color={textPrimary} />
-          </GlassView>
+          </View>
         </Pressable>
 
         <Pressable
@@ -66,14 +77,22 @@ export function DashboardHeader(props: {
           disabled={!props.canGoForward}
           style={({ pressed }) => [{ opacity: !props.canGoForward ? 0.35 : pressed ? 0.9 : 1 }]}
         >
-          <GlassView
-            glassEffectStyle="clear"
-            isInteractive={props.canGoForward}
-            colorScheme={isDark ? "dark" : "light"}
-            style={[styles.iconBtn, { borderColor: btnBorder }]}
-          >
+          <View style={styles.iconBtn}>
+            <GlassView
+              glassEffectStyle="regular"
+              isInteractive={props.canGoForward}
+              colorScheme={isDark ? "dark" : "light"}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFillObject,
+                { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, borderColor: btnBorder },
+              ]}
+            />
             <Ionicons name="chevron-forward" size={16} color={textPrimary} />
-          </GlassView>
+          </View>
         </Pressable>
       </View>
 
@@ -82,12 +101,20 @@ export function DashboardHeader(props: {
           const active = opt.key === props.range;
           return (
             <Pressable key={opt.key} style={{ flex: 1 }} onPress={() => props.onRangeChange(opt.key)}>
-              <GlassView
-                glassEffectStyle={active ? "regular" : "clear"}
-                isInteractive
-                colorScheme={isDark ? "dark" : "light"}
-                style={[styles.segment, { borderColor: segmentBorder }]}
-              >
+              <View style={styles.segment}>
+                <GlassView
+                  glassEffectStyle="regular"
+                  isInteractive
+                  colorScheme={isDark ? "dark" : "light"}
+                  style={StyleSheet.absoluteFillObject}
+                />
+                <View
+                  pointerEvents="none"
+                  style={[
+                    StyleSheet.absoluteFillObject,
+                    { borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, borderColor: segmentBorder },
+                  ]}
+                />
                 <Text
                   style={[
                     styles.segmentText,
@@ -96,7 +123,7 @@ export function DashboardHeader(props: {
                 >
                   {opt.label}
                 </Text>
-              </GlassView>
+              </View>
             </Pressable>
           );
         })}

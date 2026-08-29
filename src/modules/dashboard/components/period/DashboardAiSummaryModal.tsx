@@ -8,13 +8,14 @@ import {
   View,
   Animated,
   Platform,
-  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "@/src/context/ThemeContext";
+import { useGlassStyle } from "@/src/context/GlassStyleContext";
+import { typography } from "@/src/theme/typography";
 import { DashboardApi, GeminiSummaryResponse } from "../../api";
 
 type Props = {
@@ -182,6 +183,7 @@ function RevealBlock({
 
 export default function DashboardAiSummaryModal({ open, onClose }: Props) {
   const { resolvedTheme } = useTheme();
+  const { glassStyle } = useGlassStyle();
   const isDark = resolvedTheme === "dark";
   const insets = useSafeAreaInsets();
 
@@ -189,81 +191,6 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
   const [data, setData] = useState<GeminiSummaryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const revealReady = status === "success" && !!data;
-
-  const surfaceShift = useRef(new Animated.Value(0)).current;
-  const surfacePulse = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (!open) {
-      surfaceShift.stopAnimation();
-      surfacePulse.stopAnimation();
-      surfaceShift.setValue(0);
-      surfacePulse.setValue(0);
-      return;
-    }
-
-    const shiftLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(surfaceShift, {
-          toValue: 1,
-          duration: 1600,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(surfaceShift, {
-          toValue: 0,
-          duration: 1500,
-          easing: Easing.inOut(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    const pulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(surfacePulse, {
-          toValue: 1,
-          duration: 2100,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-        Animated.timing(surfacePulse, {
-          toValue: 0,
-          duration: 2100,
-          easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    shiftLoop.start();
-    pulseLoop.start();
-
-    return () => {
-      shiftLoop.stop();
-      pulseLoop.stop();
-    };
-  }, [open, surfacePulse, surfaceShift]);
-
-  const sheetTranslateY = surfaceShift.interpolate({
-    inputRange: [0, 1],
-    outputRange: [22, -10],
-  });
-
-  const sheetTranslateX = surfaceShift.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [-18, 14, -10],
-  });
-
-  const sheetScale = surfacePulse.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.04],
-  });
-
-  const sheetOpacity = surfacePulse.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.55, 0.9],
-  });
 
   const T = useMemo(() => {
     return {
@@ -314,96 +241,13 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
   const REVEAL_STEP = 120;
 
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
-<Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
-  <View
-    style={{
-      flex: 1,
-      backgroundColor: isDark ? "rgba(0,0,0,0.34)" : "rgba(8,15,35,0.14)",
-      overflow: "hidden",
-    }}
-  >
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        styles.intelligenceSheet,
-        {
-          top: "14%",
-          left: "-18%",
-          backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.52)",
-          opacity: sheetOpacity,
-          transform: [
-            { translateX: sheetTranslateX },
-            { translateY: sheetTranslateY },
-            { scale: sheetScale },
-            { rotate: "-8deg" },
-          ],
-        },
-      ]}
-    />
-
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        styles.intelligenceSheet,
-        {
-          top: "34%",
-          right: "-24%",
-          backgroundColor: isDark ? "rgba(129,140,248,0.11)" : "rgba(191,219,254,0.46)",
-          opacity: sheetOpacity,
-          transform: [
-            { translateX: Animated.multiply(sheetTranslateX, -0.8) },
-            { translateY: Animated.multiply(sheetTranslateY, 0.75) },
-            {
-              scale: surfacePulse.interpolate({
-                inputRange: [0, 1],
-                outputRange: [1, 1.06],
-              }),
-            },
-            { rotate: "7deg" },
-          ],
-        },
-      ]}
-    />
-
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        styles.intelligenceSheetThin,
-        {
-          bottom: "12%",
-          left: "-12%",
-          backgroundColor: isDark ? "rgba(99,102,241,0.10)" : "rgba(165,180,252,0.30)",
-          opacity: surfacePulse.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0.35, 0.7],
-          }),
-          transform: [
-            { translateX: Animated.multiply(sheetTranslateX, 0.55) },
-            { translateY: Animated.multiply(sheetTranslateY, -0.6) },
-            { rotate: "-5deg" },
-          ],
-        },
-      ]}
-    />
-  </View>
-</Pressable>
-      <View
-        style={[
-          StyleSheet.absoluteFillObject,
-          {
-            paddingTop: insets.top,
-            paddingBottom: 0,
-          },
-        ]}
-      >
-        <View style={styles.center}>
-          <View style={styles.wrap}>
-            <GlassView
-              glassEffectStyle="regular"
-              colorScheme={isDark ? "dark" : "light"}
-              style={[styles.modal, { borderColor: T.border }]}
-            >
+    <Modal
+      visible={open}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+              <View style={[styles.modal, { backgroundColor: isDark ? "#0a0a0a" : "#ffffff" }]}>
               <View style={[styles.header, { borderBottomColor: T.border }]}>
                 <View style={styles.headerLeft}>
                   <View style={[styles.iconPill, { borderColor: T.border, backgroundColor: T.bg }]}>
@@ -419,7 +263,7 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
 
                 <Pressable onPress={onClose} style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}>
                   <GlassView
-                    glassEffectStyle="clear"
+                    glassEffectStyle={glassStyle}
                     isInteractive
                     colorScheme={isDark ? "dark" : "light"}
                     style={[styles.closeBtn, { borderColor: T.border }]}
@@ -452,13 +296,13 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
                     ]}
                   >
                     <RevealBlock visible delay={REVEAL_BASE}>
-                      <Text style={{ color: T.danger, fontWeight: "800", fontSize: 14 }}>
+                      <Text style={[typography.subheadlineEmphasized, { color: T.danger }]}>
                         Failed to generate summary
                       </Text>
                     </RevealBlock>
 
                     <RevealBlock visible delay={REVEAL_BASE + REVEAL_STEP}>
-                      <Text style={{ color: T.danger, marginTop: 6, fontSize: 13, lineHeight: 19 }}>
+                      <Text style={[typography.footnote, { color: T.danger, marginTop: 6 }]}>
                         {error}
                       </Text>
                     </RevealBlock>
@@ -466,13 +310,13 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
                     <RevealBlock visible delay={REVEAL_BASE + REVEAL_STEP * 2}>
                       <Pressable onPress={loadSummary} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
                         <GlassView
-                          glassEffectStyle="regular"
+                          glassEffectStyle={glassStyle}
                           isInteractive
                           tintColor={T.primary}
                           colorScheme={isDark ? "dark" : "light"}
                           style={styles.retryBtn}
                         >
-                          <Text style={{ color: "#fff", fontWeight: "800" }}>Retry</Text>
+                          <Text style={[typography.footnoteEmphasized, { color: "#fff" }]}>Retry</Text>
                         </GlassView>
                       </Pressable>
                     </RevealBlock>
@@ -607,32 +451,16 @@ export default function DashboardAiSummaryModal({ open, onClose }: Props) {
                   </>
                 )}
               </ScrollView>
-            </GlassView>
-          </View>
-        </View>
-      </View>
+              </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  wrap: {
-    flex: 1,
-    width: "100%",
-    overflow: "hidden",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-  },
   modal: {
     flex: 1,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderRadius: 24,
     overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
   },
   header: {
     padding: 16,
@@ -664,27 +492,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
   },
-  h1: {
-    fontSize: 16,
-    fontWeight: "800",
-  },
+  h1: { ...typography.headline },
   h2: {
+    ...typography.caption1,
     marginTop: 2,
-    fontSize: 12,
-    lineHeight: 16,
   },
   body: {
     padding: 16,
     gap: 14,
   },
-  loadingTitle: {
-    fontSize: 15,
-    fontWeight: "800",
-  },
+  loadingTitle: { ...typography.subheadlineEmphasized },
   loadingSub: {
+    ...typography.footnote,
     marginTop: 4,
-    fontSize: 13,
-    lineHeight: 18,
   },
   waveWrap: {
     paddingTop: 2,
@@ -706,17 +526,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionChipText: {
-    fontSize: 11,
-    fontWeight: "800",
+    ...typography.caption2,
+    fontWeight: "700",
   },
-  blockTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-  },
+  blockTitle: { ...typography.footnoteEmphasized },
   blockBody: {
+    ...typography.footnote,
     marginTop: 6,
-    fontSize: 13,
-    lineHeight: 20,
   },
   warningBox: {
     marginTop: 14,
@@ -725,13 +541,12 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   warningTitle: {
-    fontSize: 12,
-    fontWeight: "800",
+    ...typography.caption1,
+    fontWeight: "700",
   },
   warningText: {
+    ...typography.footnote,
     marginTop: 4,
-    fontSize: 13,
-    lineHeight: 19,
   },
   suggestionRow: {
     flexDirection: "row",
@@ -740,8 +555,7 @@ const styles = StyleSheet.create({
   },
   suggestionText: {
     flex: 1,
-    fontSize: 13,
-    lineHeight: 19,
+    ...typography.footnote,
   },
   dot: {
     width: 7,
@@ -759,13 +573,10 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   historyChipText: {
-    fontSize: 11,
-    fontWeight: "800",
+    ...typography.caption2,
+    fontWeight: "700",
   },
-  historyText: {
-    fontSize: 13,
-    lineHeight: 19,
-  },
+  historyText: { ...typography.footnote },
   errorBox: {
     borderRadius: 18,
     borderWidth: StyleSheet.hairlineWidth,
@@ -788,24 +599,11 @@ const styles = StyleSheet.create({
   },
 
   loadingParagraph: {
-    fontSize: 13,
+    ...typography.footnoteEmphasized,
     lineHeight: 22,
-    fontWeight: "600",
   },
   loadingParagraphWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
   },
-  intelligenceSheet: {
-  position: "absolute",
-  width: "140%",
-  height: 190,
-  borderRadius: 48,
-},
-intelligenceSheetThin: {
-  position: "absolute",
-  width: "128%",
-  height: 110,
-  borderRadius: 40,
-},
 });

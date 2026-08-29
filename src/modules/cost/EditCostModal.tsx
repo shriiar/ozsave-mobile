@@ -16,13 +16,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { GlassView } from "expo-glass-effect";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 
 import { useTheme } from "../../context/ThemeContext";
+import { useGlassStyle } from "../../context/GlassStyleContext";
 import { useAuth } from "../../context/AuthContext";
 import { CostApi, FullCost } from "./api";
 import { useUpdateCost } from "./hooks/useCostApi";
+import { typography } from "../../theme/typography";
 
 type Member = { _id: string; name: string; email: string };
 
@@ -93,7 +94,6 @@ function CategorySelect({
   borderColor,
   bgColor,
   textColor,
-  mutedColor,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -104,119 +104,21 @@ function CategorySelect({
   textColor: string;
   mutedColor: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState(value || CATEGORY_OPTIONS[0]?.key);
-  const current = CATEGORY_OPTIONS.find((c) => c.key === value)?.label ?? "";
-
-  React.useEffect(() => {
-    if (open) setDraft(value || CATEGORY_OPTIONS[0]?.key);
-  }, [open, value]);
-
   return (
-    <>
-      <Pressable
-        disabled={disabled}
-        onPress={() => setOpen(true)}
-        style={({ pressed }) => [
-          styles.selectField,
-          { opacity: pressed ? 0.9 : 1, borderColor, backgroundColor: bgColor },
-        ]}
+    <View style={[styles.pickerWrap, { borderColor, backgroundColor: bgColor }]}>
+      <Picker
+        enabled={!disabled}
+        selectedValue={value || CATEGORY_OPTIONS[0]?.key}
+        onValueChange={(v) => onChange(String(v))}
+        dropdownIconColor={isDark ? "rgba(255,255,255,0.8)" : "rgba(15,23,42,0.7)"}
+        style={{ color: textColor }}
+        itemStyle={{ color: textColor, fontSize: 16 }}
       >
-        <Text style={{ color: current ? textColor : mutedColor, fontSize: 14, fontWeight: "500" }}>
-          {current || "Select category"}
-        </Text>
-        <Ionicons name="chevron-down" size={16} color={mutedColor} />
-      </Pressable>
-
-      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <View style={StyleSheet.absoluteFill}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)}>
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)",
-              }}
-            />
-          </Pressable>
-
-          <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}>
-            <GlassView
-              glassEffectStyle="regular"
-              colorScheme={isDark ? "dark" : "light"}
-              style={[styles.categorySheet, { borderColor }]}
-            >
-              <View style={[styles.selectHeader, { borderBottomColor: borderColor }]}>
-                <Text style={{ color: textColor, fontSize: 15, fontWeight: "600" }}>Category</Text>
-                <Text style={{ color: mutedColor, marginTop: 2, fontSize: 12, fontWeight: "400" }}>
-                  Choose one option
-                </Text>
-              </View>
-
-              {Platform.OS === "ios" ? (
-                <View style={{ paddingHorizontal: 8, paddingVertical: 10 }}>
-                  <Picker
-                    selectedValue={draft}
-                    onValueChange={(v) => setDraft(String(v))}
-                    itemStyle={{ color: textColor, fontSize: 16 }}
-                  >
-                    {CATEGORY_OPTIONS.map((c) => (
-                      <Picker.Item key={c.key} label={c.label} value={c.key} />
-                    ))}
-                  </Picker>
-                </View>
-              ) : (
-                <ScrollView contentContainerStyle={{ padding: 10 }}>
-                  {CATEGORY_OPTIONS.map((c) => {
-                    const active = c.key === value;
-                    return (
-                      <Pressable
-                        key={c.key}
-                        onPress={() => {
-                          onChange(c.key);
-                          setOpen(false);
-                        }}
-                        style={({ pressed }) => [
-                          styles.selectRow,
-                          {
-                            opacity: pressed ? 0.9 : 1,
-                            borderColor: active ? "rgba(79,70,229,0.35)" : borderColor,
-                            backgroundColor: active ? "rgba(79,70,229,0.10)" : "transparent",
-                          },
-                        ]}
-                      >
-                        <Text style={{ color: textColor, fontSize: 14, fontWeight: active ? "600" : "500" }}>
-                          {c.label}
-                        </Text>
-                        {active ? <Ionicons name="checkmark" size={18} color="#4F46E5" /> : null}
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-              )}
-
-              <View style={[styles.selectFooter, { borderTopColor: borderColor }]}>
-                <Pressable
-                  onPress={() => {
-                    if (Platform.OS === "ios") onChange(draft);
-                    setOpen(false);
-                  }}
-                  style={({ pressed }) => [{ opacity: pressed ? 0.88 : 1 }]}
-                >
-                  <GlassView
-                    glassEffectStyle="clear"
-                    isInteractive
-                    colorScheme={isDark ? "dark" : "light"}
-                    style={styles.doneBtn}
-                  >
-                    <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
-                  </GlassView>
-                </Pressable>
-              </View>
-            </GlassView>
-          </View>
-        </View>
-      </Modal>
-    </>
+        {CATEGORY_OPTIONS.map((c) => (
+          <Picker.Item key={c.key} label={c.label} value={c.key} />
+        ))}
+      </Picker>
+    </View>
   );
 }
 
@@ -240,6 +142,7 @@ function DateField({
   mutedColor: string;
 }) {
   const [show, setShow] = React.useState(false);
+  const { glassStyle } = useGlassStyle();
   const valueDate = React.useMemo(() => dateFromYmd(valueYmd), [valueYmd]);
 
   function onChange(_: DateTimePickerEvent, selected?: Date) {
@@ -261,7 +164,7 @@ function DateField({
           { opacity: pressed ? 0.9 : 1, borderColor, backgroundColor: bgColor },
         ]}
       >
-        <Text style={{ color: textColor, fontSize: 14, fontWeight: "500" }}>{valueYmd || "Select date"}</Text>
+        <Text style={[typography.footnote, { color: textColor }]}>{valueYmd || "Select date"}</Text>
         <Ionicons name="calendar-outline" size={16} color={mutedColor} />
       </Pressable>
 
@@ -280,13 +183,13 @@ function DateField({
 
               <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}>
                 <GlassView
-                  glassEffectStyle="regular"
+                  glassEffectStyle={glassStyle}
                   colorScheme={isDark ? "dark" : "light"}
                   style={[styles.dateSheet, { borderColor }]}
                 >
                   <View style={[styles.selectHeader, { borderBottomColor: borderColor }]}>
-                    <Text style={{ color: textColor, fontSize: 15, fontWeight: "600" }}>Select date</Text>
-                    <Text style={{ color: mutedColor, marginTop: 2, fontSize: 12, fontWeight: "400" }}>
+                    <Text style={[typography.subheadlineEmphasized, { color: textColor }]}>Select date</Text>
+                    <Text style={[typography.caption1, { color: mutedColor, marginTop: 2 }]}>
                       Pick a day
                     </Text>
                   </View>
@@ -307,7 +210,7 @@ function DateField({
                       style={({ pressed }) => [{ opacity: pressed ? 0.88 : 1 }]}
                     >
                       <GlassView
-                        glassEffectStyle="clear"
+                        glassEffectStyle={glassStyle}
                         isInteractive
                         colorScheme={isDark ? "dark" : "light"}
                         style={styles.doneBtn}
@@ -330,10 +233,9 @@ function DateField({
 
 export default function EditCostModal({ open, costId, onClose }: Props) {
   const { resolvedTheme } = useTheme();
+  const { glassStyle } = useGlassStyle();
   const isDark = resolvedTheme === "dark";
   const { user } = useAuth();
-
-  const insets = useSafeAreaInsets();
 
   const members: Member[] = useMemo(() => ((user as any)?.house?.members ?? []) as Member[], [user]);
   const currentUserId = (user as any)?._id as string | undefined;
@@ -365,7 +267,7 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
     const text = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
     const muted = isDark ? "rgba(148,163,184,0.82)" : "#64748B";
 
-    const inputBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.70)";
+    const inputBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.045)";
     const inputBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
 
     const primary = "#4F46E5";
@@ -483,47 +385,15 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
   return (
     <Modal
       visible={open}
-      transparent
-      animationType="fade"
+      animationType="slide"
+      presentationStyle="pageSheet"
       onRequestClose={() => !saving && onClose()}
     >
-      <Pressable
-        style={StyleSheet.absoluteFill}
-        onPress={() => !saving && onClose()}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: isDark
-              ? "rgba(0,0,0,0.35)"
-              : "rgba(0,0,0,0.18)",
-          }}
-        />
-      </Pressable>
-
-      <View
-        style={[
-          StyleSheet.absoluteFillObject,
-          {
-            paddingTop: insets.top,
-            paddingBottom: 0,
-            paddingHorizontal: 0,
-          },
-        ]}
-      >
-
-
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.kav}
         >
-          <View style={styles.center}>
-            <View style={styles.modalWrap}>
-              <GlassView
-                glassEffectStyle="regular"
-                colorScheme={isDark ? "dark" : "light"}
-                style={[styles.modal, { borderColor: T.border }, T.shadow]}
-              >
+              <View style={[styles.modal, { backgroundColor: isDark ? "#0a0a0a" : "#ffffff" }]}>
 
                 <View
                   style={[styles.header, { borderBottomColor: T.headerBorder }]}
@@ -630,9 +500,9 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
                                 style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
                               >
                                 <GlassView
-                                  glassEffectStyle={active ? "regular" : "clear"}
+                                  glassEffectStyle={glassStyle}
                                   isInteractive={!saving}
-                                  tintColor={active ? "rgba(79,70,229,0.55)" : undefined}
+                                  tintColor={active ? "rgba(79,70,229,0.55)" : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
                                   colorScheme={isDark ? "dark" : "light"}
                                   style={[
                                     styles.memberChip,
@@ -691,9 +561,9 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
                             return (
                               <Pressable key={m._id} disabled={saving} onPress={() => toggleShared(m._id)} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
                                 <GlassView
-                                  glassEffectStyle={checked ? "regular" : "clear"}
+                                  glassEffectStyle={glassStyle}
                                   isInteractive={!saving}
-                                  tintColor={checked ? "rgba(16,185,129,0.55)" : undefined}
+                                  tintColor={checked ? "rgba(16,185,129,0.55)" : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
                                   colorScheme={isDark ? "dark" : "light"}
                                   style={[
                                     styles.sharedChip,
@@ -798,12 +668,13 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
                         style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.9 : 1 }]}
                       >
                         <GlassView
-                          glassEffectStyle="clear"
+                          glassEffectStyle={glassStyle}
                           isInteractive={!saving}
+                          tintColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
                           colorScheme={isDark ? "dark" : "light"}
                           style={[styles.footerBtn, { borderColor: T.border }]}
                         >
-                          <Text style={{ color: T.text, fontWeight: "600" }}>
+                          <Text style={[typography.subheadlineEmphasized, { color: T.text }]}>
                             Cancel
                           </Text>
                         </GlassView>
@@ -815,7 +686,7 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
                         style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.92 : 1 }]}
                       >
                         <GlassView
-                          glassEffectStyle="regular"
+                          glassEffectStyle={glassStyle}
                           isInteractive={!saving && !showLoading}
                           tintColor={T.primary}
                           colorScheme={isDark ? "dark" : "light"}
@@ -824,7 +695,7 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
                           {saving ? (
                             <ActivityIndicator color="#fff" />
                           ) : (
-                            <Text style={{ color: "#fff", fontWeight: "600" }}>
+                            <Text style={[typography.subheadlineEmphasized, { color: "#fff" }]}>
                               Save changes
                             </Text>
                           )}
@@ -833,11 +704,8 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
                     </View>
                   </View>
                 )}
-              </GlassView>
-            </View>
-          </View>
+              </View>
         </KeyboardAvoidingView>
-      </View>
     </Modal>
   );
 }
@@ -846,24 +714,10 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   kav: { flex: 1 },
 
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-
-  modalWrap: {
-    width: "100%",
-    flex: 1,
-    borderRadius: 24,
-    overflow: "hidden",
-  },
-
   modal: {
     flex: 1,
     borderRadius: 24,
     overflow: "hidden",
-    // borderWidth: StyleSheet.hairlineWidth,
   },
 
 
@@ -893,8 +747,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  h1: { fontSize: 16, fontWeight: "600" },
-  h2: { marginTop: 2, fontSize: 12, fontWeight: "400", lineHeight: 16 },
+  h1: { ...typography.headline },
+  h2: { ...typography.caption1, marginTop: 2 },
 
   body: { padding: 16, paddingBottom: 28, gap: 14 },
 
@@ -904,10 +758,10 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   blockHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 8 },
-  blockTitle: { fontSize: 14, fontWeight: "600" },
-  blockSub: { marginTop: 2, fontSize: 12, fontWeight: "400", lineHeight: 16 },
+  blockTitle: { ...typography.footnoteEmphasized },
+  blockSub: { ...typography.caption1, marginTop: 2 },
 
-  label: { fontSize: 12, fontWeight: "500" },
+  label: { ...typography.caption1 },
 
   input: {
     marginTop: 8,
@@ -982,6 +836,11 @@ const styles = StyleSheet.create({
   },
 
   // ---- Category/date select modal styles ----
+  pickerWrap: {
+    marginTop: 8,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
   selectField: {
     marginTop: 8,
     // borderWidth: StyleSheet.hairlineWidth,
@@ -1000,10 +859,9 @@ const styles = StyleSheet.create({
     padding: 18,
   },
 
-  categorySheet: {
+  dateSheet: {
     borderRadius: 16,
     overflow: "hidden",
-    // borderWidth: StyleSheet.hairlineWidth,
     maxHeight: "70%",
     width: "100%",
   },
@@ -1011,16 +869,6 @@ const styles = StyleSheet.create({
   selectHeader: {
     padding: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  selectRow: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    // borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
   },
   selectFooter: {
     padding: 12,
@@ -1035,18 +883,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   doneBtnText: {
-    fontSize: 15,
-    fontWeight: "700",
+    ...typography.subheadlineEmphasized,
     letterSpacing: 0.2,
   },
-  dateSheet: {
-    borderRadius: 16,
-    overflow: "hidden",
-    // borderWidth: StyleSheet.hairlineWidth,
-    maxHeight: "70%",
-    width: "100%",
-  },
-
   // ---- Loading stabilizer ----
   loadingBody: {
     flex: 1,

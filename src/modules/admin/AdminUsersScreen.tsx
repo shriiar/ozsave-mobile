@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "@/src/context/ThemeContext";
+import { useGlassStyle } from "@/src/context/GlassStyleContext";
 import { useAuth } from "@/src/context/AuthContext";
 import { useAdminUsers } from "./hooks/useAdminUsers";
 import AdminSearchPanel from "./AdminSearchPanel";
@@ -27,6 +28,7 @@ type TabKey = "search" | "invites";
 
 export default function AdminUsersScreen() {
   const { resolvedTheme } = useTheme();
+  const { glassStyle } = useGlassStyle();
   const { refreshUser, refreshing } = useAuth();
   const isDark = resolvedTheme === "dark";
   const insets = useSafeAreaInsets();
@@ -105,7 +107,7 @@ export default function AdminUsersScreen() {
       ]}
     >
       <GlassView
-        glassEffectStyle="regular"
+        glassEffectStyle={glassStyle}
         colorScheme={isDark ? "dark" : "light"}
         style={[styles.headerCard, { borderColor: T.border }]}
       >

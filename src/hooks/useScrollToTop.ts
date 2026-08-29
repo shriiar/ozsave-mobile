@@ -4,11 +4,11 @@ import { registerScrollToTop } from "../lib/scrollToTop";
 
 type Scrollable = FlatList<any> | ScrollView;
 
-export function useScrollToTop<T extends Scrollable = FlatList<any>>() {
+export function useScrollToTop<T extends Scrollable = FlatList<any>>(key: string) {
   const ref = useRef<T>(null);
 
   useEffect(() => {
-    return registerScrollToTop(() => {
+    return registerScrollToTop(key, () => {
       const el = ref.current as any;
       if (!el) return;
       if (typeof el.scrollToOffset === "function") {
@@ -17,7 +17,7 @@ export function useScrollToTop<T extends Scrollable = FlatList<any>>() {
         el.scrollTo({ y: 0, animated: true });
       }
     });
-  }, []);
+  }, [key]);
 
   return ref;
 }

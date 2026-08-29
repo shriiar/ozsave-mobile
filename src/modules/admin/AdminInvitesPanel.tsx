@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { GlassView } from "expo-glass-effect";
 import { useTheme } from "@/src/context/ThemeContext";
+import { useGlassStyle } from "@/src/context/GlassStyleContext";
 import { AdminSearchUser } from "./api";
 import AdminUserRow from "./AdminUserRow";
 
@@ -17,6 +18,7 @@ export default function AdminInvitesPanel({
   removeInvite,
 }: Props) {
   const { resolvedTheme } = useTheme();
+  const { glassStyle } = useGlassStyle();
   const isDark = resolvedTheme === "dark";
 
   const T = useMemo(() => {
@@ -30,7 +32,7 @@ export default function AdminInvitesPanel({
 
   return (
     <GlassView
-      glassEffectStyle="regular"
+      glassEffectStyle={glassStyle}
       colorScheme={isDark ? "dark" : "light"}
       style={[styles.panel, { borderColor: T.border }]}
     >

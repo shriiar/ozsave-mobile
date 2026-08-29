@@ -8,6 +8,7 @@ import { GlassView } from "expo-glass-effect";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "../../src/context/AuthContext";
+import { useGlassStyle } from "../../src/context/GlassStyleContext";
 import { setVerifyCooldown } from "../../src/lib/storage";
 
 const COOLDOWN_MS = 5 * 60 * 1000;
@@ -18,6 +19,7 @@ function meetsPasswordRules(pw: string) {
 
 export default function Signup() {
   const { signup } = useAuth();
+  const { glassStyle } = useGlassStyle();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -87,7 +89,7 @@ export default function Signup() {
           {/* Name */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Name</Text>
-            <GlassView glassEffectStyle="clear" colorScheme="dark" style={styles.inputWrap}>
+            <GlassView glassEffectStyle={glassStyle} colorScheme="dark" style={styles.inputWrap}>
               <View style={styles.inputIcon}>
                 <Ionicons name="person-outline" size={16} color="rgba(148,163,184,0.82)" />
               </View>
@@ -106,7 +108,7 @@ export default function Signup() {
           {/* Email */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Email</Text>
-            <GlassView glassEffectStyle="clear" colorScheme="dark" style={styles.inputWrap}>
+            <GlassView glassEffectStyle={glassStyle} colorScheme="dark" style={styles.inputWrap}>
               <View style={styles.inputIcon}>
                 <Ionicons name="mail-outline" size={16} color="rgba(148,163,184,0.82)" />
               </View>
@@ -128,7 +130,7 @@ export default function Signup() {
           {/* Password */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Password</Text>
-            <GlassView glassEffectStyle="clear" colorScheme="dark" style={styles.inputWrap}>
+            <GlassView glassEffectStyle={glassStyle} colorScheme="dark" style={styles.inputWrap}>
               <View style={styles.inputIcon}>
                 <Ionicons name="lock-closed-outline" size={16} color="rgba(148,163,184,0.82)" />
               </View>

@@ -16,6 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import CreateHouseModal from "./CreateHouseModal";
 import { useAuth } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
+import { useGlassStyle } from "../../../context/GlassStyleContext";
 import {
   useHouseInvitations,
   type InvitationHouse,
@@ -28,6 +29,7 @@ export default function GetStarted() {
   const [showCreate, setShowCreate] = useState(false);
   const { refreshUser } = useAuth();
   const { resolvedTheme } = useTheme();
+  const { glassStyle } = useGlassStyle();
   const isDark = resolvedTheme === "dark";
 
   const queryClient = useQueryClient();
@@ -65,7 +67,7 @@ export default function GetStarted() {
   const invitesYRef = useRef(0);
 
   useEffect(() => {
-    return registerScrollToTop(() => {
+    return registerScrollToTop("/dashboard", () => {
       scrollRef.current?.scrollTo({ y: 0, animated: true });
     });
   }, []);
@@ -328,7 +330,7 @@ export default function GetStarted() {
                     </View>
 
                     <GlassView
-                      glassEffectStyle="clear"
+                      glassEffectStyle={glassStyle}
                       colorScheme={isDark ? "dark" : "light"}
                       style={styles.btnGhost}
                     >
@@ -374,7 +376,7 @@ export default function GetStarted() {
                               ]}
                             >
                               <GlassView
-                                glassEffectStyle="regular"
+                                glassEffectStyle={glassStyle}
                                 isInteractive={!accepting && !declining}
                                 tintColor="#059669"
                                 colorScheme={isDark ? "dark" : "light"}
@@ -395,7 +397,7 @@ export default function GetStarted() {
                               ]}
                             >
                               <GlassView
-                                glassEffectStyle="regular"
+                                glassEffectStyle={glassStyle}
                                 isInteractive={!declining && !accepting}
                                 tintColor="#DC2626"
                                 colorScheme={isDark ? "dark" : "light"}
@@ -450,7 +452,7 @@ export default function GetStarted() {
                       style={({ pressed }) => [pressed && { transform: [{ translateY: 1 }] }]}
                     >
                       <GlassView
-                        glassEffectStyle="regular"
+                        glassEffectStyle={glassStyle}
                         isInteractive
                         tintColor="#4F46E5"
                         colorScheme={isDark ? "dark" : "light"}
@@ -495,7 +497,7 @@ export default function GetStarted() {
                         </View>
 
                         <GlassView
-                          glassEffectStyle="clear"
+                          glassEffectStyle={glassStyle}
                           colorScheme={isDark ? "dark" : "light"}
                           style={styles.btnGhost}
                         >
@@ -525,7 +527,7 @@ export default function GetStarted() {
                           style={({ pressed }) => [pressed && { opacity: 0.9 }]}
                         >
                           <GlassView
-                            glassEffectStyle="clear"
+                            glassEffectStyle={glassStyle}
                             isInteractive
                             colorScheme={isDark ? "dark" : "light"}
                             style={styles.btnGhost}

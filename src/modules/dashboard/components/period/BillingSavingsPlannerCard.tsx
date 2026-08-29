@@ -2,9 +2,25 @@ import React, { memo, useMemo, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../../context/ThemeContext";
+import { typography } from "../../../../theme/typography";
 import { money2 } from "./formatters";
 import type { BillingSavingsPlanner, BillOccurrence } from "../../api";
+
+// Apple iOS system colors — keeps every accent in this card mapped to a
+// named UIKit system color instead of an arbitrary hex.
+const SYS = {
+  green: "#34C759",
+  red: "#FF3B30",
+  orange: "#FF9500",
+  indigo: "#5856D6",
+  blue: "#007AFF",
+  cyan: "#32ADE6",
+  purple: "#AF52DE",
+  pink: "#FF2D55",
+  gray: "#8E8E93",
+};
 
 type Props = {
   data?: BillingSavingsPlanner;
@@ -40,9 +56,9 @@ function buildUi(isDark: boolean): UiVars {
 }
 
 function sevColor(sev: Sev): string {
-  if (sev === "good") return "#10b981";
-  if (sev === "warn") return "#f59e0b";
-  return "#ef4444";
+  if (sev === "good") return SYS.green;
+  if (sev === "warn") return SYS.orange;
+  return SYS.red;
 }
 
 function sevLabel(sev: Sev): string {
@@ -52,18 +68,18 @@ function sevLabel(sev: Sev): string {
 }
 
 const CAT_COLORS: Record<string, string> = {
-  entertainment: "#8b5cf6",
-  utilities: "#06b6d4",
-  insurance: "#3b82f6",
-  groceries: "#10b981",
-  transport: "#f59e0b",
-  health: "#ec4899",
-  rent: "#ef4444",
-  subscriptions: "#6366f1",
+  entertainment: SYS.purple,
+  utilities: SYS.cyan,
+  insurance: SYS.blue,
+  groceries: SYS.green,
+  transport: SYS.orange,
+  health: SYS.pink,
+  rent: SYS.red,
+  subscriptions: SYS.indigo,
 };
 
 function catColor(cat: string) {
-  return CAT_COLORS[cat.toLowerCase()] ?? "#64748b";
+  return CAT_COLORS[cat.toLowerCase()] ?? SYS.gray;
 }
 
 function monthKind(month: string): MonthKind {
@@ -75,9 +91,9 @@ function monthKind(month: string): MonthKind {
 }
 
 function monthKindLabel(kind: MonthKind) {
-  if (kind === "past") return { label: "Past month", color: "#94a3b8" };
-  if (kind === "future") return { label: "Future month", color: "#6366f1" };
-  return { label: "This month", color: "#10b981" };
+  if (kind === "past") return { label: "Past month", color: SYS.gray };
+  if (kind === "future") return { label: "Future month", color: SYS.indigo };
+  return { label: "This month", color: SYS.green };
 }
 
 function fmtMonth(m: string) {
@@ -107,6 +123,11 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
 
   const [showPaid, setShowPaid] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
+
+  const sortedUpcoming = useMemo(() => {
+    const list = data?.bills?.upcoming ?? [];
+    return [...list].sort((a, b) => a.date.localeCompare(b.date));
+  }, [data?.bills?.upcoming]);
 
   if (!data || !derived) return null;
 
@@ -140,39 +161,87 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
 
           <View style={styles.tilesGrid}>
             <View style={styles.tilesRow}>
-              <Tile label="Paid" value={money2(totals.ran)} accent="#ef4444" ui={ui} />
-              <Tile label="Upcoming" value={money2(totals.upcoming)} accent="#f59e0b" ui={ui} />
+              <Tile label="Paid" value={money2(totals.ran)} accent={SYS.red} ui={ui} />
+              <Tile label="Upcoming" value={money2(totals.upcoming)} accent={SYS.orange} ui={ui} />
               <Tile label="Total" value={money2(totals.total)} accent={ui.text} ui={ui} />
             </View>
             <View style={styles.tilesRow}>
-              <Tile label="Income" value={money2(mtdIncome)} accent="#10b981" ui={ui} />
-              <Tile label="Monthly costs" value={money2(mtdCosts)} accent="#6366f1" ui={ui} />
+              <Tile label="Income" value={money2(mtdIncome)} accent={SYS.green} ui={ui} />
+              <Tile label="Monthly costs" value={money2(mtdCosts)} accent={SYS.indigo} ui={ui} />
             </View>
           </View>
 
           {!isFuture ? (
             <View style={styles.barSection}>
+              <View style={styles.legendRow}>
+                <LegendDot color={SYS.green} label="Income" ui={ui} />
+                <LegendDot color={SYS.red} label="Paid" ui={ui} />
+                <LegendDot color={SYS.orange} label="Upcoming" ui={ui} />
+              </View>
+
               <BarRow label="Income" value={money2(mtdIncome)} ui={ui}>
                 <View style={[styles.barTrack, { backgroundColor: ui.barTrack }]}>
-                  <View style={{ flex: incomeFlex, height: 14, backgroundColor: "#10b981", opacity: 0.85 }} />
-                  <View style={{ flex: Math.max(0, 1 - incomeFlex), height: 14 }} />
+                  <View style={{ flex: incomeFlex, height: 10, borderRadius: 5, backgroundColor: SYS.green }} />
+                  <View style={{ flex: Math.max(0, 1 - incomeFlex), height: 10 }} />
                 </View>
               </BarRow>
               <BarRow label="Costs" value={money2(mtdCosts + totals.upcoming)} ui={ui}>
-                <View style={[styles.barTrack, { backgroundColor: ui.barTrack }]}>
-                  {costFlex > 0 && <View style={{ flex: costFlex, height: 14, backgroundColor: "#ef4444" }} />}
-                  {upcomingFlex > 0 && <View style={{ flex: upcomingFlex, height: 14, backgroundColor: "#f59e0b" }} />}
-                  <View style={{ flex: Math.max(0, 1 - costFlex - upcomingFlex), height: 14 }} />
+                <View style={[styles.barTrack, { backgroundColor: ui.barTrack, flexDirection: "row" }]}>
+                  {costFlex > 0 && (
+                    <View
+                      style={{
+                        flex: costFlex,
+                        height: 10,
+                        backgroundColor: SYS.red,
+                        borderTopLeftRadius: 5,
+                        borderBottomLeftRadius: 5,
+                        borderTopRightRadius: upcomingFlex > 0 ? 0 : 5,
+                        borderBottomRightRadius: upcomingFlex > 0 ? 0 : 5,
+                      }}
+                    />
+                  )}
+                  {upcomingFlex > 0 && (
+                    <View
+                      style={{
+                        flex: upcomingFlex,
+                        height: 10,
+                        backgroundColor: SYS.orange,
+                        borderTopLeftRadius: costFlex > 0 ? 0 : 5,
+                        borderBottomLeftRadius: costFlex > 0 ? 0 : 5,
+                        borderTopRightRadius: 5,
+                        borderBottomRightRadius: 5,
+                      }}
+                    />
+                  )}
+                  <View style={{ flex: Math.max(0, 1 - costFlex - upcomingFlex), height: 10 }} />
                 </View>
               </BarRow>
-              <View style={styles.bufferRow}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                  <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: ui.sub }} />
-                  <Text style={{ fontSize: 11, fontWeight: "600", color: ui.sub }}>Buffer after upcoming</Text>
+
+              <View
+                style={[
+                  styles.bufferPill,
+                  {
+                    backgroundColor: (bufferPositive ? SYS.green : SYS.red) + "1c",
+                    borderColor: (bufferPositive ? SYS.green : SYS.red) + "40",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={bufferPositive ? "arrow-up-circle" : "arrow-down-circle"}
+                  size={22}
+                  color={bufferPositive ? SYS.green : SYS.red}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={[typography.caption2, { color: ui.sub }]}>Buffer after upcoming</Text>
+                  <Text
+                    style={[
+                      typography.subheadlineEmphasized,
+                      { color: bufferPositive ? SYS.green : SYS.red, fontWeight: "800" },
+                    ]}
+                  >
+                    {bufferPositive ? "+" : "-"}{money2(Math.abs(bufferAfterUpcoming))}
+                  </Text>
                 </View>
-                <Text style={{ fontSize: 12, fontWeight: "800", color: ui.text }}>
-                  {bufferPositive ? "+" : "-"}{money2(Math.abs(bufferAfterUpcoming))}
-                </Text>
               </View>
             </View>
           ) : (
@@ -183,8 +252,8 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
             </View>
           )}
 
-          {bills.upcoming.length > 0 && (
-            <BillList title="Upcoming bills" bills={bills.upcoming} accent="#f59e0b" ui={ui} />
+          {sortedUpcoming.length > 0 && (
+            <BillList title="Upcoming bills" bills={sortedUpcoming} accent={SYS.orange} ui={ui} />
           )}
 
           {bills.ran.length > 0 && (
@@ -203,7 +272,7 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
                   showsVerticalScrollIndicator={false}
                   nestedScrollEnabled
                 >
-                  {bills.ran.map((b, i) => <BillItem key={`${b.name}-${b.date}-${i}`} b={b} accent="#10b981" ui={ui} />)}
+                  {bills.ran.map((b, i) => <BillItem key={`${b.name}-${b.date}-${i}`} b={b} accent={SYS.green} ui={ui} />)}
                 </ScrollView>
               )}
             </View>
@@ -259,6 +328,15 @@ function BarRow({
   );
 }
 
+function LegendDot({ color, label, ui }: { color: string; label: string; ui: UiVars }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+      <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: color }} />
+      <Text style={[typography.caption2, { color: ui.sub }]}>{label}</Text>
+    </View>
+  );
+}
+
 function Tile({
   label,
   value,
@@ -272,8 +350,15 @@ function Tile({
 }) {
   return (
     <View style={[styles.tile, { backgroundColor: ui.tileBg }]}>
-      <Text style={[styles.tileLabel, { color: ui.sub }]}>{label}</Text>
-      <Text style={[styles.tileValue, { color: accent }]}>{value}</Text>
+      <Text style={[styles.tileLabel, { color: ui.sub }]} numberOfLines={1}>{label}</Text>
+      <Text
+        style={[styles.tileValue, { color: accent }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
+        {value}
+      </Text>
     </View>
   );
 }
@@ -355,11 +440,21 @@ const styles = StyleSheet.create({
   tileValue: { marginTop: 5, fontSize: 15, fontWeight: "800" },
 
   barSection: { marginTop: 18, gap: 10 },
-  barTrack: { height: 16, borderRadius: 8, overflow: "hidden", flexDirection: "row" },
+  legendRow: { flexDirection: "row", gap: 14, marginBottom: 2 },
+  barTrack: { height: 10, borderRadius: 5, overflow: "hidden", flexDirection: "row" },
   barRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   barRowLabel: { fontSize: 11, fontWeight: "600", width: 52 },
   barRowValue: { fontSize: 12, fontWeight: "800", width: 64, textAlign: "right" },
-  bufferRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 6 },
+  bufferPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 6,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+  },
 
   futureNote: {
     marginTop: 16,

@@ -56,6 +56,13 @@ export function useInfiniteBillings(
     ]
   );
 
+  // Keep this in sync with `staleTime` below — react-query's own automatic
+  // refetchOnMount fires whenever data is older than `staleTime`, on every
+  // query re-subscription (e.g. every tab switch), independent of the
+  // useScreenActive-gated effect further down. A short staleTime here would
+  // silently refetch on every route change regardless of that 5-minute gate.
+  const STALE_MS = 5 * 60_000;
+
   const query = useInfiniteQuery({
     queryKey: ["billings-infinite", keyParams],
     initialPageParam: undefined as string | undefined,
@@ -73,7 +80,7 @@ export function useInfiniteBillings(
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
 
-    staleTime: 10_000,
+    staleTime: STALE_MS,
     gcTime: 30 * 60_000,
   });
 
@@ -81,8 +88,6 @@ export function useInfiniteBillings(
    * Refresh when screen becomes active again,
    * but only if cache is old enough.
    */
-  const STALE_MS = 5 * 60_000;
-
   useEffect(() => {
     if (!isActiveScreen) return;
 
@@ -120,9 +125,14 @@ export function useInfiniteBillings(
     },
 
     refreshTop: async () => {
-      await queryClient.removeQueries({
-        queryKey: ["billings-infinite", keyParams],
-        exact: true,
+      queryClient.setQueryData(["billings-infinite", keyParams], (old: any) => {
+        if (!old?.pages?.length) return old;
+
+        return {
+          ...old,
+          pages: [old.pages[0]],
+          pageParams: old.pageParams?.length ? [old.pageParams[0]] : old.pageParams,
+        };
       });
 
       await query.refetch();

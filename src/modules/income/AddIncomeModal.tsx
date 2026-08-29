@@ -16,11 +16,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { GlassView } from "expo-glass-effect";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "@/src/context/ThemeContext";
+import { useGlassStyle } from "@/src/context/GlassStyleContext";
 import { useAddIncome } from "@/src/modules/income/hooks/useIncomeApi";
 import type { AddIncomePayload, IncomeSource, IncomeStatus, IncomeType } from "@/src/modules/income/api";
+import { typography } from "@/src/theme/typography";
 
 type Props = { open: boolean; onClose: () => void };
 
@@ -186,6 +187,7 @@ function DateField({
   mutedColor: string;
 }) {
   const [show, setShow] = useState(false);
+  const { glassStyle } = useGlassStyle();
   const valueDate = useMemo(() => dateFromYmd(valueYmd), [valueYmd]);
 
   function onChange(_: DateTimePickerEvent, selected?: Date) {
@@ -211,7 +213,7 @@ function DateField({
           },
         ]}
       >
-        <Text style={{ color: textColor, fontSize: 14, fontWeight: "500" }}>
+        <Text style={[typography.footnote, { color: textColor }]}>
           {valueYmd || "Select date"}
         </Text>
         <Ionicons name="calendar-outline" size={16} color={mutedColor} />
@@ -232,13 +234,13 @@ function DateField({
 
               <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}>
                 <GlassView
-                  glassEffectStyle="regular"
+                  glassEffectStyle={glassStyle}
                   colorScheme={isDark ? "dark" : "light"}
                   style={[styles.dateSheet, { borderColor }]}
                 >
                   <View style={[styles.selectHeader, { borderBottomColor: borderColor }]}>
-                    <Text style={{ color: textColor, fontSize: 15, fontWeight: "600" }}>Select date</Text>
-                    <Text style={{ color: mutedColor, marginTop: 2, fontSize: 12, fontWeight: "400" }}>
+                    <Text style={[typography.subheadlineEmphasized, { color: textColor }]}>Select date</Text>
+                    <Text style={[typography.caption1, { color: mutedColor, marginTop: 2 }]}>
                       Pick a day
                     </Text>
                   </View>
@@ -259,7 +261,7 @@ function DateField({
                       style={({ pressed }) => [{ opacity: pressed ? 0.88 : 1 }]}
                     >
                       <GlassView
-                        glassEffectStyle="clear"
+                        glassEffectStyle={glassStyle}
                         isInteractive
                         colorScheme={isDark ? "dark" : "light"}
                         style={styles.doneBtn}
@@ -282,8 +284,8 @@ function DateField({
 
 export default function AddIncomeModal({ open, onClose }: Props) {
   const { resolvedTheme } = useTheme();
+  const { glassStyle } = useGlassStyle();
   const isDark = resolvedTheme === "dark";
-  const insets = useSafeAreaInsets();
 
   const add = useAddIncome();
   const saving = add.isPending;
@@ -324,7 +326,7 @@ export default function AddIncomeModal({ open, onClose }: Props) {
     const text = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
     const muted = isDark ? "rgba(148,163,184,0.82)" : "#64748B";
 
-    const inputBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.70)";
+    const inputBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.045)";
     const inputBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
 
     const primary = "#4F46E5";
@@ -413,31 +415,14 @@ export default function AddIncomeModal({ open, onClose }: Props) {
   }
 
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={() => !saving && onClose()}>
-      {/* Backdrop */}
-      <Pressable style={StyleSheet.absoluteFill} onPress={() => !saving && onClose()}>
-        <View style={{ flex: 1, backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)" }} />
-      </Pressable>
-
-      <View
-        style={[
-          StyleSheet.absoluteFillObject,
-          {
-            paddingTop: insets.top,
-            paddingBottom: 0,
-            paddingHorizontal: 0,
-          },
-        ]}
-      >
-
+    <Modal
+      visible={open}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={() => !saving && onClose()}
+    >
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.kav}>
-          <View style={styles.center}>
-            <View style={styles.modalWrap}>
-              <GlassView
-                glassEffectStyle="regular"
-                colorScheme={isDark ? "dark" : "light"}
-                style={[styles.modal, { borderColor: T.border }, T.shadow]}
-              >
+              <View style={[styles.modal, { backgroundColor: isDark ? "#0a0a0a" : "#ffffff" }]}>
 
                 {/* Header */}
                 <View style={[styles.header, { borderBottomColor: T.headerBorder }]}>
@@ -447,8 +432,8 @@ export default function AddIncomeModal({ open, onClose }: Props) {
                     </View>
 
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.h1, { color: T.text }]}>Add income</Text>
-                      <Text style={[styles.h2, { color: T.muted }]}>
+                      <Text style={[typography.headline, { color: T.text }]}>Add income</Text>
+                      <Text style={[typography.caption1, styles.h2, { color: T.muted }]}>
                         Record an income entry. Only confirmed incomes count in analytics.
                       </Text>
                     </View>
@@ -521,7 +506,7 @@ export default function AddIncomeModal({ open, onClose }: Props) {
                       placeholderTextColor={isDark ? "rgba(148,163,184,0.55)" : "rgba(100,116,139,0.65)"}
                       style={[styles.input, { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder }]}
                     />
-                    <Text style={{ marginTop: 6, color: T.muted, fontSize: 11, fontWeight: "500" }}>
+                    <Text style={[typography.caption2, { marginTop: 6, color: T.muted }]}>
                       Up to 20 tags.
                     </Text>
 
@@ -542,8 +527,8 @@ export default function AddIncomeModal({ open, onClose }: Props) {
 
                   {error ? (
                     <View style={[styles.errorBox, { borderColor: "rgba(239,68,68,0.30)", backgroundColor: "rgba(239,68,68,0.10)" }]}>
-                      <Text style={{ color: T.danger, fontWeight: "600" }}>Can’t save</Text>
-                      <Text style={{ color: T.danger, marginTop: 4, fontWeight: "400" }}>{error}</Text>
+                      <Text style={[typography.footnoteEmphasized, { color: T.danger }]}>Can’t save</Text>
+                      <Text style={[typography.footnote, { color: T.danger, marginTop: 4 }]}>{error}</Text>
                     </View>
                   ) : null}
                 </ScrollView>
@@ -565,12 +550,13 @@ export default function AddIncomeModal({ open, onClose }: Props) {
                     style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.9 : 1 }]}
                   >
                     <GlassView
-                      glassEffectStyle="clear"
+                      glassEffectStyle={glassStyle}
                       isInteractive={!saving}
+                      tintColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
                       colorScheme={isDark ? "dark" : "light"}
                       style={[styles.footerBtn, { borderColor: T.border }]}
                     >
-                      <Text style={{ color: T.text, fontWeight: "600" }}>Cancel</Text>
+                      <Text style={[typography.subheadlineEmphasized, { color: T.text }]}>Cancel</Text>
                     </GlassView>
                   </Pressable>
 
@@ -580,21 +566,18 @@ export default function AddIncomeModal({ open, onClose }: Props) {
                     style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.92 : 1 }]}
                   >
                     <GlassView
-                      glassEffectStyle="regular"
+                      glassEffectStyle={glassStyle}
                       isInteractive={!saving}
                       tintColor={T.primary}
                       colorScheme={isDark ? "dark" : "light"}
                       style={styles.footerBtnPrimary}
                     >
-                      {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "600" }}>Save</Text>}
+                      {saving ? <ActivityIndicator color="#fff" /> : <Text style={[typography.subheadlineEmphasized, { color: "#fff" }]}>Save</Text>}
                     </GlassView>
                   </Pressable>
                 </View>
-              </GlassView>
-            </View>
-          </View>
+              </View>
         </KeyboardAvoidingView>
-      </View>
     </Modal>
   );
 }
@@ -602,26 +585,11 @@ export default function AddIncomeModal({ open, onClose }: Props) {
 const styles = StyleSheet.create({
   kav: { flex: 1 },
 
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-
-  modalWrap: {
-    width: "100%",
-    flex: 1,
-    borderRadius: 24,
-    overflow: "hidden",
-  },
-
   modal: {
     flex: 1,
     borderRadius: 24,
     overflow: "hidden",
-    // borderWidth: StyleSheet.hairlineWidth,
   },
-
 
   header: {
     padding: 16,
@@ -648,16 +616,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  h1: { fontSize: 16, fontWeight: "600" },
-  h2: { marginTop: 2, fontSize: 12, fontWeight: "400", lineHeight: 16 },
+  h2: { marginTop: 2 },
 
   body: { padding: 16, paddingBottom: 18 },
 
-  block: { borderRadius: 16, 
-    // borderWidth: StyleSheet.hairlineWidth, 
+  block: { borderRadius: 16,
+    // borderWidth: StyleSheet.hairlineWidth,
     padding: 14 },
 
-  label: { fontSize: 12, fontWeight: "500" },
+  label: { ...typography.caption1 },
 
   input: {
     marginTop: 8,
@@ -731,8 +698,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   doneBtnText: {
-    fontSize: 15,
-    fontWeight: "700",
+    ...typography.subheadlineEmphasized,
     letterSpacing: 0.2,
   },
 

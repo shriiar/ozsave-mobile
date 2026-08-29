@@ -20,6 +20,7 @@ import { GlassView } from "expo-glass-effect";
 
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { useGlassStyle } from "../../context/GlassStyleContext";
 import { fireScrollToTop } from "../../lib/scrollToTop";
 import { ThemeToggle } from "../../components/ThemeToggle";
 
@@ -53,11 +54,12 @@ function GlassSurface({
   expanded: boolean;
   fallbackStyle: any;
 }) {
+  const { glassStyle } = useGlassStyle();
   if (Platform.OS === "ios") {
     return (
       <GlassView
         style={styles.glassFill}
-        glassEffectStyle="regular"
+        glassEffectStyle={glassStyle}
         colorScheme={isDark ? "dark" : "light"}
       >
         {children}
@@ -129,7 +131,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   function go(href: string) {
     if (isActive(href)) {
-      fireScrollToTop();
+      fireScrollToTop(href);
       return;
     }
     router.navigate(href as any);

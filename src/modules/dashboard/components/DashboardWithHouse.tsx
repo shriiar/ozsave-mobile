@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useTheme } from "../../../context/ThemeContext";
 import { useScrollToTop } from "../../../hooks/useScrollToTop";
+import { useRemountOnThemeRefocus } from "../../../hooks/useRemountOnThemeRefocus";
 import { DashboardHeader } from "./period/DashboardHeader";
 import type { RangeKey } from "./period/DashboardHeader";
 import { DashboardBarChart } from "./period/DashboardBarChart";
@@ -37,6 +38,7 @@ import DashboardAiSummaryButton from "./period/DashboardAiSummaryButton";
 import DashboardAiSummaryModal from "./period/DashboardAiSummaryModal";
 import { BillingSavingsPlannerCard } from "./period/BillingSavingsPlannerCard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { typography } from "../../../theme/typography";
 
 type HouseBase = { _id: string; name: string };
 type PeriodDashboard = any;
@@ -100,23 +102,21 @@ function AnimatedCard({
   delay?: number;
   revision: number;
 }) {
-  const opacity = useRef(new Animated.Value(0)).current;
+  // Only animates `transform`, never `opacity` — animating opacity on an
+  // ancestor of a GlassView permanently breaks its native glass rendering
+  // on iOS 26.1+ (see AnimatedListItem in cost/income/billing screens).
   const scale = useRef(new Animated.Value(0.94)).current;
 
   function animate() {
-    opacity.setValue(0);
     scale.setValue(0.94);
     const t = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.spring(scale, {
-          toValue: 1,
-          useNativeDriver: true,
-          damping: 14,
-          mass: 0.7,
-          stiffness: 180,
-        }),
-      ]).start();
+      Animated.spring(scale, {
+        toValue: 1,
+        useNativeDriver: true,
+        damping: 14,
+        mass: 0.7,
+        stiffness: 180,
+      }).start();
     }, delay);
     return t;
   }
@@ -135,7 +135,7 @@ function AnimatedCard({
   }, [revision]);
 
   return (
-    <Animated.View style={{ opacity, transform: [{ scale }] }}>
+    <Animated.View style={{ transform: [{ scale }] }}>
       {children}
     </Animated.View>
   );
@@ -158,7 +158,8 @@ export default function DashboardWithHouse({
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
-  const scrollRef = useScrollToTop<ScrollView>();
+  const scrollRef = useScrollToTop<ScrollView>("/dashboard");
+  const remountKey = useRemountOnThemeRefocus();
   const shownErrorRef = useRef<string | null>(null);
 
   const [revision, setRevision] = useState(0);
@@ -212,6 +213,7 @@ export default function DashboardWithHouse({
 
   const [viewportH, setViewportH] = useState(0);
   const [headerHeight, setHeaderHeight] = useState(0);
+  const topInset = headerHeight + 8;
   const [summaryOpen, setSummaryOpen] = useState(false);
   const onLayout = (e: LayoutChangeEvent) => {
     const h = e.nativeEvent.layout.height;
@@ -305,7 +307,7 @@ export default function DashboardWithHouse({
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: T.bg }]} onLayout={onLayout}>
+    <View key={remountKey} style={[styles.screen, { backgroundColor: T.bg }]} onLayout={onLayout}>
       <DashboardHeader
         range={range}
         onRangeChange={onRangeChange}
@@ -335,12 +337,12 @@ export default function DashboardWithHouse({
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            progressViewOffset={headerHeight}
+            progressViewOffset={topInset}
           />
         }
         contentContainerStyle={[
           styles.container,
-          { minHeight: viewportH || undefined, paddingBottom: bottomSpace, paddingTop: headerHeight + 8 },
+          { minHeight: viewportH || undefined, paddingBottom: bottomSpace, paddingTop: topInset },
         ]}
       >
         {/* <AnimatedCard delay={0} revision={revision}>
@@ -356,13 +358,25 @@ export default function DashboardWithHouse({
           />
         </AnimatedCard>
 
+        <Text style={[typography.caption1, styles.sectionHeader, { color: T.muted }]}>
+          Trends
+        </Text>
+
         <AnimatedCard delay={60} revision={revision}>
           <DashboardBarChart data={barData} />
         </AnimatedCard>
 
+        <Text style={[typography.caption1, styles.sectionHeader, { color: T.muted }]}>
+          Bills
+        </Text>
+
         <AnimatedCard delay={90} revision={revision}>
           <BillingSavingsPlannerCard data={period?.billingSavingsPlanner} />
         </AnimatedCard>
+
+        <Text style={[typography.caption1, styles.sectionHeader, { color: T.muted }]}>
+          Breakdown
+        </Text>
 
         <AnimatedCard delay={120} revision={revision}>
           <CategorySectionCard
@@ -371,25 +385,25 @@ export default function DashboardWithHouse({
           />
         </AnimatedCard>
 
-        <AnimatedCard delay={135} revision={revision}>
+        <AnimatedCard delay={150} revision={revision}>
           <IncomeTypeSectionCard
-            title="Manual/Received income (by type)"
-            emptyMessage="No received income recorded for this period."
-            pie={incomeTypePieManual}
-            incomeTypeInsights={incomeTypeInsightsManual}
-          />
-        </AnimatedCard>
-
-        <AnimatedCard delay={140} revision={revision}>
-          <IncomeTypeSectionCard
-            title="Estimated income (by type)"
+            title="Estimate income"
             emptyMessage="No estimated income recorded for this period."
             pie={incomeTypePieEstimate}
             incomeTypeInsights={incomeTypeInsightsEstimate}
           />
         </AnimatedCard>
 
-        <AnimatedCard delay={150} revision={revision}>
+        <AnimatedCard delay={180} revision={revision}>
+          <IncomeTypeSectionCard
+            title="Manual income"
+            emptyMessage="No received income recorded for this period."
+            pie={incomeTypePieManual}
+            incomeTypeInsights={incomeTypeInsightsManual}
+          />
+        </AnimatedCard>
+
+        <AnimatedCard delay={210} revision={revision}>
           <TrendVsPreviousCard
             rangeLabel={rangeMeta.label}
             summary={
@@ -435,8 +449,15 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   container: {
     padding: 16,
-    gap: 12,
+    gap: 10,
     flexGrow: 1,
+  },
+  sectionHeader: {
+    textTransform: "uppercase",
+    fontWeight: "700",
+    letterSpacing: 0.6,
+    marginTop: 14,
+    marginLeft: 4,
   },
   emptyState: {
     marginTop: 4,

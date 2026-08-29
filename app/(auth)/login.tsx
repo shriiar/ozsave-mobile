@@ -6,11 +6,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { GlassView } from "expo-glass-effect";
 import { useAuth } from "../../src/context/AuthContext";
+import { useGlassStyle } from "../../src/context/GlassStyleContext";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Login() {
   const { login } = useAuth();
+  const { glassStyle } = useGlassStyle();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -103,7 +105,7 @@ export default function Login() {
           {/* Email */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Email</Text>
-            <GlassView glassEffectStyle="clear" colorScheme="dark" style={styles.inputWrap}>
+            <GlassView glassEffectStyle={glassStyle} colorScheme="dark" style={styles.inputWrap}>
               <View style={styles.inputIcon}>
                 <Ionicons name="mail-outline" size={16} color="rgba(148,163,184,0.82)" />
               </View>
@@ -125,7 +127,7 @@ export default function Login() {
           {/* Password */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Password</Text>
-            <GlassView glassEffectStyle="clear" colorScheme="dark" style={styles.inputWrap}>
+            <GlassView glassEffectStyle={glassStyle} colorScheme="dark" style={styles.inputWrap}>
               <View style={styles.inputIcon}>
                 <Ionicons name="lock-closed-outline" size={16} color="rgba(148,163,184,0.82)" />
               </View>

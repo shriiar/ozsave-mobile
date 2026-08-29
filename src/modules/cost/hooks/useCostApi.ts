@@ -56,6 +56,13 @@ export function useInfiniteCosts(params: Omit<GetCostsCursorParams, "cursor">) {
     ]
   );
 
+  // Keep this in sync with `staleTime` below — react-query's own automatic
+  // refetchOnMount fires whenever data is older than `staleTime`, on every
+  // query re-subscription (e.g. every tab switch), independent of the
+  // useScreenActive-gated effect further down. A short staleTime here would
+  // silently refetch on every route change regardless of that 5-minute gate.
+  const STALE_MS = 5 * 60_000;
+
   const query = useInfiniteQuery({
     queryKey: ["costs-infinite", keyParams],
     initialPageParam: undefined as string | undefined,
@@ -76,7 +83,7 @@ export function useInfiniteCosts(params: Omit<GetCostsCursorParams, "cursor">) {
     // don’t auto-refetch on random focus events (we control it via useScreenActive)
     refetchOnWindowFocus: false,
 
-    staleTime: 10_000,
+    staleTime: STALE_MS,
     gcTime: 30 * 60_000,
   });
 
@@ -87,7 +94,6 @@ export function useInfiniteCosts(params: Omit<GetCostsCursorParams, "cursor">) {
    *
    * In v5: NO query.remove(). Use queryClient.removeQueries().
    */
-  const STALE_MS = 5 * 60_000;
 
   useEffect(() => {
     if (!isActiveScreen) return;

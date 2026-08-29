@@ -7,6 +7,7 @@ import { BlurView } from "expo-blur";
 import { GlassView } from "expo-glass-effect";
 import { VerificationApi } from "../../src/modules/verify/api";
 import { useAuth } from "../../src/context/AuthContext";
+import { useGlassStyle } from "../../src/context/GlassStyleContext";
 import { clearVerifyCooldown, getVerifyCooldown, setVerifyCooldown } from "../../src/lib/storage";
 
 const COOLDOWN_MS = 5 * 60 * 1000;
@@ -27,6 +28,7 @@ export default function Verify() {
   const emailStr = String(email ?? "").trim().toLowerCase();
 
   const { loginWithToken } = useAuth();
+  const { glassStyle } = useGlassStyle();
 
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -163,7 +165,7 @@ export default function Verify() {
         style={s.bottomWash}
       />
 
-      <GlassView glassEffectStyle="clear" colorScheme="light" style={s.card}>
+      <GlassView glassEffectStyle={glassStyle} colorScheme="light" style={s.card}>
         <BlurView intensity={32} tint="light" style={StyleSheet.absoluteFill} />
         <LinearGradient
           pointerEvents="none"
@@ -208,7 +210,7 @@ export default function Verify() {
         <View style={s.body}>
           <Text style={s.label}>Verification code</Text>
 
-          <GlassView glassEffectStyle="clear" colorScheme="light" style={s.otpWrap}>
+          <GlassView glassEffectStyle={glassStyle} colorScheme="light" style={s.otpWrap}>
             <TextInput
               value={code}
               onChangeText={(v) => setCode(cleanCode(v))}

@@ -10,6 +10,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "../src/context/AuthContext";
 import { ThemeProvider, useTheme } from "../src/context/ThemeContext";
+import { GlassStyleProvider } from "../src/context/GlassStyleContext";
 
 import ThemeTransitionOverlay from "../src/components/ThemeTransitionOverlay";
 import Toast from "react-native-toast-message";
@@ -74,10 +75,12 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
           <ThemeProvider>
-            <AuthProvider>
-              <AppShell />
-            </AuthProvider>
-            <ThemeTransitionOverlay />
+            <GlassStyleProvider>
+              <AuthProvider>
+                <AppShell />
+              </AuthProvider>
+              <ThemeTransitionOverlay />
+            </GlassStyleProvider>
           </ThemeProvider>
         </SafeAreaProvider>
       </QueryClientProvider>

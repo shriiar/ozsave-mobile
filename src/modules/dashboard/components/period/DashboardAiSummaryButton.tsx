@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GlassView } from "expo-glass-effect";
 import { useTheme } from "@/src/context/ThemeContext";
+import { useGlassStyle } from "@/src/context/GlassStyleContext";
 
 type Props = {
   onPress: () => void;
@@ -14,6 +15,7 @@ export default function DashboardAiSummaryButton({
   disabled = false,
 }: Props) {
   const { resolvedTheme } = useTheme();
+  const { glassStyle } = useGlassStyle();
   const isDark = resolvedTheme === "dark";
 
   const T = useMemo(() => {
@@ -31,7 +33,7 @@ export default function DashboardAiSummaryButton({
       style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.9 : 1 }]}
     >
       <GlassView
-        glassEffectStyle="regular"
+        glassEffectStyle={glassStyle}
         isInteractive={!disabled}
         colorScheme={isDark ? "dark" : "light"}
         style={[styles.btn, { borderColor: T.border, backgroundColor: T.mutedBg }]}

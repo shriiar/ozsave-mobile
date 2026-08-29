@@ -19,11 +19,12 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "../../context/ThemeContext";
+import { useGlassStyle } from "../../context/GlassStyleContext";
 import { useAuth } from "../../context/AuthContext";
 import { useBilling, useUpdateBilling } from "./hooks/useBillingApi";
+import { typography } from "../../theme/typography";
 
 type Member = {
   _id: string;
@@ -113,7 +114,6 @@ function CategorySelect({
   borderColor,
   bgColor,
   textColor,
-  mutedColor,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -124,178 +124,21 @@ function CategorySelect({
   textColor: string;
   mutedColor: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState(value || CATEGORY_OPTIONS[0]?.key);
-  const current =
-    CATEGORY_OPTIONS.find((c) => c.key === value)?.label ?? "";
-
-  React.useEffect(() => {
-    if (open) setDraft(value || CATEGORY_OPTIONS[0]?.key);
-  }, [open, value]);
-
   return (
-    <>
-      <Pressable
-        disabled={disabled}
-        onPress={() => setOpen(true)}
-        style={({ pressed }) => [
-          styles.selectField,
-          {
-            opacity: pressed ? 0.9 : 1,
-            borderColor,
-            backgroundColor: bgColor,
-          },
-        ]}
+    <View style={[styles.pickerWrap, { borderColor, backgroundColor: bgColor }]}>
+      <Picker
+        enabled={!disabled}
+        selectedValue={value || CATEGORY_OPTIONS[0]?.key}
+        onValueChange={(v) => onChange(String(v))}
+        dropdownIconColor={isDark ? "rgba(255,255,255,0.8)" : "rgba(15,23,42,0.7)"}
+        style={{ color: textColor }}
+        itemStyle={{ color: textColor, fontSize: 16 }}
       >
-        <Text
-          style={{
-            color: current ? textColor : mutedColor,
-            fontSize: 14,
-            fontWeight: "500",
-          }}
-        >
-          {current || "Select category"}
-        </Text>
-        <Ionicons name="chevron-down" size={16} color={mutedColor} />
-      </Pressable>
-
-      <Modal
-        visible={open}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setOpen(false)}
-      >
-        <View style={StyleSheet.absoluteFill}>
-          {/* Removed outer fullscreen BlurView */}
-
-          <Pressable
-            style={StyleSheet.absoluteFill}
-            onPress={() => setOpen(false)}
-          >
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: isDark
-                  ? "rgba(0,0,0,0.35)"
-                  : "rgba(0,0,0,0.18)",
-              }}
-            />
-          </Pressable>
-
-          <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}>
-            <GlassView
-              glassEffectStyle="regular"
-              colorScheme={isDark ? "dark" : "light"}
-              style={[styles.categorySheet, { borderColor }]}
-            >
-              {/* Gradient removed for Liquid Glass */}
-              <View
-                style={[styles.selectHeader, { borderBottomColor: borderColor }]}
-              >
-                <Text
-                  style={{ color: textColor, fontSize: 15, fontWeight: "600" }}
-                >
-                  Category
-                </Text>
-                <Text
-                  style={{
-                    color: mutedColor,
-                    marginTop: 2,
-                    fontSize: 12,
-                    fontWeight: "400",
-                  }}
-                >
-                  Choose one option
-                </Text>
-              </View>
-
-              {Platform.OS === "ios" ? (
-                <View style={{ paddingHorizontal: 8, paddingVertical: 10 }}>
-                  <Picker
-                    selectedValue={draft}
-                    onValueChange={(v) => setDraft(String(v))}
-                    itemStyle={{ color: textColor, fontSize: 16 }}
-                  >
-                    {CATEGORY_OPTIONS.map((c) => (
-                      <Picker.Item
-                        key={c.key}
-                        label={c.label}
-                        value={c.key}
-                      />
-                    ))}
-                  </Picker>
-                </View>
-              ) : (
-                <ScrollView contentContainerStyle={{ padding: 10 }}>
-                  {CATEGORY_OPTIONS.map((c) => {
-                    const active = c.key === value;
-                    return (
-                      <Pressable
-                        key={c.key}
-                        onPress={() => {
-                          onChange(c.key);
-                          setOpen(false);
-                        }}
-                        style={({ pressed }) => [
-                          styles.selectRow,
-                          {
-                            opacity: pressed ? 0.9 : 1,
-                            borderColor: active
-                              ? "rgba(79,70,229,0.35)"
-                              : borderColor,
-                            backgroundColor: active
-                              ? "rgba(79,70,229,0.10)"
-                              : "transparent",
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={{
-                            color: textColor,
-                            fontSize: 14,
-                            fontWeight: active ? "600" : "500",
-                          }}
-                        >
-                          {c.label}
-                        </Text>
-                        {active ? (
-                          <Ionicons
-                            name="checkmark"
-                            size={18}
-                            color="#4F46E5"
-                          />
-                        ) : null}
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-              )}
-
-              <View
-                style={[styles.selectFooter, { borderTopColor: borderColor }]}
-              >
-                <Pressable
-                  onPress={() => {
-                    if (Platform.OS === "ios") onChange(draft);
-                    setOpen(false);
-                  }}
-                  style={({ pressed }) => [{ opacity: pressed ? 0.88 : 1 }]}
-                >
-                  <GlassView
-                    glassEffectStyle="clear"
-                    isInteractive
-                    colorScheme={isDark ? "dark" : "light"}
-                    style={styles.doneBtn}
-                  >
-                    <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
-                  </GlassView>
-                </Pressable>
-              </View>
-            </GlassView>
-          </View>
-        </View>
-      </Modal>
-    </>
+        {CATEGORY_OPTIONS.map((c) => (
+          <Picker.Item key={c.key} label={c.label} value={c.key} />
+        ))}
+      </Picker>
+    </View>
   );
 }
 
@@ -307,7 +150,6 @@ function FrequencySelect({
   borderColor,
   bgColor,
   textColor,
-  mutedColor,
 }: {
   value: Frequency;
   onChange: (v: Frequency) => void;
@@ -318,178 +160,21 @@ function FrequencySelect({
   textColor: string;
   mutedColor: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<Frequency>(value || "monthly");
-  const current =
-    FREQUENCY_OPTIONS.find((c) => c.key === value)?.label ?? "";
-
-  React.useEffect(() => {
-    if (open) setDraft(value || "monthly");
-  }, [open, value]);
-
   return (
-    <>
-      <Pressable
-        disabled={disabled}
-        onPress={() => setOpen(true)}
-        style={({ pressed }) => [
-          styles.selectField,
-          {
-            opacity: pressed ? 0.9 : 1,
-            borderColor,
-            backgroundColor: bgColor,
-          },
-        ]}
+    <View style={[styles.pickerWrap, { borderColor, backgroundColor: bgColor }]}>
+      <Picker
+        enabled={!disabled}
+        selectedValue={value || "monthly"}
+        onValueChange={(v) => onChange(v as Frequency)}
+        dropdownIconColor={isDark ? "rgba(255,255,255,0.8)" : "rgba(15,23,42,0.7)"}
+        style={{ color: textColor }}
+        itemStyle={{ color: textColor, fontSize: 16 }}
       >
-        <Text
-          style={{
-            color: current ? textColor : mutedColor,
-            fontSize: 14,
-            fontWeight: "500",
-          }}
-        >
-          {current || "Select frequency"}
-        </Text>
-        <Ionicons name="chevron-down" size={16} color={mutedColor} />
-      </Pressable>
-
-      <Modal
-        visible={open}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setOpen(false)}
-      >
-        <View style={StyleSheet.absoluteFill}>
-          {/* Removed outer fullscreen BlurView */}
-
-          <Pressable
-            style={StyleSheet.absoluteFill}
-            onPress={() => setOpen(false)}
-          >
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: isDark
-                  ? "rgba(0,0,0,0.35)"
-                  : "rgba(0,0,0,0.18)",
-              }}
-            />
-          </Pressable>
-
-          <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}>
-            <GlassView
-              glassEffectStyle="regular"
-              colorScheme={isDark ? "dark" : "light"}
-              style={[styles.categorySheet, { borderColor }]}
-            >
-              {/* Gradient removed for Liquid Glass */}
-              <View
-                style={[styles.selectHeader, { borderBottomColor: borderColor }]}
-              >
-                <Text
-                  style={{ color: textColor, fontSize: 15, fontWeight: "600" }}
-                >
-                  Frequency
-                </Text>
-                <Text
-                  style={{
-                    color: mutedColor,
-                    marginTop: 2,
-                    fontSize: 12,
-                    fontWeight: "400",
-                  }}
-                >
-                  Choose billing frequency
-                </Text>
-              </View>
-
-              {Platform.OS === "ios" ? (
-                <View style={{ paddingHorizontal: 8, paddingVertical: 10 }}>
-                  <Picker
-                    selectedValue={draft}
-                    onValueChange={(v) => setDraft(v as Frequency)}
-                    itemStyle={{ color: textColor, fontSize: 16 }}
-                  >
-                    {FREQUENCY_OPTIONS.map((f) => (
-                      <Picker.Item
-                        key={f.key}
-                        label={f.label}
-                        value={f.key}
-                      />
-                    ))}
-                  </Picker>
-                </View>
-              ) : (
-                <ScrollView contentContainerStyle={{ padding: 10 }}>
-                  {FREQUENCY_OPTIONS.map((f) => {
-                    const active = f.key === value;
-                    return (
-                      <Pressable
-                        key={f.key}
-                        onPress={() => {
-                          onChange(f.key);
-                          setOpen(false);
-                        }}
-                        style={({ pressed }) => [
-                          styles.selectRow,
-                          {
-                            opacity: pressed ? 0.9 : 1,
-                            borderColor: active
-                              ? "rgba(79,70,229,0.35)"
-                              : borderColor,
-                            backgroundColor: active
-                              ? "rgba(79,70,229,0.10)"
-                              : "transparent",
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={{
-                            color: textColor,
-                            fontSize: 14,
-                            fontWeight: active ? "600" : "500",
-                          }}
-                        >
-                          {f.label}
-                        </Text>
-                        {active ? (
-                          <Ionicons
-                            name="checkmark"
-                            size={18}
-                            color="#4F46E5"
-                          />
-                        ) : null}
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-              )}
-
-              <View
-                style={[styles.selectFooter, { borderTopColor: borderColor }]}
-              >
-                <Pressable
-                  onPress={() => {
-                    if (Platform.OS === "ios") onChange(draft);
-                    setOpen(false);
-                  }}
-                  style={({ pressed }) => [{ opacity: pressed ? 0.88 : 1 }]}
-                >
-                  <GlassView
-                    glassEffectStyle="clear"
-                    isInteractive
-                    colorScheme={isDark ? "dark" : "light"}
-                    style={styles.doneBtn}
-                  >
-                    <Text style={[styles.doneBtnText, { color: isDark ? "rgba(255,255,255,0.88)" : "#1a1a1a" }]}>Done</Text>
-                  </GlassView>
-                </Pressable>
-              </View>
-            </GlassView>
-          </View>
-        </View>
-      </Modal>
-    </>
+        {FREQUENCY_OPTIONS.map((f) => (
+          <Picker.Item key={f.key} label={f.label} value={f.key} />
+        ))}
+      </Picker>
+    </View>
   );
 }
 
@@ -521,6 +206,7 @@ function DateField({
   maximumDate?: Date;
 }) {
   const [show, setShow] = React.useState(false);
+  const { glassStyle } = useGlassStyle();
   const valueDate = React.useMemo(
     () => dateFromYmd(valueYmd || ymdToday()),
     [valueYmd]
@@ -549,7 +235,7 @@ function DateField({
           },
         ]}
       >
-        <Text style={{ color: textColor, fontSize: 14, fontWeight: "500" }}>
+        <Text style={[typography.footnote, { color: textColor }]}>
           {valueYmd || "Select date"}
         </Text>
         <Ionicons name="calendar-outline" size={16} color={mutedColor} />
@@ -577,7 +263,7 @@ function DateField({
 
               <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}>
                 <GlassView
-                  glassEffectStyle="regular"
+                  glassEffectStyle={glassStyle}
                   colorScheme={isDark ? "dark" : "light"}
                   style={[styles.dateSheet, { borderColor }]}
                 >
@@ -586,17 +272,12 @@ function DateField({
                     style={[styles.selectHeader, { borderBottomColor: borderColor }]}
                   >
                     <Text
-                      style={{ color: textColor, fontSize: 15, fontWeight: "600" }}
+                      style={[typography.subheadlineEmphasized, { color: textColor }]}
                     >
                       {title}
                     </Text>
                     <Text
-                      style={{
-                        color: mutedColor,
-                        marginTop: 2,
-                        fontSize: 12,
-                        fontWeight: "400",
-                      }}
+                      style={[typography.caption1, { color: mutedColor, marginTop: 2 }]}
                     >
                       {subtitle}
                     </Text>
@@ -622,7 +303,7 @@ function DateField({
                       style={({ pressed }) => [{ opacity: pressed ? 0.88 : 1 }]}
                     >
                       <GlassView
-                        glassEffectStyle="clear"
+                        glassEffectStyle={glassStyle}
                         isInteractive
                         colorScheme={isDark ? "dark" : "light"}
                         style={styles.doneBtn}
@@ -656,9 +337,9 @@ export default function EditBillingModal({
   onClose,
 }: Props) {
   const { resolvedTheme } = useTheme();
+  const { glassStyle } = useGlassStyle();
   const isDark = resolvedTheme === "dark";
   const { user } = useAuth();
-  const insets = useSafeAreaInsets();
 
   const members: Member[] = useMemo(() => {
     return ((user as any)?.house?.members ?? []) as Member[];
@@ -750,7 +431,7 @@ export default function EditBillingModal({
 
     const inputBg = isDark
       ? "rgba(255,255,255,0.05)"
-      : "rgba(255,255,255,0.70)";
+      : "rgba(0,0,0,0.045)";
     const inputBorder = isDark
       ? "rgba(255,255,255,0.10)"
       : "rgba(0,0,0,0.10)";
@@ -887,48 +568,15 @@ export default function EditBillingModal({
   return (
     <Modal
       visible={open}
-      transparent
-      animationType="fade"
+      animationType="slide"
+      presentationStyle="pageSheet"
       onRequestClose={() => !saving && onClose()}
     >
-      <Pressable
-        style={StyleSheet.absoluteFill}
-        onPress={() => !saving && onClose()}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: isDark
-              ? "rgba(0,0,0,0.35)"
-              : "rgba(0,0,0,0.18)",
-          }}
-        />
-      </Pressable>
-
-      <View
-        style={[
-          StyleSheet.absoluteFillObject,
-          {
-            paddingTop: insets.top,
-            paddingBottom: 0,
-            paddingHorizontal: 0,
-          },
-        ]}
-      >
-        {/* Removed fullscreen BlurView */}
-
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.kav}
         >
-          <View style={styles.center}>
-            <View style={styles.modalWrap}>
-              <GlassView
-                glassEffectStyle="regular"
-                colorScheme={isDark ? "dark" : "light"}
-                style={[styles.modal, { borderColor: T.border }, T.shadow]}
-              >
-                {/* No gradient, no glow, Liquid Glass */}
+              <View style={[styles.modal, { backgroundColor: isDark ? "#0a0a0a" : "#ffffff" }]}>
                 <View
                   style={[styles.header, { borderBottomColor: T.headerBorder }]}
                 >
@@ -950,10 +598,10 @@ export default function EditBillingModal({
                     </View>
 
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.h1, { color: T.text }]}>
+                      <Text style={[typography.headline, { color: T.text }]}>
                         Edit billing
                       </Text>
-                      <Text style={[styles.h2, { color: T.muted }]}>
+                      <Text style={[typography.caption1, styles.h2, { color: T.muted }]}>
                         Update recurring billing details with the same UI style.
                       </Text>
                     </View>
@@ -964,7 +612,7 @@ export default function EditBillingModal({
                 {isLoading ? (
                   <View style={styles.loadingWrap}>
                     <ActivityIndicator color={T.primary} />
-                    <Text style={{ marginTop: 10, color: T.muted }}>
+                    <Text style={[typography.footnote, { marginTop: 10, color: T.muted }]}>
                       Loading billing...
                     </Text>
                   </View>
@@ -1122,7 +770,7 @@ export default function EditBillingModal({
                             },
                           ]}
                         >
-                          <Text style={{ color: T.text, fontWeight: "500" }}>
+                          <Text style={[typography.footnote, { color: T.text }]}>
                             {form.startDate || "N/A"}
                           </Text>
                         </View>
@@ -1160,7 +808,7 @@ export default function EditBillingModal({
                               },
                             ]}
                           >
-                            <Text style={{ color: T.text, fontWeight: "600" }}>
+                            <Text style={[typography.footnoteEmphasized, { color: T.text }]}>
                               Clear end date
                             </Text>
                           </Pressable>
@@ -1172,13 +820,10 @@ export default function EditBillingModal({
                           Skip to next run date (optional)
                         </Text>
                         <Text
-                          style={{
-                            fontSize: 11,
-                            fontWeight: "400",
-                            color: T.muted,
-                            marginTop: 4,
-                            lineHeight: 15,
-                          }}
+                          style={[
+                            typography.caption2,
+                            { color: T.muted, marginTop: 4 },
+                          ]}
                         >
                           Choosing a future date skips all billing cycles until then. The next charge will run on this date instead.
                         </Text>
@@ -1232,9 +877,9 @@ export default function EditBillingModal({
                                 ]}
                               >
                                 <GlassView
-                                  glassEffectStyle={active ? "regular" : "clear"}
+                                  glassEffectStyle={glassStyle}
                                   isInteractive={!saving}
-                                  tintColor={active ? "rgba(79,70,229,0.55)" : undefined}
+                                  tintColor={active ? "rgba(79,70,229,0.55)" : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
                                   colorScheme={isDark ? "dark" : "light"}
                                   style={[
                                     styles.memberChip,
@@ -1243,11 +888,7 @@ export default function EditBillingModal({
                                 >
                                   <View style={[styles.avatar, { borderColor: T.border }]}>
                                     <Text
-                                      style={{
-                                        color: T.text,
-                                        fontWeight: "600",
-                                        fontSize: 11,
-                                      }}
+                                      style={[typography.caption2, { color: T.text, fontWeight: "600" }]}
                                     >
                                       {initials(m.name)}
                                     </Text>
@@ -1256,21 +897,13 @@ export default function EditBillingModal({
                                   <View style={{ minWidth: 140 }}>
                                     <Text
                                       numberOfLines={1}
-                                      style={{
-                                        color: T.text,
-                                        fontWeight: "600",
-                                        fontSize: 13,
-                                      }}
+                                      style={[typography.footnoteEmphasized, { color: T.text }]}
                                     >
                                       {m.name}
                                     </Text>
                                     <Text
                                       numberOfLines={1}
-                                      style={{
-                                        color: T.muted,
-                                        fontWeight: "400",
-                                        fontSize: 12,
-                                      }}
+                                      style={[typography.caption1, { color: T.muted }]}
                                     >
                                       {m.email}
                                     </Text>
@@ -1314,7 +947,7 @@ export default function EditBillingModal({
                                 { opacity: pressed ? 0.85 : 1 },
                               ]}
                             >
-                              <Text style={{ color: T.text, fontWeight: "600" }}>
+                              <Text style={[typography.footnoteEmphasized, { color: T.text }]}>
                                 All
                               </Text>
                             </Pressable>
@@ -1327,7 +960,7 @@ export default function EditBillingModal({
                                   { opacity: pressed ? 0.85 : 1 },
                                 ]}
                               >
-                                <Text style={{ color: T.text, fontWeight: "600" }}>
+                                <Text style={[typography.footnoteEmphasized, { color: T.text }]}>
                                   Just me
                                 </Text>
                               </Pressable>
@@ -1355,9 +988,9 @@ export default function EditBillingModal({
                                 ]}
                               >
                                 <GlassView
-                                  glassEffectStyle={checked ? "regular" : "clear"}
+                                  glassEffectStyle={glassStyle}
                                   isInteractive={!saving}
-                                  tintColor={checked ? "rgba(16,185,129,0.55)" : undefined}
+                                  tintColor={checked ? "rgba(16,185,129,0.55)" : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
                                   colorScheme={isDark ? "dark" : "light"}
                                   style={[
                                     styles.sharedChip,
@@ -1377,11 +1010,7 @@ export default function EditBillingModal({
                                     ]}
                                   />
                                   <Text
-                                    style={{
-                                      color: T.text,
-                                      fontWeight: "600",
-                                      fontSize: 13,
-                                    }}
+                                    style={[typography.footnoteEmphasized, { color: T.text }]}
                                   >
                                     {m.name}
                                   </Text>
@@ -1393,12 +1022,7 @@ export default function EditBillingModal({
 
                         {form.sharedBy.length === 0 ? (
                           <Text
-                            style={{
-                              marginTop: 10,
-                              color: T.danger,
-                              fontWeight: "600",
-                              fontSize: 12,
-                            }}
+                            style={[typography.caption1, { marginTop: 10, color: T.danger, fontWeight: "600" }]}
                           >
                             Select at least 1 member.
                           </Text>
@@ -1423,9 +1047,9 @@ export default function EditBillingModal({
                           style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
                         >
                           <GlassView
-                            glassEffectStyle={form.isActive ? "regular" : "clear"}
+                            glassEffectStyle={glassStyle}
                             isInteractive={!saving}
-                            tintColor={form.isActive ? "rgba(16,185,129,0.55)" : undefined}
+                            tintColor={form.isActive ? "rgba(16,185,129,0.55)" : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
                             colorScheme={isDark ? "dark" : "light"}
                             style={[
                               styles.sharedChip,
@@ -1449,11 +1073,7 @@ export default function EditBillingModal({
                               ]}
                             />
                             <Text
-                              style={{
-                                color: T.text,
-                                fontWeight: "600",
-                                fontSize: 13,
-                              }}
+                              style={[typography.footnoteEmphasized, { color: T.text }]}
                             >
                               {form.isActive ? "Active" : "Inactive"}
                             </Text>
@@ -1471,15 +1091,11 @@ export default function EditBillingModal({
                             },
                           ]}
                         >
-                          <Text style={{ color: T.danger, fontWeight: "600" }}>
+                          <Text style={[typography.footnoteEmphasized, { color: T.danger }]}>
                             Can’t save
                           </Text>
                           <Text
-                            style={{
-                              color: T.danger,
-                              marginTop: 4,
-                              fontWeight: "400",
-                            }}
+                            style={[typography.footnote, { color: T.danger, marginTop: 4 }]}
                           >
                             {error}
                           </Text>
@@ -1503,12 +1119,13 @@ export default function EditBillingModal({
                         style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.9 : 1 }]}
                       >
                         <GlassView
-                          glassEffectStyle="clear"
+                          glassEffectStyle={glassStyle}
                           isInteractive={!saving}
+                          tintColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
                           colorScheme={isDark ? "dark" : "light"}
                           style={[styles.footerBtn, { borderColor: T.border }]}
                         >
-                          <Text style={{ color: T.text, fontWeight: "600" }}>
+                          <Text style={[typography.subheadlineEmphasized, { color: T.text }]}>
                             Cancel
                           </Text>
                         </GlassView>
@@ -1520,7 +1137,7 @@ export default function EditBillingModal({
                         style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.92 : 1 }]}
                       >
                         <GlassView
-                          glassEffectStyle="regular"
+                          glassEffectStyle={glassStyle}
                           isInteractive={!saving}
                           tintColor={T.primary}
                           colorScheme={isDark ? "dark" : "light"}
@@ -1529,7 +1146,7 @@ export default function EditBillingModal({
                           {saving ? (
                             <ActivityIndicator color="#fff" />
                           ) : (
-                            <Text style={{ color: "#fff", fontWeight: "600" }}>
+                            <Text style={[typography.subheadlineEmphasized, { color: "#fff" }]}>
                               Save changes
                             </Text>
                           )}
@@ -1538,11 +1155,8 @@ export default function EditBillingModal({
                     </View>
                   </Animated.View>
                 )}
-              </GlassView>
-            </View>
-          </View>
+              </View>
         </KeyboardAvoidingView>
-      </View>
     </Modal>
   );
 }
@@ -1550,28 +1164,6 @@ export default function EditBillingModal({
 const styles = StyleSheet.create({
   root: { flex: 1 },
   kav: { flex: 1 },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "transparent",
-  },
-  categorySheet: {
-    borderRadius: 16,
-    overflow: "hidden",
-    // borderWidth: StyleSheet.hairlineWidth,
-    maxHeight: "70%",
-    width: "100%",
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  modalWrap: {
-    width: "100%",
-    flex: 1,
-    borderRadius: 24,
-    overflow: "hidden",
-  },
   modal: {
     flex: 1,
     borderRadius: 24,
@@ -1594,8 +1186,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  h1: { fontSize: 16, fontWeight: "600" },
-  h2: { marginTop: 2, fontSize: 12, fontWeight: "400", lineHeight: 16 },
+  h2: { marginTop: 2 },
   body: { padding: 16, paddingBottom: 18, gap: 14 },
   blockHeader: {
     flexDirection: "row",
@@ -1603,14 +1194,9 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 8,
   },
-  blockTitle: { fontSize: 14, fontWeight: "600" },
-  blockSub: {
-    marginTop: 2,
-    fontSize: 12,
-    fontWeight: "400",
-    lineHeight: 16,
-  },
-  label: { fontSize: 12, fontWeight: "500" },
+  blockTitle: { ...typography.footnoteEmphasized },
+  blockSub: { ...typography.caption1, marginTop: 2 },
+  label: { ...typography.caption1 },
   input: {
     marginTop: 8,
     // borderWidth: StyleSheet.hairlineWidth,
@@ -1683,6 +1269,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
   },
+  pickerWrap: {
+    marginTop: 8,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
   selectField: {
     marginTop: 8,
     // borderWidth: StyleSheet.hairlineWidth,
@@ -1699,25 +1290,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 18,
   },
-  selectSheet: {
-    borderRadius: 16,
-    overflow: "hidden",
-    // borderWidth: StyleSheet.hairlineWidth,
-    maxHeight: "70%",
-  },
   selectHeader: {
     padding: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  selectRow: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    // borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
   },
   selectFooter: {
     padding: 12,
@@ -1732,8 +1307,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   doneBtnText: {
-    fontSize: 15,
-    fontWeight: "700" as const,
+    ...typography.subheadlineEmphasized,
     letterSpacing: 0.2,
   },
   dateSheet: {

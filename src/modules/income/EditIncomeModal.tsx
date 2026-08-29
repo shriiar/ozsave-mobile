@@ -19,9 +19,10 @@ import { Picker } from "@react-native-picker/picker";
 import { useQuery } from "@tanstack/react-query";
 
 import { useTheme } from "@/src/context/ThemeContext";
+import { useGlassStyle } from "@/src/context/GlassStyleContext";
 import { IncomeApi, FullIncome, IncomeSource, IncomeStatus, IncomeType } from "./api";
 import { useUpdateIncome } from "./hooks/useIncomeApi";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { typography } from "@/src/theme/typography";
 
 type FormState = {
   name: string;
@@ -92,6 +93,7 @@ function DateField({
   mutedColor: string;
 }) {
   const [show, setShow] = React.useState(false);
+  const { glassStyle } = useGlassStyle();
   const valueDate = React.useMemo(() => dateFromYmd(valueYmd), [valueYmd]);
 
   function onChange(_: DateTimePickerEvent, selected?: Date) {
@@ -113,7 +115,7 @@ function DateField({
           { opacity: pressed ? 0.9 : 1, borderColor, backgroundColor: bgColor },
         ]}
       >
-        <Text style={{ color: textColor, fontSize: 14, fontWeight: "500" }}>
+        <Text style={[typography.footnote, { color: textColor }]}>
           {valueYmd || "Select date"}
         </Text>
         <Ionicons name="calendar-outline" size={16} color={mutedColor} />
@@ -134,13 +136,13 @@ function DateField({
 
               <View style={[styles.modalOverlay, { backgroundColor: "transparent" }]}>
                 <GlassView
-                  glassEffectStyle="regular"
+                  glassEffectStyle={glassStyle}
                   colorScheme={isDark ? "dark" : "light"}
                   style={[styles.dateSheet, { borderColor }]}
                 >
                   <View style={[styles.selectHeader, { borderBottomColor: borderColor }]}>
-                    <Text style={{ color: textColor, fontSize: 15, fontWeight: "600" }}>Select date</Text>
-                    <Text style={{ color: mutedColor, marginTop: 2, fontSize: 12, fontWeight: "400" }}>
+                    <Text style={[typography.subheadlineEmphasized, { color: textColor }]}>Select date</Text>
+                    <Text style={[typography.caption1, { color: mutedColor, marginTop: 2 }]}>
                       Pick a day
                     </Text>
                   </View>
@@ -161,7 +163,7 @@ function DateField({
                       style={({ pressed }) => [{ opacity: pressed ? 0.88 : 1 }]}
                     >
                       <GlassView
-                        glassEffectStyle="clear"
+                        glassEffectStyle={glassStyle}
                         isInteractive
                         colorScheme={isDark ? "dark" : "light"}
                         style={styles.doneBtn}
@@ -219,8 +221,8 @@ function IncomeTypeSelect({
 
 export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
   const { resolvedTheme } = useTheme();
+  const { glassStyle } = useGlassStyle();
   const isDark = resolvedTheme === "dark";
-  const insets = useSafeAreaInsets();
 
   const update = useUpdateIncome();
   const saving = update.isPending;
@@ -251,7 +253,7 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
     const headerBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
     const text = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
     const muted = isDark ? "rgba(148,163,184,0.82)" : "#64748B";
-    const inputBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.70)";
+    const inputBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.045)";
     const inputBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
     const primary = "#4F46E5";
     const danger = isDark ? "#FCA5A5" : "#B91C1C";
@@ -398,29 +400,14 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
   if (!open) return null;
 
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={() => !saving && onClose()}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={() => !saving && onClose()}>
-        <View style={{ flex: 1, backgroundColor: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.18)" }} />
-      </Pressable>
-
-      <View
-        style={[
-          StyleSheet.absoluteFillObject,
-          {
-            paddingTop: insets.top,
-            paddingBottom: 0,
-            paddingHorizontal: 0,
-          },
-        ]}
-      >
+    <Modal
+      visible={open}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={() => !saving && onClose()}
+    >
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.kav}>
-          <View style={styles.center}>
-            <View style={styles.modalWrap}>
-              <GlassView
-                glassEffectStyle="regular"
-                colorScheme={isDark ? "dark" : "light"}
-                style={[styles.modal, { borderColor: T.border }, T.shadow]}
-              >
+              <View style={[styles.modal, { backgroundColor: isDark ? "#0a0a0a" : "#ffffff" }]}>
 
                 {/* Header */}
                 <View style={[styles.header, { borderBottomColor: T.headerBorder }]}>
@@ -430,8 +417,8 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                     </View>
 
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.h1, { color: T.text }]}>Edit income</Text>
-                      <Text style={[styles.h2, { color: T.muted }]}>Changes update your analytics.</Text>
+                      <Text style={[typography.headline, { color: T.text }]}>Edit income</Text>
+                      <Text style={[typography.caption1, styles.h2, { color: T.muted }]}>Changes update your analytics.</Text>
                     </View>
                   </View>
                 </View>
@@ -441,7 +428,7 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                   {showLoading ? (
                     <View style={styles.loadingWrap}>
                       <ActivityIndicator color={T.primary} />
-                      <Text style={{ marginTop: 10, color: T.muted }}>
+                      <Text style={[typography.footnote, { marginTop: 10, color: T.muted }]}>
                         {isError ? "Failed to load income..." : "Loading income..."}
                       </Text>
                     </View>
@@ -488,7 +475,7 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
 
                         <Text style={[styles.label, { color: T.muted, marginTop: 12 }]}>Source</Text>
                         <View style={[styles.selectField, { borderColor: T.inputBorder, backgroundColor: T.inputBg, opacity: 0.7 }]}>
-                          <Text style={{ color: T.text, fontSize: 14, fontWeight: "500" }}>
+                          <Text style={[typography.footnote, { color: T.text }]}>
                             {SOURCE_OPTIONS.find((x) => x === form.source) ?? "manual"}
                           </Text>
                           <Ionicons name="lock-closed-outline" size={16} color={T.muted} />
@@ -514,7 +501,7 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                           style={[styles.input, { color: T.text, backgroundColor: T.inputBg, borderColor: T.inputBorder }]}
                           editable={!disabled}
                         />
-                        <Text style={{ marginTop: 6, color: T.muted, fontSize: 11 }}>
+                        <Text style={[typography.caption2, { marginTop: 6, color: T.muted }]}>
                           Comma separated, max 20 tags.
                         </Text>
 
@@ -543,8 +530,8 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                         { borderColor: "rgba(239,68,68,0.30)", backgroundColor: "rgba(239,68,68,0.10)" },
                       ]}
                     >
-                      <Text style={{ color: T.danger, fontWeight: "600" }}>Can’t save</Text>
-                      <Text style={{ color: T.danger, marginTop: 4, fontWeight: "400" }}>{error}</Text>
+                      <Text style={[typography.footnoteEmphasized, { color: T.danger }]}>Can’t save</Text>
+                      <Text style={[typography.footnote, { color: T.danger, marginTop: 4 }]}>{error}</Text>
                     </View>
                   ) : null}
                 </ScrollView>
@@ -566,12 +553,13 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                     style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.9 : 1 }]}
                   >
                     <GlassView
-                      glassEffectStyle="clear"
+                      glassEffectStyle={glassStyle}
                       isInteractive={!saving}
+                      tintColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
                       colorScheme={isDark ? "dark" : "light"}
                       style={[styles.footerBtn, { borderColor: T.border }]}
                     >
-                      <Text style={{ color: T.text, fontWeight: "600" }}>Cancel</Text>
+                      <Text style={[typography.subheadlineEmphasized, { color: T.text }]}>Cancel</Text>
                     </GlassView>
                   </Pressable>
 
@@ -581,21 +569,18 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                     style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.92 : 1 }]}
                   >
                     <GlassView
-                      glassEffectStyle="regular"
+                      glassEffectStyle={glassStyle}
                       isInteractive={!saving && !showLoading}
                       tintColor={T.primary}
                       colorScheme={isDark ? "dark" : "light"}
                       style={styles.footerBtnPrimary}
                     >
-                      {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontWeight: "600" }}>Save changes</Text>}
+                      {saving ? <ActivityIndicator color="#fff" /> : <Text style={[typography.subheadlineEmphasized, { color: "#fff" }]}>Save changes</Text>}
                     </GlassView>
                   </Pressable>
                 </View>
-              </GlassView>
-            </View>
-          </View>
+              </View>
         </KeyboardAvoidingView>
-      </View>
     </Modal>
   );
 }
@@ -603,19 +588,6 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   kav: { flex: 1 },
-
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-
-  modalWrap: {
-    width: "100%",
-    flex: 1,
-    borderRadius: 24,
-    overflow: "hidden",
-  },
 
   modal: {
     flex: 1,
@@ -649,8 +621,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  h1: { fontSize: 16, fontWeight: "600" },
-  h2: { marginTop: 2, fontSize: 12, fontWeight: "400", lineHeight: 16 },
+  h2: { marginTop: 2 },
 
   body: { padding: 16, paddingBottom: 18, gap: 14 },
 
@@ -660,10 +631,10 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   blockHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 8 },
-  blockTitle: { fontSize: 14, fontWeight: "600" },
-  blockSub: { marginTop: 2, fontSize: 12, fontWeight: "400", lineHeight: 16 },
+  blockTitle: { ...typography.footnoteEmphasized },
+  blockSub: { ...typography.caption1, marginTop: 2 },
 
-  label: { fontSize: 12, fontWeight: "500" },
+  label: { ...typography.caption1 },
 
   input: {
     marginTop: 8,
@@ -753,8 +724,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   doneBtnText: {
-    fontSize: 15,
-    fontWeight: "700",
+    ...typography.subheadlineEmphasized,
     letterSpacing: 0.2,
   },
 

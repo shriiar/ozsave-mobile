@@ -18,10 +18,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
+import { useGlassStyle } from "../../src/context/GlassStyleContext";
+import { typography } from "../../src/theme/typography";
 // Old pill nav bar shell — replaced by the native tab bar at app/(user)/_layout.tsx.
 // Kept for reference/rollback, not currently used.
 // import DashboardShell from "../../src/modules/shell/DashboardShell";
 import { useScrollToTop } from "../../src/hooks/useScrollToTop";
+import { useRemountOnThemeRefocus } from "../../src/hooks/useRemountOnThemeRefocus";
 
 import type { BillingRow } from "../../src/modules/billing/api";
 import { useInfiniteBillings } from "../../src/modules/billing/hooks/useBillingApi";
@@ -48,26 +51,6 @@ function capitalize(s?: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function AnimatedListItem({ index, children }: { index: number; children: React.ReactNode }) {
-  // Only animates `transform`, never `opacity` — animating opacity on an
-  // ancestor of a GlassView permanently breaks its native glass rendering
-  // on iOS 26.1+ (https://github.com/expo/expo/issues/41024).
-  const scale = useRef(new Animated.Value(0.94)).current;
-
-  useEffect(() => {
-    const delay = Math.min(index, 6) * 55;
-    const t = setTimeout(() => {
-      Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 14, mass: 0.7, stiffness: 180 }).start();
-    }, delay);
-    return () => clearTimeout(t);
-  }, []);
-
-  return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-      {children}
-    </Animated.View>
-  );
-}
 
 function BillingCard({
   item,
@@ -86,8 +69,14 @@ function BillingCard({
   onSwipeOpen: (id: string, closeFn: () => void) => void;
   onSwipeClose: (id: string) => void;
 }) {
+  const { glassStyle } = useGlassStyle();
   const swipeRef = useRef<Swipeable>(null);
   const closeSelf = () => swipeRef.current?.close();
+  // Pressable only cancels its own tap when the touch leaves its bounds —
+  // a straight horizontal swipe never does, so it fires onPress even
+  // while Swipeable is also reacting to the same drag. This flag, driven
+  // by Swipeable's own native gesture callback, is the reliable signal.
+  const isSwipingRef = useRef(false);
 
   const T = useMemo(() => {
     const cardGrad = isDark
@@ -106,12 +95,10 @@ function BillingCard({
     progress: Animated.AnimatedInterpolation<number>,
     _dragX: Animated.AnimatedInterpolation<number>
   ) {
-    const opacity = progress.interpolate({
-      inputRange: [0, 0.25, 1],
-      outputRange: [0, 0.65, 1],
-      extrapolate: "clamp",
-    });
-
+    // Only transform (scale/translateX) — never opacity here. Opacity on
+    // a GlassView ancestor permanently breaks its native rendering on
+    // iOS 26.1+ (falls back to flat/colorless), which is why the red
+    // tint disappeared when this animation briefly included opacity.
     const scale = progress.interpolate({
       inputRange: [0, 0.6, 1],
       outputRange: [0.3, 1.15, 1],
@@ -127,17 +114,24 @@ function BillingCard({
     return (
       <View style={styles.swipeActionsWrap}>
         <Animated.View
-          style={[styles.deleteAction, { opacity, transform: [{ translateX }, { scale }] }]}
+          style={[styles.deleteAction, { transform: [{ translateX }, { scale }] }]}
         >
           <Pressable
             onPress={() => {
               swipeRef.current?.close();
               onDelete(item._id, item.name);
             }}
-            style={({ pressed }) => [styles.deleteBtn, { opacity: pressed ? 0.86 : 1 }]}
+            style={({ pressed }) => [{ opacity: pressed ? 0.86 : 1 }]}
             hitSlop={10}
           >
-            <Ionicons name="trash-outline" size={18} color="#fff" />
+            <GlassView
+              glassEffectStyle={glassStyle}
+              tintColor="rgba(239,68,68,0.95)"
+              colorScheme={isDark ? "dark" : "light"}
+              style={styles.deleteBtn}
+            >
+              <Ionicons name="trash-outline" size={18} color="#fff" />
+            </GlassView>
           </Pressable>
         </Animated.View>
       </View>
@@ -151,15 +145,25 @@ function BillingCard({
       rightThreshold={28}
       overshootRight={false}
       friction={1.8}
-      activeOffsetX={[-12, 12]}
-      failOffsetY={[-10, 10]}
+      activeOffsetX={[-8, 8]}
+      failOffsetY={[-20, 20]}
       dragOffsetFromRightEdge={24}
-      onSwipeableOpenStartDrag={() => onSwipeStart(item._id)}
-      onSwipeableOpen={() => onSwipeOpen(item._id, closeSelf)}
-      onSwipeableClose={() => onSwipeClose(item._id)}
+      onSwipeableOpenStartDrag={() => {
+        isSwipingRef.current = true;
+        onSwipeStart(item._id);
+      }}
+      onSwipeableOpen={() => {
+        isSwipingRef.current = false;
+        onSwipeOpen(item._id, closeSelf);
+      }}
+      onSwipeableClose={() => {
+        isSwipingRef.current = false;
+        onSwipeClose(item._id);
+      }}
     >
       <Pressable
         onPress={() => {
+          if (isSwipingRef.current) return;
           swipeRef.current?.close();
           onPress(item._id);
         }}
@@ -167,8 +171,7 @@ function BillingCard({
       >
         <View style={styles.cardWrap}>
           <GlassView
-            glassEffectStyle="clear"
-            isInteractive
+            glassEffectStyle={glassStyle}
             tintColor={isDark ? "rgba(0,0,0,0.55)" : undefined}
             colorScheme={isDark ? "dark" : "light"}
             style={[styles.card, { borderColor: T.ring }]}
@@ -282,7 +285,9 @@ function BillingCard({
 }
 
 export default function BillingScreen() {
-  const listRef = useScrollToTop<FlatList>();
+  const listRef = useScrollToTop<FlatList>("/billing");
+  const remountKey = useRemountOnThemeRefocus();
+  const { glassStyle } = useGlassStyle();
 
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -293,6 +298,7 @@ export default function BillingScreen() {
   const bottomSpace = TOPBAR_H + insets.bottom + 16;
   const [headerHeight, setHeaderHeight] = useState(insets.top + 92);
   const headerGap = 8;
+  const topInset = headerHeight + headerGap;
 
   const spinner = isDark ? "rgba(255,255,255,0.92)" : "rgba(15,23,42,0.85)";
   const androidBg = isDark ? "rgba(10,10,10,0.90)" : "rgba(255,255,255,0.95)";
@@ -419,9 +425,9 @@ export default function BillingScreen() {
 
   return (
     <>
-      <View style={[styles.screen, isDark && { backgroundColor: "#0a0a0a" }]}>
+      <View key={remountKey} style={[styles.screen, isDark && { backgroundColor: "#0a0a0a" }]}>
         <GlassView
-          glassEffectStyle="regular"
+          glassEffectStyle={glassStyle}
           colorScheme={isDark ? "dark" : "light"}
           onLayout={(e) => {
             const next = Math.ceil(e.nativeEvent.layout.height);
@@ -437,10 +443,10 @@ export default function BillingScreen() {
         >
           <View style={[styles.headerRow, { marginBottom: 10 }]}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.h1, { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" }]}>
+              <Text style={[typography.headline, { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" }]}>
                 Billing
               </Text>
-              <Text style={[styles.h2, { color: isDark ? "rgba(148,163,184,0.95)" : "#64748B" }]}>
+              <Text style={[typography.footnote, styles.h2, { color: isDark ? "rgba(148,163,184,0.95)" : "#64748B" }]}>
                 Track recurring subscriptions for this house.
               </Text>
             </View>
@@ -451,7 +457,7 @@ export default function BillingScreen() {
             >
               <View style={styles.addBtn}>
                 <GlassView
-                  glassEffectStyle="regular"
+                  glassEffectStyle={glassStyle}
                   isInteractive
                   colorScheme={isDark ? "dark" : "light"}
                   style={StyleSheet.absoluteFillObject}
@@ -484,13 +490,13 @@ export default function BillingScreen() {
           <View
             style={{
               flex: 1,
-              paddingTop: headerHeight + headerGap,
+              paddingTop: topInset,
               paddingBottom: bottomSpace,
             }}
           >
             <View style={styles.center}>
               <ActivityIndicator />
-              <Text style={{ marginTop: 10, opacity: 0.7 }}>Loading billings...</Text>
+              <Text style={[typography.footnote, { marginTop: 10, opacity: 0.7 }]}>Loading billings...</Text>
             </View>
           </View>
         ) : (
@@ -502,7 +508,7 @@ export default function BillingScreen() {
             showsVerticalScrollIndicator={false}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{
-              paddingTop: headerHeight + headerGap,
+              paddingTop: topInset,
               paddingBottom: bottomSpace,
               flexGrow: 1,
             }}
@@ -510,18 +516,16 @@ export default function BillingScreen() {
             bounces
             onScrollBeginDrag={closeAllSwipes}
             onMomentumScrollBegin={closeAllSwipes}
-            renderItem={({ item, index }) => (
-              <AnimatedListItem index={index}>
-                <BillingCard
-                  item={item}
-                  isDark={isDark}
-                  onPress={openEdit}
-                  onDelete={openDelete}
-                  onSwipeStart={onSwipeStart}
-                  onSwipeOpen={onSwipeOpen}
-                  onSwipeClose={onSwipeClose}
-                />
-              </AnimatedListItem>
+            renderItem={({ item }) => (
+              <BillingCard
+                item={item}
+                isDark={isDark}
+                onPress={openEdit}
+                onDelete={openDelete}
+                onSwipeStart={onSwipeStart}
+                onSwipeOpen={onSwipeOpen}
+                onSwipeClose={onSwipeClose}
+              />
             )}
             refreshControl={
               <RefreshControl
@@ -530,14 +534,14 @@ export default function BillingScreen() {
                 tintColor={spinner}
                 colors={[spinner]}
                 progressBackgroundColor={androidBg}
-                progressViewOffset={headerHeight + headerGap}
+                progressViewOffset={topInset}
               />
             }
             onEndReached={onEndReached}
             onEndReachedThreshold={0.6}
             ListEmptyComponent={
               <View style={styles.empty}>
-                <Text style={{ opacity: 0.7 }}>No billings yet. Tap Add.</Text>
+                <Text style={[typography.footnote, { opacity: 0.7 }]}>No billings yet. Tap Add.</Text>
               </View>
             }
             ListFooterComponent={<ListFooter />}
@@ -587,8 +591,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
 
-  h1: { fontSize: 18, fontWeight: "700" },
-  h2: { marginTop: 2, fontSize: 13, lineHeight: 18 },
+  h2: { marginTop: 2 },
 
   addBtn: {
     minHeight: 40,
@@ -600,7 +603,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     // borderWidth: StyleSheet.hairlineWidth,
   },
-  addBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+  addBtnText: { ...typography.footnoteEmphasized, color: "#fff" },
 
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   empty: { paddingVertical: 28, alignItems: "center" },
@@ -631,9 +634,9 @@ const styles = StyleSheet.create({
     height: 56,
     width: 56,
     borderRadius: 18,
-    backgroundColor: "rgba(239,68,68,0.95)",
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
 
   row: {
@@ -656,15 +659,12 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
 
-  TextHero: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
+  TextHero: { ...typography.bodyEmphasized },
 
   subText: {
-    marginTop: 3,
-    fontSize: 12.5,
+    ...typography.caption1,
     fontWeight: "700",
+    marginTop: 3,
   },
 
   miniStatsRow: {
@@ -681,8 +681,8 @@ const styles = StyleSheet.create({
   },
 
   miniPillText: {
-    fontSize: 12,
-    fontWeight: "800",
+    ...typography.caption1,
+    fontWeight: "700",
   },
 
   rightBadge: {
@@ -695,15 +695,15 @@ const styles = StyleSheet.create({
   },
 
   badgeTop: {
-    fontSize: 11,
-    fontWeight: "900",
+    ...typography.caption2,
+    fontWeight: "800",
     opacity: 0.9,
   },
 
   badgeBottom: {
+    ...typography.caption1,
+    fontWeight: "700",
     marginTop: 4,
-    fontSize: 12,
-    fontWeight: "800",
   },
 
   rightBubble: {

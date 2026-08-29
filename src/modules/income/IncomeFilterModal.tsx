@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import {
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,12 +9,12 @@ import {
   View,
 } from "react-native";
 import { GlassView } from "expo-glass-effect";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/src/context/ThemeContext";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { useGlassStyle } from "@/src/context/GlassStyleContext";
 import { Picker } from "@react-native-picker/picker";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { DateRangePicker } from "@/src/components/DateRangePicker";
+import { typography } from "@/src/theme/typography";
 
 import type { IncomeSource, IncomeType } from "@/src/modules/income/api";
 
@@ -45,25 +44,6 @@ function isInvalidRange(from: string, to: string) {
   return !!from && !!to && from > to;
 }
 
-function parseYMD(s: string): Date | null {
-  if (!s) return null;
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s.trim());
-  if (!m) return null;
-  const y = Number(m[1]);
-  const mo = Number(m[2]);
-  const d = Number(m[3]);
-  const dt = new Date(y, mo - 1, d);
-  if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
-  return dt;
-}
-
-function toYMD(dt: Date): string {
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, "0");
-  const d = String(dt.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
 export default function IncomeFilterModal({
   open,
   draft,
@@ -73,21 +53,8 @@ export default function IncomeFilterModal({
   onClose,
 }: Props) {
   const { resolvedTheme } = useTheme();
+  const { glassStyle } = useGlassStyle();
   const isDark = resolvedTheme === "dark";
-  const insets = useSafeAreaInsets();
-
-  const [picking, setPicking] = useState<null | "from" | "to">(null);
-
-  const fromDate = useMemo(() => parseYMD(draft.from), [draft.from]);
-  const toDate = useMemo(() => parseYMD(draft.to), [draft.to]);
-
-  function openPicker(which: "from" | "to") {
-    setPicking(which);
-  }
-
-  function closePicker() {
-    setPicking(null);
-  }
 
   const T = useMemo(() => {
     const surfaceGrad = isDark
@@ -107,37 +74,18 @@ export default function IncomeFilterModal({
   }, [isDark]);
 
   const invalidRange = isInvalidRange(draft.from, draft.to);
-  const pickerTextColor = isDark ? "#FFFFFF" : "#0F172A";
 
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
-      {/* Backdrop */}
-      <Pressable style={styles.backdrop} onPress={onClose} />
-
+    <Modal
+      visible={open}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
       {/* Panel */}
-      <View
-        style={[
-          styles.panelWrap,
-          {
-            paddingTop: insets.top + 12,
-            paddingBottom: 0,
-            paddingHorizontal: 0,
-          },
-        ]}
-      >
+      <View style={[styles.panelWrap, { paddingTop: 12, backgroundColor: isDark ? "#0a0a0a" : "#ffffff" }]}>
         <View style={styles.panelShadow}>
-          <GlassView
-            glassEffectStyle="regular"
-            colorScheme={isDark ? "dark" : "light"}
-            style={[styles.panel, { borderColor: T.ring }]}
-          >
-            <LinearGradient
-              colors={T.surfaceGrad as any}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-
+          <View style={[styles.panel, { backgroundColor: isDark ? "#0a0a0a" : "#ffffff" }]}>
             {/* Header */}
             <View style={styles.header}>
               <View style={{ flex: 1 }}>
@@ -227,93 +175,39 @@ export default function IncomeFilterModal({
               </View>
 
               {/* Date range */}
-              <View style={{ flexDirection: "row", gap: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.label, { color: T.muted }]}>From</Text>
-                  <Pressable
-                    onPress={() => openPicker("from")}
-                    style={({ pressed }) => [
-                      styles.input,
-                      { backgroundColor: T.tile, borderColor: T.ring, opacity: pressed ? 0.9 : 1 },
-                    ]}
-                  >
-                    <Text style={[styles.inputText, { color: draft.from ? T.text : T.muted }]}>
-                      {draft.from || "Select date"}
-                    </Text>
-                  </Pressable>
+              <View>
+                <View style={styles.dateRangeHeader}>
+                  <Text style={[styles.label, { color: T.muted, marginBottom: 0 }]}>Date range</Text>
+                  {draft.from ? (
+                    <Pressable
+                      onPress={() => setDraft({ ...draft, from: "", to: "" })}
+                      style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                    >
+                      <Text style={[styles.clearRangeText, { color: T.text }]}>Clear</Text>
+                    </Pressable>
+                  ) : null}
                 </View>
 
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.label, { color: T.muted }]}>To</Text>
-                  <Pressable
-                    onPress={() => openPicker("to")}
-                    style={({ pressed }) => [
-                      styles.input,
-                      { backgroundColor: T.tile, borderColor: T.ring, opacity: pressed ? 0.9 : 1 },
-                    ]}
-                  >
-                    <Text style={[styles.inputText, { color: draft.to ? T.text : T.muted }]}>
-                      {draft.to || "Select date"}
-                    </Text>
-                  </Pressable>
-                </View>
+                <Text style={[styles.rangeSummary, { color: draft.from ? T.text : T.muted }]}>
+                  {draft.from
+                    ? draft.to && draft.to !== draft.from
+                      ? `${draft.from} → ${draft.to}`
+                      : draft.from
+                    : "Tap a start day, then an end day"}
+                </Text>
+
+                <DateRangePicker
+                  from={draft.from}
+                  to={draft.to}
+                  onChange={(next) => setDraft({ ...draft, ...next })}
+                  isDark={isDark}
+                  text={T.text}
+                  muted={T.muted}
+                  tile={T.tile}
+                  ring={T.ring}
+                  primary={T.primary}
+                />
               </View>
-
-              {invalidRange ? (
-                <View
-                  style={[
-                    styles.errorBox,
-                    {
-                      backgroundColor: isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.10)",
-                      borderColor: T.danger,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.errorText,
-                      { color: isDark ? "rgba(252,165,165,0.95)" : "rgba(185,28,28,0.95)" },
-                    ]}
-                  >
-                    Invalid date range: "From" must be before "To".
-                  </Text>
-                </View>
-              ) : null}
-
-              {/* Inline picker block */}
-              {picking ? (
-                <View style={[styles.pickerWrap, { borderColor: T.ring, backgroundColor: T.tile }]}>
-                  <View style={styles.pickerHeader}>
-                    <Text style={[styles.pickerTitle, { color: T.text }]}>
-                      {picking === "from" ? "Pick From date" : "Pick To date"}
-                    </Text>
-
-                    {Platform.OS === "ios" ? (
-                      <Pressable onPress={closePicker} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
-                        <Text style={[styles.pickerDone, { color: T.text }]}>Done</Text>
-                      </Pressable>
-                    ) : null}
-                  </View>
-
-                  <DateTimePicker
-                    value={(picking === "from" ? fromDate : toDate) ?? new Date()}
-                    mode="date"
-                    display={Platform.OS === "ios" ? "inline" : "default"}
-                    textColor={pickerTextColor as any}
-                    // @ts-ignore
-                    themeVariant={isDark ? "dark" : "light"}
-                    onChange={(_, selected) => {
-                      if (!selected) return;
-                      const next = toYMD(selected);
-
-                      if (picking === "from") setDraft({ ...draft, from: next });
-                      else setDraft({ ...draft, to: next });
-
-                      if (Platform.OS !== "ios") closePicker();
-                    }}
-                  />
-                </View>
-              ) : null}
 
               {/* Sort */}
               <View>
@@ -338,7 +232,7 @@ export default function IncomeFilterModal({
                     style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
                   >
                     <GlassView
-                      glassEffectStyle="clear"
+                      glassEffectStyle={glassStyle}
                       isInteractive
                       colorScheme={isDark ? "dark" : "light"}
                       style={[styles.sortDirBtn, { borderColor: T.ring }]}
@@ -358,20 +252,19 @@ export default function IncomeFilterModal({
                 styles.footer,
                 {
                   borderTopColor: T.ring,
-                  paddingBottom: Math.max(insets.bottom, 10) + 22,
+                  paddingTop: 14,
+                  paddingBottom: 40,
                 },
               ]}
             >
               <Pressable
-                onPress={() => {
-                  closePicker();
-                  onClear();
-                }}
+                onPress={onClear}
                 style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.85 : 1 }]}
               >
                 <GlassView
-                  glassEffectStyle="clear"
+                  glassEffectStyle={glassStyle}
                   isInteractive
+                  tintColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
                   colorScheme={isDark ? "dark" : "light"}
                   style={[styles.btnGhost, { borderColor: T.ring }]}
                 >
@@ -381,14 +274,11 @@ export default function IncomeFilterModal({
 
               <Pressable
                 disabled={invalidRange}
-                onPress={() => {
-                  closePicker();
-                  onApply();
-                }}
+                onPress={onApply}
                 style={({ pressed }) => [{ flex: 1 }, { opacity: invalidRange ? 0.4 : pressed ? 0.88 : 1 }]}
               >
                 <GlassView
-                  glassEffectStyle="regular"
+                  glassEffectStyle={glassStyle}
                   isInteractive={!invalidRange}
                   tintColor={T.primary}
                   colorScheme={isDark ? "dark" : "light"}
@@ -398,7 +288,7 @@ export default function IncomeFilterModal({
                 </GlassView>
               </Pressable>
             </View>
-          </GlassView>
+          </View>
         </View>
       </View>
     </Modal>
@@ -406,11 +296,6 @@ export default function IncomeFilterModal({
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.40)",
-  },
-
   panelWrap: {
     ...StyleSheet.absoluteFillObject,
   },
@@ -438,8 +323,8 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingBottom: 10,
   },
-  title: { fontSize: 16, fontWeight: "700" },
-  subtitle: { marginTop: 2, fontSize: 12.5, fontWeight: "700" },
+  title: { ...typography.headline },
+  subtitle: { ...typography.caption1, marginTop: 2 },
 
   iconBtn: {
     height: 34,
@@ -459,7 +344,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
 
-  label: { fontSize: 12, fontWeight: "800", marginBottom: 6 },
+  label: { ...typography.caption1, fontWeight: "700", marginBottom: 6 },
 
   tile: {
     borderRadius: 16,
@@ -478,36 +363,18 @@ const styles = StyleSheet.create({
 
   textInput: {
     flex: 1,
-    fontSize: 12.5,
-    fontWeight: "800",
+    ...typography.footnoteEmphasized,
     paddingVertical: 0,
   },
 
-  input: {
-    height: 44,
-    borderRadius: 16,
-    // borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 12,
-    justifyContent: "center",
-  },
-  inputText: { fontSize: 12.5, fontWeight: "800" },
-
-  pickerWrap: {
-    borderRadius: 16,
-    // borderWidth: StyleSheet.hairlineWidth,
-    overflow: "hidden",
-    paddingBottom: 8,
-  },
-  pickerHeader: {
+  dateRangeHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 8,
+    marginBottom: 6,
   },
-  pickerTitle: { fontSize: 12.5, fontWeight: "700" },
-  pickerDone: { fontSize: 12.5, fontWeight: "700" },
+  clearRangeText: { ...typography.footnoteEmphasized },
+  rangeSummary: { ...typography.subheadlineEmphasized, marginBottom: 8 },
 
   sortDirBtn: {
     width: 56,
@@ -518,15 +385,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
   },
-  sortDirText: { fontSize: 16, fontWeight: "700" },
-
-  errorBox: {
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  errorText: { fontSize: 12.5, fontWeight: "800" },
+  sortDirText: { ...typography.bodyEmphasized },
 
   footer: {
     paddingTop: 12,
@@ -546,7 +405,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
   },
-  btnGhostText: { fontSize: 13, fontWeight: "700" },
+  btnGhostText: { ...typography.footnoteEmphasized },
 
   btnPrimary: {
     flex: 1,
@@ -557,5 +416,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
   },
-  btnPrimaryText: { color: "#fff", fontSize: 13, fontWeight: "700" },
+  btnPrimaryText: { ...typography.footnoteEmphasized, color: "#fff" },
 });

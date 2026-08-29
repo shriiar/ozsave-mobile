@@ -61,6 +61,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setResolvedTheme(resolveTheme(theme, systemScheme));
   }, [theme, systemScheme, mounted]);
 
+  // Force genuinely native UI (the NativeTabs bar, ActionSheetIOS, Alerts,
+  // etc.) to follow our in-app theme choice. Without this, those components
+  // read the OS-level appearance directly and ignore an explicit light/dark
+  // pick made inside the app.
+  useEffect(() => {
+    if (!mounted) return;
+
+    if (theme === "system") {
+      Appearance.setColorScheme("unspecified");
+      // Clearing the override doesn't itself fire a change event, so
+      // re-read the true current value directly rather than waiting on one.
+      setSystemScheme(Appearance.getColorScheme() ?? "light");
+    } else {
+      Appearance.setColorScheme(resolvedTheme);
+    }
+  }, [mounted, theme, resolvedTheme]);
+
   const setTheme = useCallback(
     (t: Theme) => {
       const nextResolved = resolveTheme(t, systemScheme);

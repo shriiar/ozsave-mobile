@@ -9,14 +9,14 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { BlurView } from "expo-blur";
 import { GlassView } from "expo-glass-effect";
-import { LinearGradient } from "expo-linear-gradient";
 import { useMutation } from "@tanstack/react-query";
 
 import { HouseApi } from "../../house/api";
 import { useAuth } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
+import { useGlassStyle } from "../../../context/GlassStyleContext";
+import { typography } from "../../../theme/typography";
 
 type Props = {
   open: boolean;
@@ -29,6 +29,7 @@ export default function CreateHouseModal({ open, onClose }: Props) {
 
   const { refreshUser } = useAuth();
   const { resolvedTheme } = useTheme();
+  const { glassStyle } = useGlassStyle();
   const isDark = resolvedTheme === "dark";
 
   const T = useMemo(() => {
@@ -119,34 +120,13 @@ export default function CreateHouseModal({ open, onClose }: Props) {
   };
 
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={handleClose}>
-      <View style={styles.root}>
-        {/* backdrop */}
-        <Pressable style={styles.backdrop} onPress={handleClose} />
-
-        {/* modal */}
-        <View style={styles.center}>
-          <View style={styles.modalWrap}>
-            <BlurView
-              intensity={T.isDark ? 24 : 30}
-              tint={T.isDark ? "dark" : "light"}
-              style={[styles.modal, { borderColor: T.border }, T.shadow]}
-            >
-              <LinearGradient
-                colors={T.modalBgGrad as any}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-
-              {/* glow */}
-              <LinearGradient
-                colors={T.glowA as any}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[styles.glow, { top: -90, left: -90 }]}
-              />
-
+    <Modal
+      visible={open}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={handleClose}
+    >
+            <View style={[styles.modal, { backgroundColor: isDark ? "#0a0a0a" : "#ffffff" }]}>
               {/* Header */}
               <View style={[styles.header, { borderBottomColor: T.headerBorder }]}>
                 <View style={{ flex: 1, paddingRight: 10 }}>
@@ -163,7 +143,7 @@ export default function CreateHouseModal({ open, onClose }: Props) {
                   hitSlop={10}
                 >
                   <GlassView
-                    glassEffectStyle="clear"
+                    glassEffectStyle={glassStyle}
                     isInteractive={!busy}
                     colorScheme={isDark ? "dark" : "light"}
                     style={styles.iconBtn}
@@ -215,8 +195,9 @@ export default function CreateHouseModal({ open, onClose }: Props) {
                     style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }, busy && { opacity: 0.5 }]}
                   >
                     <GlassView
-                      glassEffectStyle="clear"
+                      glassEffectStyle={glassStyle}
                       isInteractive={!busy}
+                      tintColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
                       colorScheme={isDark ? "dark" : "light"}
                       style={styles.btnGhost}
                     >
@@ -233,7 +214,7 @@ export default function CreateHouseModal({ open, onClose }: Props) {
                     ]}
                   >
                     <GlassView
-                      glassEffectStyle="regular"
+                      glassEffectStyle={glassStyle}
                       isInteractive={!!name.trim() && !busy}
                       tintColor="#4F46E5"
                       colorScheme={isDark ? "dark" : "light"}
@@ -251,48 +232,16 @@ export default function CreateHouseModal({ open, onClose }: Props) {
                   </Pressable>
                 </View>
               </View>
-            </BlurView>
-          </View>
-        </View>
-      </View>
+            </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.45)",
-  },
-
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-
-  modalWrap: {
-    width: "100%",
-    maxWidth: 420,
-    borderRadius: 24,
-    overflow: "hidden",
-  },
-
   modal: {
+    flex: 1,
     borderRadius: 24,
     overflow: "hidden",
-    // borderWidth: StyleSheet.hairlineWidth,
-  },
-
-  glow: {
-    position: "absolute",
-    height: 280,
-    width: 280,
-    borderRadius: 280,
-    opacity: 1,
   },
 
   header: {
@@ -303,15 +252,13 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 16,
-    fontWeight: "700",
+    ...typography.headline,
     letterSpacing: -0.1,
   },
 
   subtitle: {
+    ...typography.footnote,
     marginTop: 4,
-    fontSize: 13,
-    lineHeight: 18,
   },
 
   iconBtn: {
@@ -323,20 +270,14 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 
-  iconBtnText: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
+  iconBtnText: { ...typography.bodyEmphasized },
 
   body: {
     padding: 18,
     gap: 10,
   },
 
-  label: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
+  label: { ...typography.footnoteEmphasized },
 
   input: {
     marginTop: 2,
@@ -344,13 +285,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 18,
     // borderWidth: StyleSheet.hairlineWidth,
-    fontSize: 13,
+    ...typography.footnote,
   },
 
-  help: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
+  help: { ...typography.caption1 },
 
   errorBox: {
     marginTop: 6,
@@ -363,13 +301,12 @@ const styles = StyleSheet.create({
   },
 
   errorTitle: {
-    fontSize: 13,
-    fontWeight: "800",
+    ...typography.footnoteEmphasized,
     color: "#B91C1C",
   },
 
   errorText: {
-    fontSize: 12,
+    ...typography.caption1,
     color: "rgba(185,28,28,0.92)",
   },
 
@@ -394,10 +331,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 
-  btnGhostText: {
-    fontSize: 13,
-    fontWeight: "800",
-  },
+  btnGhostText: { ...typography.footnoteEmphasized },
 
   btnPrimary: {
     minHeight: 40,
@@ -410,8 +344,7 @@ const styles = StyleSheet.create({
   },
 
   btnPrimaryText: {
-    fontSize: 13,
-    fontWeight: "800",
+    ...typography.footnoteEmphasized,
     color: "#fff",
   },
 });

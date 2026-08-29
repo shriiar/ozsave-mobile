@@ -1,14 +1,18 @@
 type Handler = () => void;
 
-let handler: Handler | null = null;
+// Keyed by route path — each tab screen registers its own handler here.
+// A single shared variable would let whichever screen mounts (or remounts)
+// last silently steal every other screen's scroll-to-top, since NativeTabs
+// keeps every tab mounted at once.
+const handlers = new Map<string, Handler>();
 
-export function fireScrollToTop(): void {
-  handler?.();
+export function fireScrollToTop(key: string): void {
+  handlers.get(key)?.();
 }
 
-export function registerScrollToTop(h: Handler): () => void {
-  handler = h;
+export function registerScrollToTop(key: string, h: Handler): () => void {
+  handlers.set(key, h);
   return () => {
-    if (handler === h) handler = null;
+    if (handlers.get(key) === h) handlers.delete(key);
   };
 }

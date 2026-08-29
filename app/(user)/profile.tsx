@@ -4,7 +4,7 @@
 // expandable menu sheet (theme toggle, user info, logout, admin link).
 // Will get a proper design pass later.
 import React from "react";
-import { View, Text, Image, Pressable, StyleSheet, ScrollView } from "react-native";
+import { View, Text, Image, Pressable, StyleSheet, ScrollView, ActionSheetIOS, Alert, Platform } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,6 +12,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { ThemeToggle } from "../../src/components/ThemeToggle";
+import { GlassStyleToggle } from "../../src/components/GlassStyleToggle";
+import { typography } from "../../src/theme/typography";
+import { useScrollToTop } from "../../src/hooks/useScrollToTop";
+import { useRemountOnThemeRefocus } from "../../src/hooks/useRemountOnThemeRefocus";
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -20,6 +24,8 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
 
   const isAdmin = user?.role === "admin";
+  const scrollRef = useScrollToTop<ScrollView>("/profile");
+  const remountKey = useRemountOnThemeRefocus();
 
   const T = {
     bg: isDark ? "#0a0a0a" : "#F5F7FB",
@@ -31,7 +37,7 @@ export default function ProfileScreen() {
     dangerBg: "rgba(239,68,68,0.10)",
   };
 
-  async function handleLogout() {
+  async function performLogout() {
     try {
       await logout();
     } finally {
@@ -39,14 +45,41 @@ export default function ProfileScreen() {
     }
   }
 
+  function handleLogout() {
+    const title = "Log out";
+    const message = "Are you sure you want to log out?";
+
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title,
+          message,
+          options: ["Log out", "Cancel"],
+          destructiveButtonIndex: 0,
+          cancelButtonIndex: 1,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 0) performLogout();
+        }
+      );
+    } else {
+      Alert.alert(title, message, [
+        { text: "Cancel", style: "cancel" },
+        { text: "Log out", style: "destructive", onPress: () => performLogout() },
+      ]);
+    }
+  }
+
   if (!user) return null;
 
   return (
     <ScrollView
+      key={remountKey}
+      ref={scrollRef}
       style={{ flex: 1, backgroundColor: T.bg }}
       contentContainerStyle={{ padding: 16, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24, gap: 16 }}
     >
-      <Text style={[styles.title, { color: T.text }]}>Profile</Text>
+      <Text style={[typography.title2, { color: T.text }]}>Profile</Text>
 
       <View style={[styles.card, { backgroundColor: T.cardBg, borderColor: T.ring }]}>
         {user.imageUrl ? (
@@ -60,23 +93,32 @@ export default function ProfileScreen() {
         )}
 
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={[styles.name, { color: T.text }]} numberOfLines={1}>
+          <Text style={[typography.subheadlineEmphasized, { color: T.text }]} numberOfLines={1}>
             {user.name}
           </Text>
-          <Text style={[styles.email, { color: T.muted }]} numberOfLines={1}>
+          <Text style={[typography.caption1, styles.email, { color: T.muted }]} numberOfLines={1}>
             {user.email}
           </Text>
           {user.house?.name ? (
-            <Text style={[styles.house, { color: T.muted }]} numberOfLines={1}>
+            <Text style={[typography.caption1, styles.house, { color: T.muted }]} numberOfLines={1}>
               {user.house.name}
             </Text>
           ) : null}
         </View>
       </View>
 
-      <View style={[styles.card, { backgroundColor: T.cardBg, borderColor: T.ring, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
-        <Text style={[styles.rowLabel, { color: T.text }]}>Appearance</Text>
-        <ThemeToggle />
+      <View style={[styles.card, { backgroundColor: T.cardBg, borderColor: T.ring, flexDirection: "column", alignItems: "stretch", gap: 14 }]}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Text style={[typography.subheadlineEmphasized, styles.rowLabel, { color: T.text }]}>Theme</Text>
+          <ThemeToggle />
+        </View>
+
+        <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: T.ring }} />
+
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Text style={[typography.subheadlineEmphasized, styles.rowLabel, { color: T.text }]}>Glass style</Text>
+          <GlassStyleToggle />
+        </View>
       </View>
 
       {isAdmin ? (
@@ -88,7 +130,7 @@ export default function ProfileScreen() {
           ]}
         >
           <Ionicons name="people-outline" size={20} color={T.text} />
-          <Text style={[styles.rowLabel, { color: T.text, flex: 1 }]}>Users & Invites</Text>
+          <Text style={[typography.subheadlineEmphasized, styles.rowLabel, { color: T.text, flex: 1 }]}>Users & Invites</Text>
           <Ionicons name="chevron-forward" size={18} color={T.muted} />
         </Pressable>
       ) : null}
@@ -101,14 +143,13 @@ export default function ProfileScreen() {
         ]}
       >
         <Ionicons name="log-out-outline" size={20} color={T.dangerText} />
-        <Text style={[styles.rowLabel, { color: T.dangerText }]}>Log out</Text>
+        <Text style={[typography.subheadlineEmphasized, styles.rowLabel, { color: T.dangerText }]}>Log out</Text>
       </Pressable>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 22, fontWeight: "800" },
   card: {
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
@@ -120,8 +161,7 @@ const styles = StyleSheet.create({
   avatar: { height: 48, width: 48, borderRadius: 24 },
   avatarFallback: { height: 48, width: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" },
   avatarInitial: { fontSize: 18, fontWeight: "800" },
-  name: { fontSize: 15, fontWeight: "700" },
-  email: { marginTop: 2, fontSize: 12.5, fontWeight: "500" },
-  house: { marginTop: 2, fontSize: 12, fontWeight: "500" },
-  rowLabel: { fontSize: 14, fontWeight: "700" },
+  email: { marginTop: 2 },
+  house: { marginTop: 2 },
+  rowLabel: {},
 });

@@ -236,7 +236,7 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
 
                     <View style={styles.legendRow}>
                         <LegendPill label="Cost" color={ui.cost} textColor={ui.legend} />
-                        <LegendPill label="Manual" color={ui.manual} textColor={ui.legend} />
+                        <LegendPill label="Actual" color={ui.manual} textColor={ui.legend} />
                         <LegendPill label="Estimate" color={ui.estimate} textColor={ui.legend} />
                     </View>
 
@@ -290,7 +290,7 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
 
                                 <View style={{ height: 8 }} />
                                 <TooltipRow label="Cost" color={ui.cost} value={selected.meta.cost} textColor={ui.legend} />
-                                <TooltipRow label="Manual" color={ui.manual} value={selected.meta.manual} textColor={ui.legend} />
+                                <TooltipRow label="Actual" color={ui.manual} value={selected.meta.manual} textColor={ui.legend} />
                                 <TooltipRow label="Estimate" color={ui.estimate} value={selected.meta.estimate} textColor={ui.legend} />
                             </View>
                         )}

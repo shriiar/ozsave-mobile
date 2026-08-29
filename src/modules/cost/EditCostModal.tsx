@@ -417,10 +417,45 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
 
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.h1, { color: T.text }]}>Edit cost</Text>
-                      <Text style={[styles.h2, { color: T.muted }]}>
-                        Changes will recalculate balances for this house.
-                      </Text>
                     </View>
+                  </View>
+
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <Pressable
+                      onPress={handleSave}
+                      disabled={saving || showLoading}
+                      style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+                    >
+                      <GlassView
+                        glassEffectStyle={glassStyle}
+                        isInteractive={!saving && !showLoading}
+                        tintColor={T.primary}
+                        colorScheme={isDark ? "dark" : "light"}
+                        style={styles.headerSaveBtn}
+                      >
+                        {saving ? (
+                          <ActivityIndicator color="#fff" size="small" />
+                        ) : (
+                          <Text style={[typography.subheadlineEmphasized, { color: "#fff" }]}>Save</Text>
+                        )}
+                      </GlassView>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => !saving && onClose()}
+                      disabled={saving}
+                      hitSlop={10}
+                      style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
+                    >
+                      <GlassView
+                        glassEffectStyle={glassStyle}
+                        isInteractive={!saving}
+                        colorScheme={isDark ? "dark" : "light"}
+                        style={styles.closeBtn}
+                      >
+                        <Ionicons name="close" size={18} color={T.text} />
+                      </GlassView>
+                    </Pressable>
                   </View>
                 </View>
 
@@ -651,57 +686,6 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
                         </View>
                       ) : null}
                     </ScrollView>
-
-                    <View
-                      style={[
-                        styles.footer,
-                        {
-                          borderTopColor: T.headerBorder,
-                          paddingTop: 14,
-                          paddingBottom: 40,
-                        },
-                      ]}
-                    >
-                      <Pressable
-                        onPress={() => !saving && onClose()}
-                        disabled={saving}
-                        style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.9 : 1 }]}
-                      >
-                        <GlassView
-                          glassEffectStyle={glassStyle}
-                          isInteractive={!saving}
-                          tintColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
-                          colorScheme={isDark ? "dark" : "light"}
-                          style={[styles.footerBtn, { borderColor: T.border }]}
-                        >
-                          <Text style={[typography.subheadlineEmphasized, { color: T.text }]}>
-                            Cancel
-                          </Text>
-                        </GlassView>
-                      </Pressable>
-
-                      <Pressable
-                        onPress={handleSave}
-                        disabled={saving || showLoading}
-                        style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.92 : 1 }]}
-                      >
-                        <GlassView
-                          glassEffectStyle={glassStyle}
-                          isInteractive={!saving && !showLoading}
-                          tintColor={T.primary}
-                          colorScheme={isDark ? "dark" : "light"}
-                          style={styles.footerBtnPrimary}
-                        >
-                          {saving ? (
-                            <ActivityIndicator color="#fff" />
-                          ) : (
-                            <Text style={[typography.subheadlineEmphasized, { color: "#fff" }]}>
-                              Save changes
-                            </Text>
-                          )}
-                        </GlassView>
-                      </Pressable>
-                    </View>
                   </View>
                 )}
               </View>
@@ -741,16 +725,25 @@ const styles = StyleSheet.create({
   closeBtn: {
     height: 36,
     width: 36,
-    borderRadius: 14,
+    borderRadius: 18,
     // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },
 
   h1: { ...typography.headline },
-  h2: { ...typography.caption1, marginTop: 2 },
 
-  body: { padding: 16, paddingBottom: 28, gap: 14 },
+  headerSaveBtn: {
+    height: 36,
+    minWidth: 64,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+
+  body: { padding: 16, paddingBottom: 40, gap: 14 },
 
   block: {
     borderRadius: 16,
@@ -806,34 +799,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   dot: { height: 8, width: 8, borderRadius: 999 },
-
-  footer: {
-    paddingHorizontal: 14,
-    paddingTop: 14,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  footerBtn: {
-    flex: 1,
-    minHeight: 46,
-    borderRadius: 14,
-    // borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  footerBtnPrimary: {
-    flex: 1,
-    minHeight: 46,
-    borderRadius: 14,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
 
   // ---- Category/date select modal styles ----
   pickerWrap: {

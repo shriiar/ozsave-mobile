@@ -58,6 +58,7 @@ export function DashboardHeader(props: {
   const thumbX = useRef(new Animated.Value(0)).current;
   const isDraggingRef = useRef(false);
   const lastIndexRef = useRef(activeIndex);
+  const [segmentPressed, setSegmentPressed] = useState(false);
 
   function indexFromX(x: number) {
     const w = trackWidthRef.current;
@@ -78,6 +79,7 @@ export function DashboardHeader(props: {
 
   function commit() {
     isDraggingRef.current = false;
+    setSegmentPressed(false);
     snapTo(lastIndexRef.current, true);
     // Only fire the actual range change (which triggers a data refetch) once
     // the gesture ends — not on every segment the finger passes through
@@ -93,6 +95,7 @@ export function DashboardHeader(props: {
       onMoveShouldSetPanResponder: () => trackWidthRef.current > 0,
       onPanResponderGrant: (evt) => {
         isDraggingRef.current = true;
+        setSegmentPressed(true);
         const x = evt.nativeEvent.locationX - SEGMENT_PADDING;
         const segW = trackWidthRef.current / RANGE_TABS.length;
         thumbX.setValue(Math.min(trackWidthRef.current - segW, Math.max(0, x - segW / 2)));
@@ -136,44 +139,34 @@ export function DashboardHeader(props: {
           )}
         </View>
 
-        {/* Prev/Next stepper — one shared glass pill instead of two separate
-            buttons, matching Apple's compact date-stepper convention. */}
+        {/* Prev/Next — two separate rounded glass buttons, each with its own
+            native isInteractive press feedback, matching every other button
+            in the app (Save/Close/Add/Filters). */}
         <View style={styles.stepper}>
-          <GlassView
-            glassEffectStyle={glassStyle}
-            colorScheme={isDark ? "dark" : "light"}
-            style={StyleSheet.absoluteFillObject}
-          />
-          {/* Plain-View border overlay: GlassView's own border rim has the
-              same native attach-timing flash the fill used to have, so the
-              border is drawn here instead, on an ordinary layer. */}
-          <View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFillObject,
-              { borderRadius: 10, borderWidth: StyleSheet.hairlineWidth, borderColor: hairline },
-            ]}
-          />
-
-          <Pressable
-            onPress={props.onPrev}
-            style={({ pressed }) => [
-              styles.stepperHalf,
-              { opacity: pressed ? 0.5 : 1, borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: hairline },
-            ]}
-          >
-            <Ionicons name="chevron-back" size={15} color={textPrimary} />
+          <Pressable onPress={props.onPrev} style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}>
+            <GlassView
+              glassEffectStyle={glassStyle}
+              isInteractive
+              colorScheme={isDark ? "dark" : "light"}
+              style={styles.stepperBtn}
+            >
+              <Ionicons name="chevron-back" size={15} color={textPrimary} />
+            </GlassView>
           </Pressable>
 
           <Pressable
             onPress={props.onNext}
             disabled={!props.canGoForward}
-            style={({ pressed }) => [
-              styles.stepperHalf,
-              { opacity: !props.canGoForward ? 0.3 : pressed ? 0.5 : 1 },
-            ]}
+            style={({ pressed }) => [{ opacity: !props.canGoForward ? 0.3 : pressed ? 0.75 : 1 }]}
           >
-            <Ionicons name="chevron-forward" size={15} color={textPrimary} />
+            <GlassView
+              glassEffectStyle={glassStyle}
+              isInteractive={props.canGoForward}
+              colorScheme={isDark ? "dark" : "light"}
+              style={styles.stepperBtn}
+            >
+              <Ionicons name="chevron-forward" size={15} color={textPrimary} />
+            </GlassView>
           </Pressable>
         </View>
       </View>
@@ -182,7 +175,7 @@ export function DashboardHeader(props: {
           you can tap OR drag your finger across to slide the selection,
           like Apple's native segmented control. */}
       <View
-        style={styles.segmentedWrap}
+        style={[styles.segmentedWrap, { opacity: segmentPressed ? 0.75 : 1 }]}
         onLayout={(e) => {
           const w = Math.max(0, e.nativeEvent.layout.width - SEGMENT_PADDING * 2);
           trackWidthRef.current = w;
@@ -192,6 +185,7 @@ export function DashboardHeader(props: {
       >
         <GlassView
           glassEffectStyle={glassStyle}
+          isInteractive
           colorScheme={isDark ? "dark" : "light"}
           style={StyleSheet.absoluteFillObject}
         />
@@ -264,14 +258,15 @@ const styles = StyleSheet.create({
   h2: { marginTop: 1 },
   stepper: {
     flexDirection: "row",
-    height: 30,
-    borderRadius: 10,
-    overflow: "hidden",
+    gap: 8,
   },
-  stepperHalf: {
-    paddingHorizontal: 10,
+  stepperBtn: {
+    height: 30,
+    width: 30,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
   segmentedWrap: {
     flexDirection: "row",

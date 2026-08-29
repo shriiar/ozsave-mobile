@@ -162,7 +162,7 @@ export function TrendVsPreviousCard({ rangeLabel, summary, comparison }: Props) 
                 ui={ui}
               />
               <TrendRow
-                label="Manual income"
+                label="Actual income"
                 value={summary.income.manual}
                 delta={c.delta.manual}
                 pct={c.deltaPct.manual}

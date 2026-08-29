@@ -86,7 +86,7 @@ function SourceSelect({
         style={{ color: textColor }}
         itemStyle={{ color: textColor, fontSize: 16 }}
       >
-        <Picker.Item label="Manual" value="manual" />
+        <Picker.Item label="Actual" value="manual" />
         <Picker.Item label="Estimate" value="estimate" />
       </Picker>
     </View>
@@ -433,10 +433,45 @@ export default function AddIncomeModal({ open, onClose }: Props) {
 
                     <View style={{ flex: 1 }}>
                       <Text style={[typography.headline, { color: T.text }]}>Add income</Text>
-                      <Text style={[typography.caption1, styles.h2, { color: T.muted }]}>
-                        Record an income entry. Only confirmed incomes count in analytics.
-                      </Text>
                     </View>
+                  </View>
+
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <Pressable
+                      onPress={handleSave}
+                      disabled={saving}
+                      style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+                    >
+                      <GlassView
+                        glassEffectStyle={glassStyle}
+                        isInteractive={!saving}
+                        tintColor={T.primary}
+                        colorScheme={isDark ? "dark" : "light"}
+                        style={styles.headerSaveBtn}
+                      >
+                        {saving ? (
+                          <ActivityIndicator color="#fff" size="small" />
+                        ) : (
+                          <Text style={[typography.subheadlineEmphasized, { color: "#fff" }]}>Save</Text>
+                        )}
+                      </GlassView>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => !saving && onClose()}
+                      disabled={saving}
+                      hitSlop={10}
+                      style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
+                    >
+                      <GlassView
+                        glassEffectStyle={glassStyle}
+                        isInteractive={!saving}
+                        colorScheme={isDark ? "dark" : "light"}
+                        style={styles.closeBtn}
+                      >
+                        <Ionicons name="close" size={18} color={T.text} />
+                      </GlassView>
+                    </Pressable>
                   </View>
                 </View>
 
@@ -532,50 +567,6 @@ export default function AddIncomeModal({ open, onClose }: Props) {
                     </View>
                   ) : null}
                 </ScrollView>
-
-                {/* Footer */}
-                <View
-                  style={[
-                    styles.footer,
-                    {
-                      borderTopColor: T.headerBorder,
-                      paddingTop: 14,
-                      paddingBottom: 40,
-                    },
-                  ]}
-                >
-                  <Pressable
-                    onPress={() => !saving && onClose()}
-                    disabled={saving}
-                    style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.9 : 1 }]}
-                  >
-                    <GlassView
-                      glassEffectStyle={glassStyle}
-                      isInteractive={!saving}
-                      tintColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
-                      colorScheme={isDark ? "dark" : "light"}
-                      style={[styles.footerBtn, { borderColor: T.border }]}
-                    >
-                      <Text style={[typography.subheadlineEmphasized, { color: T.text }]}>Cancel</Text>
-                    </GlassView>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={handleSave}
-                    disabled={saving}
-                    style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.92 : 1 }]}
-                  >
-                    <GlassView
-                      glassEffectStyle={glassStyle}
-                      isInteractive={!saving}
-                      tintColor={T.primary}
-                      colorScheme={isDark ? "dark" : "light"}
-                      style={styles.footerBtnPrimary}
-                    >
-                      {saving ? <ActivityIndicator color="#fff" /> : <Text style={[typography.subheadlineEmphasized, { color: "#fff" }]}>Save</Text>}
-                    </GlassView>
-                  </Pressable>
-                </View>
               </View>
         </KeyboardAvoidingView>
     </Modal>
@@ -610,15 +601,23 @@ const styles = StyleSheet.create({
   closeBtn: {
     height: 36,
     width: 36,
-    borderRadius: 14,
+    borderRadius: 18,
     // borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },
 
-  h2: { marginTop: 2 },
+  headerSaveBtn: {
+    height: 36,
+    minWidth: 64,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
 
-  body: { padding: 16, paddingBottom: 18 },
+  body: { padding: 16, paddingBottom: 40 },
 
   block: { borderRadius: 16,
     // borderWidth: StyleSheet.hairlineWidth,
@@ -636,29 +635,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   textarea: { minHeight: 92, textAlignVertical: "top" },
-
-  footer: { paddingHorizontal: 14,
-    // borderTopWidth: StyleSheet.hairlineWidth,
-     flexDirection: "row", alignItems: "center", gap: 10 },
-  footerBtn: {
-    flex: 1,
-    minHeight: 46,
-    borderRadius: 14,
-    // borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  footerBtnPrimary: {
-    flex: 1,
-    minHeight: 46,
-    borderRadius: 14,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
 
   // selects
   selectField: {

@@ -7,10 +7,12 @@ import React from "react";
 import { View, Text, Image, Pressable, StyleSheet, ScrollView, ActionSheetIOS, Alert, Platform } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
+import { useGlassStyle } from "../../src/context/GlassStyleContext";
 import { ThemeToggle } from "../../src/components/ThemeToggle";
 import { GlassStyleToggle } from "../../src/components/GlassStyleToggle";
 import { typography } from "../../src/theme/typography";
@@ -20,6 +22,7 @@ import { useRemountOnThemeRefocus } from "../../src/hooks/useRemountOnThemeRefoc
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { resolvedTheme } = useTheme();
+  const { glassStyle } = useGlassStyle();
   const isDark = resolvedTheme === "dark";
   const insets = useSafeAreaInsets();
 
@@ -137,13 +140,21 @@ export default function ProfileScreen() {
 
       <Pressable
         onPress={handleLogout}
-        style={({ pressed }) => [
-          styles.card,
-          { backgroundColor: T.dangerBg, borderColor: "rgba(239,68,68,0.25)", flexDirection: "row", alignItems: "center", gap: 12, opacity: pressed ? 0.85 : 1 },
-        ]}
+        style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
       >
-        <Ionicons name="log-out-outline" size={20} color={T.dangerText} />
-        <Text style={[typography.subheadlineEmphasized, styles.rowLabel, { color: T.dangerText }]}>Log out</Text>
+        <GlassView
+          glassEffectStyle={glassStyle}
+          isInteractive
+          tintColor={T.dangerBg}
+          colorScheme={isDark ? "dark" : "light"}
+          style={[
+            styles.card,
+            { borderColor: "rgba(239,68,68,0.25)", flexDirection: "row", alignItems: "center", gap: 12 },
+          ]}
+        >
+          <Ionicons name="log-out-outline" size={20} color={T.dangerText} />
+          <Text style={[typography.subheadlineEmphasized, styles.rowLabel, { color: T.dangerText }]}>Log out</Text>
+        </GlassView>
       </Pressable>
     </ScrollView>
   );

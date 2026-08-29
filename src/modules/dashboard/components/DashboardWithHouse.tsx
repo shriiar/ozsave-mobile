@@ -396,7 +396,7 @@ export default function DashboardWithHouse({
 
         <AnimatedCard delay={180} revision={revision}>
           <IncomeTypeSectionCard
-            title="Manual income"
+            title="Actual income"
             emptyMessage="No received income recorded for this period."
             pie={incomeTypePieManual}
             incomeTypeInsights={incomeTypeInsightsManual}

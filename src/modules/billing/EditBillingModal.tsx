@@ -601,12 +601,46 @@ export default function EditBillingModal({
                       <Text style={[typography.headline, { color: T.text }]}>
                         Edit billing
                       </Text>
-                      <Text style={[typography.caption1, styles.h2, { color: T.muted }]}>
-                        Update recurring billing details with the same UI style.
-                      </Text>
                     </View>
                   </View>
-                  {/* Removed close button from modal header */}
+
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <Pressable
+                      onPress={handleSave}
+                      disabled={saving}
+                      style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+                    >
+                      <GlassView
+                        glassEffectStyle={glassStyle}
+                        isInteractive={!saving}
+                        tintColor={T.primary}
+                        colorScheme={isDark ? "dark" : "light"}
+                        style={styles.headerSaveBtn}
+                      >
+                        {saving ? (
+                          <ActivityIndicator color="#fff" size="small" />
+                        ) : (
+                          <Text style={[typography.subheadlineEmphasized, { color: "#fff" }]}>Save</Text>
+                        )}
+                      </GlassView>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => !saving && onClose()}
+                      disabled={saving}
+                      hitSlop={10}
+                      style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
+                    >
+                      <GlassView
+                        glassEffectStyle={glassStyle}
+                        isInteractive={!saving}
+                        colorScheme={isDark ? "dark" : "light"}
+                        style={styles.closeBtn}
+                      >
+                        <Ionicons name="close" size={18} color={T.text} />
+                      </GlassView>
+                    </Pressable>
+                  </View>
                 </View>
 
                 {isLoading ? (
@@ -1102,57 +1136,6 @@ export default function EditBillingModal({
                         </View>
                       ) : null}
                     </ScrollView>
-
-                    <View
-                      style={[
-                        styles.footer,
-                        {
-                          borderTopColor: T.headerBorder,
-                          paddingTop: 14,
-                          paddingBottom: 40,
-                        },
-                      ]}
-                    >
-                      <Pressable
-                        onPress={() => !saving && onClose()}
-                        disabled={saving}
-                        style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.9 : 1 }]}
-                      >
-                        <GlassView
-                          glassEffectStyle={glassStyle}
-                          isInteractive={!saving}
-                          tintColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
-                          colorScheme={isDark ? "dark" : "light"}
-                          style={[styles.footerBtn, { borderColor: T.border }]}
-                        >
-                          <Text style={[typography.subheadlineEmphasized, { color: T.text }]}>
-                            Cancel
-                          </Text>
-                        </GlassView>
-                      </Pressable>
-
-                      <Pressable
-                        onPress={handleSave}
-                        disabled={saving}
-                        style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.92 : 1 }]}
-                      >
-                        <GlassView
-                          glassEffectStyle={glassStyle}
-                          isInteractive={!saving}
-                          tintColor={T.primary}
-                          colorScheme={isDark ? "dark" : "light"}
-                          style={styles.footerBtnPrimary}
-                        >
-                          {saving ? (
-                            <ActivityIndicator color="#fff" />
-                          ) : (
-                            <Text style={[typography.subheadlineEmphasized, { color: "#fff" }]}>
-                              Save changes
-                            </Text>
-                          )}
-                        </GlassView>
-                      </Pressable>
-                    </View>
                   </Animated.View>
                 )}
               </View>
@@ -1186,8 +1169,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  h2: { marginTop: 2 },
-  body: { padding: 16, paddingBottom: 18, gap: 14 },
+  closeBtn: {
+    height: 36,
+    width: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerSaveBtn: {
+    height: 36,
+    minWidth: 64,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  body: { padding: 16, paddingBottom: 40, gap: 14 },
   blockHeader: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -1242,32 +1240,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     // borderWidth: StyleSheet.hairlineWidth,
     padding: 12,
-  },
-  footer: {
-    paddingHorizontal: 14,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  footerBtn: {
-    flex: 1,
-    minHeight: 46,
-    borderRadius: 14,
-    // borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  footerBtnPrimary: {
-    flex: 1,
-    minHeight: 46,
-    borderRadius: 14,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
   },
   pickerWrap: {
     marginTop: 8,

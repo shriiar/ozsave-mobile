@@ -67,7 +67,7 @@ export function PeriodSummaryCards(props: Props) {
 
                     <View style={styles.grid}>
                         <SummaryTile title="Cost" value={props.totalCost} valueColor={isDark ? "#ff6b6b" : "#dc2626"} ui={ui} />
-                        <SummaryTile title="Manual" value={props.manualIncome} valueColor={isDark ? "#34d399" : "#059669"} ui={ui} />
+                        <SummaryTile title="Actual" value={props.manualIncome} valueColor={isDark ? "#34d399" : "#059669"} ui={ui} />
                         <SummaryTile title="Estimate" value={props.estimatedIncome} valueColor={isDark ? "#fbbf24" : "#d97706"} ui={ui} />
                     </View>
                 </View>

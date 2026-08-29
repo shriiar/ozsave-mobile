@@ -148,8 +148,7 @@ export default function IncomeFilterModal({
                     itemStyle={{ color: isDark ? "#FFFFFF" : "#0F172A", fontSize: 16 }}
                   >
                     <Picker.Item label="All" value="all" />
-                    <Picker.Item label="Manual" value="manual" />
-                    <Picker.Item label="Import" value="import" />
+                    <Picker.Item label="Actual" value="manual" />
                     <Picker.Item label="Estimate" value="estimate" />
                   </Picker>
                 </View>

@@ -115,7 +115,7 @@ function CostCard({
         // tint disappeared when this animation briefly included opacity.
         const scale = progress.interpolate({
             inputRange: [0, 0.6, 1],
-            outputRange: [0.3, 1.15, 1],
+            outputRange: [0, 1.15, 1],
             extrapolate: "clamp",
         });
 
@@ -139,6 +139,7 @@ function CostCard({
                     >
                         <GlassView
                             glassEffectStyle={glassStyle}
+                            isInteractive
                             tintColor="rgba(239,68,68,0.95)"
                             colorScheme={isDark ? "dark" : "light"}
                             style={styles.deleteBtn}
@@ -185,6 +186,7 @@ function CostCard({
                 <View style={styles.cardWrap}>
                     <GlassView
                         glassEffectStyle={glassStyle}
+                        isInteractive
                         tintColor={isDark ? "rgba(0,0,0,0.55)" : undefined}
                         colorScheme={isDark ? "dark" : "light"}
                         style={[styles.card, { borderColor: T.ring }]}
@@ -486,30 +488,15 @@ export default function CostScreen() {
                         </View>
 
                         <Pressable
-                            style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+                            style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
                             onPress={() => setFiltersOpen(true)}
                         >
-                            <View style={styles.filterBtn}>
-                                <GlassView
-                                    glassEffectStyle={glassStyle}
-                                    isInteractive
-                                    colorScheme={isDark ? "dark" : "light"}
-                                    style={StyleSheet.absoluteFillObject}
-                                />
-                                {/* Plain-View border overlay: GlassView's own border rim has
-                                    the same native attach-timing flash as the fill did, so the
-                                    border is drawn here instead, on an ordinary layer. */}
-                                <View
-                                    pointerEvents="none"
-                                    style={[
-                                        StyleSheet.absoluteFillObject,
-                                        {
-                                            borderRadius: 14,
-                                            borderWidth: StyleSheet.hairlineWidth,
-                                            borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)",
-                                        },
-                                    ]}
-                                />
+                            <GlassView
+                                glassEffectStyle={glassStyle}
+                                isInteractive
+                                colorScheme={isDark ? "dark" : "light"}
+                                style={styles.filterBtn}
+                            >
                                 <Ionicons
                                     name="options-outline"
                                     size={16}
@@ -523,31 +510,19 @@ export default function CostScreen() {
                                 >
                                     Filters
                                 </Text>
-                            </View>
+                            </GlassView>
                         </Pressable>
 
                         <Pressable
-                            style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+                            style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
                             onPress={() => setAddOpen(true)}
                         >
-                            <View style={styles.addBtn}>
-                                <GlassView
-                                    glassEffectStyle={glassStyle}
-                                    isInteractive
-                                    colorScheme={isDark ? "dark" : "light"}
-                                    style={StyleSheet.absoluteFillObject}
-                                />
-                                <View
-                                    pointerEvents="none"
-                                    style={[
-                                        StyleSheet.absoluteFillObject,
-                                        {
-                                            borderRadius: 14,
-                                            borderWidth: StyleSheet.hairlineWidth,
-                                            borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)",
-                                        },
-                                    ]}
-                                />
+                            <GlassView
+                                glassEffectStyle={glassStyle}
+                                isInteractive
+                                colorScheme={isDark ? "dark" : "light"}
+                                style={styles.addBtn}
+                            >
                                 <Text
                                     style={[
                                         styles.addBtnText,
@@ -556,7 +531,7 @@ export default function CostScreen() {
                                 >
                                     Add
                                 </Text>
-                            </View>
+                            </GlassView>
                         </Pressable>
                     </View>
                 </GlassView>
@@ -688,14 +663,13 @@ const styles = StyleSheet.create({
     h2: { marginTop: 2 },
 
     addBtn: {
-        minHeight: 40,
+        minHeight: 44,
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 14,
         alignItems: "center",
         justifyContent: "center",
         overflow: "hidden",
-        // borderWidth: StyleSheet.hairlineWidth,
     },
     addBtnText: { ...typography.footnoteEmphasized, color: "#fff" },
 
@@ -826,12 +800,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         gap: 6,
-        minHeight: 40,
+        minHeight: 44,
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 14,
         overflow: "hidden",
-        // borderWidth: StyleSheet.hairlineWidth,
     },
     filterBtnText: { ...typography.footnoteEmphasized, color: "#fff" },
 });

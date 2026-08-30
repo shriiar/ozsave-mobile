@@ -257,7 +257,10 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
   );
 
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [initialForm, setInitialForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
+
+  const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initialForm), [form, initialForm]);
 
   // ✅ Same token system as AddCostModal
   const T = useMemo(() => {
@@ -320,7 +323,7 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
 
     const c: FullCost = cost;
 
-    setForm({
+    const loaded: FormState = {
       name: c.name ?? "",
       amount: c.amount != null ? Number(c.amount).toFixed(2) : "",
       category: c.category ?? "",
@@ -328,8 +331,10 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
       sharedBy: (c.sharedBy ?? []).map((m) => m._id),
       date: c.date ? new Date(c.date).toISOString().slice(0, 10) : ymdToday(),
       notes: c.notes ?? "",
-    });
+    };
 
+    setForm(loaded);
+    setInitialForm(loaded);
     setError(null);
   }, [open, cost, currentUserId]);
 
@@ -423,13 +428,13 @@ export default function EditCostModal({ open, costId, onClose }: Props) {
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                     <Pressable
                       onPress={handleSave}
-                      disabled={saving || showLoading}
-                      style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+                      disabled={saving || showLoading || !isDirty}
+                      style={({ pressed }) => [{ opacity: !isDirty ? 0.4 : pressed ? 0.92 : 1 }]}
                     >
                       <GlassView
                         glassEffectStyle={glassStyle}
-                        isInteractive={!saving && !showLoading}
-                        tintColor={T.primary}
+                        isInteractive
+                        tintColor="#FF9500"
                         colorScheme={isDark ? "dark" : "light"}
                         style={styles.headerSaveBtn}
                       >

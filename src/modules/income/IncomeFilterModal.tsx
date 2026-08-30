@@ -67,7 +67,7 @@ export default function IncomeFilterModal({
     const muted = isDark ? "rgba(148,163,184,0.95)" : "#64748B";
     const tile = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)";
     const danger = "rgba(239,68,68,0.95)";
-    const primary = "#4F46E5";
+    const primary = "#FF9500";
     const inputText = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
     const placeholder = isDark ? "rgba(148,163,184,0.75)" : "rgba(100,116,139,0.85)";
     return { surfaceGrad, ring, text, muted, tile, danger, primary, inputText, placeholder };
@@ -88,8 +88,59 @@ export default function IncomeFilterModal({
           <View style={[styles.panel, { backgroundColor: isDark ? "#0a0a0a" : "#ffffff" }]}>
             {/* Header */}
             <View style={styles.header}>
-              <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
+                <View style={[styles.iconPill, { backgroundColor: T.tile }]}>
+                  <Ionicons name="options-outline" size={18} color={T.text} />
+                </View>
                 <Text style={[styles.title, { color: T.text }]}>Filters</Text>
+              </View>
+
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Pressable
+                  onPress={onClear}
+                  style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                >
+                  <GlassView
+                    glassEffectStyle={glassStyle}
+                    isInteractive
+                    tintColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
+                    colorScheme={isDark ? "dark" : "light"}
+                    style={styles.headerBtn}
+                  >
+                    <Text style={[styles.headerBtnText, { color: T.text }]}>Clear</Text>
+                  </GlassView>
+                </Pressable>
+
+                <Pressable
+                  disabled={invalidRange}
+                  onPress={onApply}
+                  style={({ pressed }) => [{ opacity: invalidRange ? 0.4 : pressed ? 0.88 : 1 }]}
+                >
+                  <GlassView
+                    glassEffectStyle={glassStyle}
+                    isInteractive
+                    tintColor={T.primary}
+                    colorScheme={isDark ? "dark" : "light"}
+                    style={styles.headerBtn}
+                  >
+                    <Text style={[styles.headerBtnText, { color: "#fff" }]}>Apply</Text>
+                  </GlassView>
+                </Pressable>
+
+                <Pressable
+                  onPress={onClose}
+                  hitSlop={10}
+                  style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
+                >
+                  <GlassView
+                    glassEffectStyle={glassStyle}
+                    isInteractive
+                    colorScheme={isDark ? "dark" : "light"}
+                    style={styles.closeBtn}
+                  >
+                    <Ionicons name="close" size={18} color={T.text} />
+                  </GlassView>
+                </Pressable>
               </View>
             </View>
 
@@ -244,49 +295,6 @@ export default function IncomeFilterModal({
                 </View>
               </View>
             </ScrollView>
-
-            {/* Footer */}
-            <View
-              style={[
-                styles.footer,
-                {
-                  borderTopColor: T.ring,
-                  paddingTop: 14,
-                  paddingBottom: 40,
-                },
-              ]}
-            >
-              <Pressable
-                onPress={onClear}
-                style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.85 : 1 }]}
-              >
-                <GlassView
-                  glassEffectStyle={glassStyle}
-                  isInteractive
-                  tintColor={isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.045)"}
-                  colorScheme={isDark ? "dark" : "light"}
-                  style={[styles.btnGhost, { borderColor: T.ring }]}
-                >
-                  <Text style={[styles.btnGhostText, { color: T.text }]}>Clear</Text>
-                </GlassView>
-              </Pressable>
-
-              <Pressable
-                disabled={invalidRange}
-                onPress={onApply}
-                style={({ pressed }) => [{ flex: 1 }, { opacity: invalidRange ? 0.4 : pressed ? 0.88 : 1 }]}
-              >
-                <GlassView
-                  glassEffectStyle={glassStyle}
-                  isInteractive={!invalidRange}
-                  tintColor={T.primary}
-                  colorScheme={isDark ? "dark" : "light"}
-                  style={styles.btnPrimary}
-                >
-                  <Text style={styles.btnPrimaryText}>Apply</Text>
-                </GlassView>
-              </Pressable>
-            </View>
           </View>
         </View>
       </View>
@@ -318,17 +326,35 @@ const styles = StyleSheet.create({
 
   header: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: 10,
     paddingBottom: 10,
   },
   title: { ...typography.headline },
-  subtitle: { ...typography.caption1, marginTop: 2 },
 
-  iconBtn: {
-    height: 34,
-    width: 34,
-    borderRadius: 12,
+  iconPill: {
+    height: 36,
+    width: 36,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  headerBtn: {
+    height: 36,
+    minWidth: 64,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  headerBtnText: { ...typography.subheadlineEmphasized },
+
+  closeBtn: {
+    height: 36,
+    width: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -340,7 +366,7 @@ const styles = StyleSheet.create({
   bodyContent: {
     flexGrow: 1,
     gap: 12,
-    paddingBottom: 12,
+    paddingBottom: 40,
   },
 
   label: { ...typography.caption1, fontWeight: "700", marginBottom: 6 },
@@ -385,35 +411,4 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   sortDirText: { ...typography.bodyEmphasized },
-
-  footer: {
-    paddingTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-
-  btnGhost: {
-    flex: 1,
-    minHeight: 38,
-    borderRadius: 16,
-    // borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  btnGhostText: { ...typography.footnoteEmphasized },
-
-  btnPrimary: {
-    flex: 1,
-    minHeight: 38,
-    borderRadius: 16,
-    paddingVertical: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  btnPrimaryText: { ...typography.footnoteEmphasized, color: "#fff" },
 });

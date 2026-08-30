@@ -246,7 +246,10 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
   );
 
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [initialForm, setInitialForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
+
+  const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initialForm), [form, initialForm]);
 
   const formOpacity = useRef(new Animated.Value(0)).current;
   const formTranslateY = useRef(new Animated.Value(8)).current;
@@ -305,7 +308,7 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
 
     const i: FullIncome = income;
 
-    setForm({
+    const loaded: FormState = {
       name: i.name ?? "",
       amount: i.amount != null && Number.isFinite(i.amount) ? Number(i.amount).toFixed(2) : "",
       date: i.date ? new Date(i.date).toISOString().slice(0, 10) : ymdToday(),
@@ -314,8 +317,10 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
       incomeType: (i.incomeType as IncomeType) ?? "tfn",
       tagsInput: (i.tags ?? []).join(", "),
       notes: i.notes ?? "",
-    });
+    };
 
+    setForm(loaded);
+    setInitialForm(loaded);
     setError(null);
   }, [open, income]);
 
@@ -428,13 +433,13 @@ export default function EditIncomeModal({ open, incomeId, onClose }: Props) {
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                     <Pressable
                       onPress={handleSave}
-                      disabled={saving || showLoading}
-                      style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+                      disabled={saving || showLoading || !isDirty}
+                      style={({ pressed }) => [{ opacity: !isDirty ? 0.4 : pressed ? 0.92 : 1 }]}
                     >
                       <GlassView
                         glassEffectStyle={glassStyle}
-                        isInteractive={!saving && !showLoading}
-                        tintColor={T.primary}
+                        isInteractive
+                        tintColor="#FF9500"
                         colorScheme={isDark ? "dark" : "light"}
                         style={styles.headerSaveBtn}
                       >

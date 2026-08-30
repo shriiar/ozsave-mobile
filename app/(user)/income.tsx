@@ -529,13 +529,14 @@ export default function IncomeScreen() {
                             <GlassView
                                 glassEffectStyle={glassStyle}
                                 isInteractive
+                                tintColor="#FF9500"
                                 colorScheme={isDark ? "dark" : "light"}
                                 style={styles.addBtn}
                             >
                                 <Text
                                     style={[
                                         styles.addBtnText,
-                                        { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" },
+                                        { color: "#fff" },
                                     ]}
                                 >
                                     Add

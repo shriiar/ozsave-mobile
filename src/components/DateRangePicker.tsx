@@ -14,6 +14,13 @@ type Props = {
   primary: string;
 };
 
+function hexToRgb(hex: string) {
+  const clean = hex.replace("#", "");
+  const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
+  const num = parseInt(full, 16);
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+
 function addDaysYmd(ymd: string, days: number) {
   const [y, m, d] = ymd.split("-").map(Number);
   const dt = new Date(y, m - 1, d);
@@ -57,6 +64,9 @@ export function DateRangePicker({ from, to, onChange, isDark, text, muted, tile,
       return marks;
     }
 
+    const { r, g, b } = hexToRgb(primary);
+    const inRangeColor = `rgba(${r},${g},${b},${isDark ? 0.35 : 0.20})`;
+
     marks[from] = { startingDay: true, color: primary, textColor: "#fff" };
 
     let cursor = from;
@@ -65,7 +75,7 @@ export function DateRangePicker({ from, to, onChange, isDark, text, muted, tile,
       marks[cursor] =
         cursor === to
           ? { endingDay: true, color: primary, textColor: "#fff" }
-          : { color: isDark ? "rgba(79,70,229,0.35)" : "rgba(79,70,229,0.20)", textColor: text };
+          : { color: inRangeColor, textColor: text };
     }
 
     return marks;

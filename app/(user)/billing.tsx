@@ -222,50 +222,36 @@ function BillingCard({
                 </Text>
 
                 <View style={styles.miniStatsRow}>
-                  <View
-                    style={[
-                      styles.miniPill,
-                      {
-                        backgroundColor:
-                          item.frequency === "weekly"
-                            ? isDark
-                              ? "rgba(59,130,246,0.18)"
-                              : "rgba(59,130,246,0.12)"
-                            : item.frequency === "monthly"
-                            ? isDark
-                              ? "rgba(168,85,247,0.18)"
-                              : "rgba(168,85,247,0.12)"
-                            : item.frequency === "yearly"
-                            ? isDark
-                              ? "rgba(245,158,11,0.20)"
-                              : "rgba(245,158,11,0.14)"
-                            : T.chipBg,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.miniPillText, { color: T.muted }]} numberOfLines={1}>
-                      {capitalize(item.frequency)}
-                    </Text>
-                  </View>
+                  {(() => {
+                    const freqColor =
+                      item.frequency === "weekly"
+                        ? "#3B82F6"
+                        : item.frequency === "monthly"
+                        ? "#A855F7"
+                        : item.frequency === "yearly"
+                        ? "#F59E0B"
+                        : T.muted;
+                    const freqBg = freqColor === T.muted ? T.chipBg : freqColor + (isDark ? "33" : "22");
+                    return (
+                      <View style={[styles.miniPill, { backgroundColor: freqBg }]}>
+                        <Text style={[styles.miniPillText, { color: isDark ? "#fff" : "#000" }]} numberOfLines={1}>
+                          {capitalize(item.frequency)}
+                        </Text>
+                      </View>
+                    );
+                  })()}
 
-                  <View
-                    style={[
-                      styles.miniPill,
-                      {
-                        backgroundColor: item.isActive
-                          ? isDark
-                            ? "rgba(34,197,94,0.22)"
-                            : "rgba(34,197,94,0.14)"
-                          : isDark
-                          ? "rgba(239,68,68,0.22)"
-                          : "rgba(239,68,68,0.14)",
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.miniPillText, { color: T.muted }]} numberOfLines={1}>
-                      {item.isActive ? "Active" : "Inactive"}
-                    </Text>
-                  </View>
+                  {(() => {
+                    const statusColor = item.isActive ? "#22C55E" : "#EF4444";
+                    const statusBg = statusColor + (isDark ? "33" : "22");
+                    return (
+                      <View style={[styles.miniPill, { backgroundColor: statusBg }]}>
+                        <Text style={[styles.miniPillText, { color: isDark ? "#fff" : "#000" }]} numberOfLines={1}>
+                          {item.isActive ? "Active" : "Inactive"}
+                        </Text>
+                      </View>
+                    );
+                  })()}
                 </View>
               </View>
 
@@ -460,13 +446,14 @@ export default function BillingScreen() {
               <GlassView
                 glassEffectStyle={glassStyle}
                 isInteractive
+                tintColor="#FF9500"
                 colorScheme={isDark ? "dark" : "light"}
                 style={styles.addBtn}
               >
                 <Text
                   style={[
                     styles.addBtnText,
-                    { color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" },
+                    { color: "#fff" },
                   ]}
                 >
                   Add

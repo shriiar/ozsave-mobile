@@ -351,7 +351,7 @@ export default function EditBillingModal({
   const updateBilling = useUpdateBilling();
   const saving = updateBilling.isPending;
 
-  const [form, setForm] = useState<BillingForm>({
+  const emptyBillingForm: BillingForm = {
     name: "",
     amount: "",
     category: "",
@@ -363,9 +363,13 @@ export default function EditBillingModal({
     sharedBy: currentUserId ? [currentUserId] : [],
     notes: "",
     isActive: true,
-  });
+  };
 
+  const [form, setForm] = useState<BillingForm>(emptyBillingForm);
+  const [initialForm, setInitialForm] = useState<BillingForm>(emptyBillingForm);
   const [error, setError] = useState<string | null>(null);
+
+  const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initialForm), [form, initialForm]);
 
   // Only animates `transform`, never `opacity` — animating opacity on an
   // ancestor of a GlassView permanently breaks its native glass rendering
@@ -384,7 +388,7 @@ export default function EditBillingModal({
       typeof m === "string" ? m : m?._id
     );
 
-    setForm({
+    const loaded: BillingForm = {
       name: billing.name ?? "",
       amount:
         billing.amount != null ? String(Number(billing.amount)) : "",
@@ -397,8 +401,10 @@ export default function EditBillingModal({
       sharedBy: sharedIds.filter(Boolean),
       notes: billing.notes ?? "",
       isActive: !!billing.isActive,
-    });
+    };
 
+    setForm(loaded);
+    setInitialForm(loaded);
     setError(null);
   }, [open, billing]);
 
@@ -607,13 +613,13 @@ export default function EditBillingModal({
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                     <Pressable
                       onPress={handleSave}
-                      disabled={saving}
-                      style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+                      disabled={saving || !isDirty}
+                      style={({ pressed }) => [{ opacity: !isDirty ? 0.4 : pressed ? 0.92 : 1 }]}
                     >
                       <GlassView
                         glassEffectStyle={glassStyle}
-                        isInteractive={!saving}
-                        tintColor={T.primary}
+                        isInteractive
+                        tintColor="#FF9500"
                         colorScheme={isDark ? "dark" : "light"}
                         style={styles.headerSaveBtn}
                       >

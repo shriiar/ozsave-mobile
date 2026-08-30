@@ -35,7 +35,6 @@ export function DashboardHeader(props: {
   const textPrimary = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
   const textMuted = isDark ? "rgba(148,163,184,0.95)" : "#64748B";
   const hairline = isDark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)";
-  const thumbBg = isDark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.08)";
 
   // --- Slide-to-select segmented control -----------------------------------
   // A single PanResponder drives both taps and drags across the whole strip,
@@ -147,10 +146,11 @@ export function DashboardHeader(props: {
             <GlassView
               glassEffectStyle={glassStyle}
               isInteractive
+              tintColor="#FF9500"
               colorScheme={isDark ? "dark" : "light"}
               style={styles.stepperBtn}
             >
-              <Ionicons name="chevron-back" size={15} color={textPrimary} />
+              <Ionicons name="chevron-back" size={18} color="#fff" />
             </GlassView>
           </Pressable>
 
@@ -161,11 +161,12 @@ export function DashboardHeader(props: {
           >
             <GlassView
               glassEffectStyle={glassStyle}
-              isInteractive={props.canGoForward}
+              isInteractive
+              tintColor="#FF9500"
               colorScheme={isDark ? "dark" : "light"}
               style={styles.stepperBtn}
             >
-              <Ionicons name="chevron-forward" size={15} color={textPrimary} />
+              <Ionicons name="chevron-forward" size={18} color="#fff" />
             </GlassView>
           </Pressable>
         </View>
@@ -208,7 +209,7 @@ export function DashboardHeader(props: {
                 top: SEGMENT_PADDING,
                 bottom: SEGMENT_PADDING,
                 width: thumbWidth,
-                backgroundColor: thumbBg,
+                backgroundColor: "#FF9500",
                 transform: [{ translateX: thumbX }],
               },
             ]}
@@ -224,7 +225,7 @@ export function DashboardHeader(props: {
                   style={[
                     active ? typography.footnoteEmphasized : typography.footnote,
                     styles.segmentText,
-                    { color: active ? textPrimary : textMuted },
+                    { color: active ? "#fff" : textMuted },
                   ]}
                 >
                   {opt.label}
@@ -261,9 +262,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   stepperBtn: {
-    height: 30,
-    width: 30,
-    borderRadius: 15,
+    height: 36,
+    width: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",

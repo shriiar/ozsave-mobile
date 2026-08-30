@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
+  ActivityIndicator,
   Platform,
   LayoutChangeEvent,
 } from "react-native";
@@ -128,11 +129,13 @@ function AnimatedCard({
   }, []);
 
   // Data refresh — re-wave when new data arrives
-  useEffect(() => {
-    if (revision === 0) return;
-    const t = animate();
-    return () => clearTimeout(t);
-  }, [revision]);
+  // Disabled: re-triggering this scale animation on every period/range
+  // change made the dashboard visibly "jump" each time you navigated.
+  // useEffect(() => {
+  //   if (revision === 0) return;
+  //   const t = animate();
+  //   return () => clearTimeout(t);
+  // }, [revision]);
 
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
@@ -202,6 +205,8 @@ export default function DashboardWithHouse({
     return { bg, text, muted };
   }, [isDark]);
 
+  const spinnerColor = isDark ? "rgba(255,255,255,0.92)" : "rgba(15,23,42,0.85)";
+
   const rangeMeta = useMemo(() => rangeMetaOf(range), [range]);
 
   const subtitle = useMemo(() => {
@@ -209,7 +214,18 @@ export default function DashboardWithHouse({
     return " ";
   }, [period?.start, period?.end]);
 
-  const refreshing = !!isFetching;
+  const [pullRefreshing, setPullRefreshing] = useState(false);
+
+  async function handlePullRefresh() {
+    setPullRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setPullRefreshing(false);
+    }
+  }
+
+  const showStickyLoader = !!isFetching && !pullRefreshing;
 
   const [viewportH, setViewportH] = useState(0);
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -322,6 +338,12 @@ export default function DashboardWithHouse({
         }}
       />
 
+      {showStickyLoader ? (
+        <View pointerEvents="none" style={[styles.stickyLoader, { top: topInset }]}>
+          <ActivityIndicator size="small" color={spinnerColor} style={{ transform: [{ scale: 1.4 }] }} />
+        </View>
+      ) : null}
+
       <ScrollView
         ref={scrollRef}
         style={{ flex: 1 }}
@@ -335,8 +357,10 @@ export default function DashboardWithHouse({
         overScrollMode="always"
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
+            refreshing={pullRefreshing}
+            onRefresh={handlePullRefresh}
+            tintColor={spinnerColor}
+            colors={[spinnerColor]}
             progressViewOffset={topInset}
           />
         }
@@ -447,6 +471,14 @@ export default function DashboardWithHouse({
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  stickyLoader: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    paddingVertical: 6,
+    zIndex: 15,
+  },
   container: {
     padding: 16,
     gap: 10,

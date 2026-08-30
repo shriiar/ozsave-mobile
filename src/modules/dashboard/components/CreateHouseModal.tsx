@@ -215,7 +215,7 @@ export default function CreateHouseModal({ open, onClose }: Props) {
                   >
                     <GlassView
                       glassEffectStyle={glassStyle}
-                      isInteractive={!!name.trim() && !busy}
+                      isInteractive
                       tintColor="#4F46E5"
                       colorScheme={isDark ? "dark" : "light"}
                       style={styles.btnPrimary}

@@ -490,7 +490,7 @@ export default function AddBillingModal({ open, onClose }: Props) {
                       <GlassView
                         glassEffectStyle={glassStyle}
                         isInteractive={!saving}
-                        tintColor={T.primary}
+                        tintColor="#FF9500"
                         colorScheme={isDark ? "dark" : "light"}
                         style={styles.headerSaveBtn}
                       >

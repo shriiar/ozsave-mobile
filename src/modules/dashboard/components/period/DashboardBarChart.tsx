@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -37,6 +37,15 @@ function formatDayShort(ymd: string) {
     const [yy, mm, dd] = (ymd || "").split("-");
     if (!yy || !mm || !dd) return ymd || "";
     return `${dd.padStart(2, "0")}/${mm.padStart(2, "0")}`;
+}
+
+const WEEKDAY_NAMES = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+function weekdayShort(ymd: string) {
+    const [yy, mm, dd] = (ymd || "").split("-").map(Number);
+    if (!yy || !mm || !dd) return "";
+    const date = new Date(yy, mm - 1, dd);
+    return WEEKDAY_NAMES[date.getDay()];
 }
 
 function TooltipRow(props: { label: string; color: string; value: number; textColor: string }) {
@@ -113,13 +122,9 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
     const BARS_W = BAR_W * 3 + INNER_SPACING * 2;
     const END_SPACING = Math.max(75, Math.ceil(BARS_W / 2) + 16);
 
-    const labelStep = useMemo(() => {
-        const n = safe.length;
-        if (n <= 7) return 1;
-        if (n <= 14) return 2;
-        if (n <= 30) return 3;
-        return 4;
-    }, [safe.length]);
+    // The chart scrolls horizontally, so there's no need to skip labels to
+    // fit a fixed width — every day gets its own label regardless of range.
+    const labelStep = 1;
 
     // --- Tooltip + scroll state ---
     const [scrollX, setScrollX] = useState(0);
@@ -151,6 +156,20 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
         return Math.max(chartW, w);
     }, [safe.length, chartW, INITIAL_SPACING, BARS_W, GROUP_SPACING, END_SPACING]);
 
+    // Default to showing the most recent days (the right edge) instead of
+    // making people manually swipe all the way over from the oldest day.
+    // scrollToEnd (not a manually computed x) so it always matches the
+    // ScrollView's real rendered content width, even if that ends up
+    // slightly wider than our own chartContentW estimate.
+    const scrollRef = useRef<ScrollView>(null);
+    useEffect(() => {
+        if (chartContentW <= chartW) return;
+        const t = setTimeout(() => {
+            scrollRef.current?.scrollToEnd({ animated: false });
+        }, 0);
+        return () => clearTimeout(t);
+    }, [safe.length, chartContentW, chartW]);
+
     // ---- Tap-to-dismiss logic (this is the important part) ----
     const barTapAtRef = useRef(0);
     const touchStartRef = useRef({ x: 0, y: 0, t: 0 });
@@ -162,7 +181,7 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
 
     const makeLabelComponent = useCallback(
         (show: boolean, dayKey: string) => {
-            if (!show) return () => <View style={{ height: 22 }} />;
+            if (!show) return () => <View style={{ height: 40 }} />;
 
             return () => (
                 <View
@@ -174,6 +193,9 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
                 >
                     <Text numberOfLines={1} style={{ color: ui.axis, fontSize: 11, fontWeight: "700" as any }}>
                         {formatDayShort(dayKey)}
+                    </Text>
+                    <Text numberOfLines={1} style={{ color: ui.axis, fontSize: 10, fontWeight: "800" as any, letterSpacing: 0.3, marginTop: 2 }}>
+                        {weekdayShort(dayKey)}
                     </Text>
                 </View>
             );
@@ -296,6 +318,7 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
                         )}
 
                         <ScrollView
+                            ref={scrollRef}
                             horizontal
                             nestedScrollEnabled
                             showsHorizontalScrollIndicator={false}
@@ -324,7 +347,8 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
                                     maxValue={maxY * 1.15}
                                     yAxisLabelWidth={Y_AXIS_LABEL_W}
                                     formatYLabel={(v) => formatAxisMoney(Number(v))}
-                                    xAxisLabelsHeight={22}
+                                    xAxisLabelsHeight={40}
+                                    labelsDistanceFromXaxis={20}
                                 />
                             </View>
                         </ScrollView>

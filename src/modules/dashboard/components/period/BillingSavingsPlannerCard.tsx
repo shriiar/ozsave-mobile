@@ -14,11 +14,15 @@ const SYS = {
   green: "#34C759",
   red: "#FF3B30",
   orange: "#FF9500",
+  yellow: "#FFCC00",
   indigo: "#5856D6",
   blue: "#007AFF",
   cyan: "#32ADE6",
+  teal: "#30B0C7",
+  mint: "#00C7BE",
   purple: "#AF52DE",
   pink: "#FF2D55",
+  brown: "#A2845E",
   gray: "#8E8E93",
 };
 
@@ -68,18 +72,44 @@ function sevLabel(sev: Sev): string {
 }
 
 const CAT_COLORS: Record<string, string> = {
-  entertainment: SYS.purple,
-  utilities: SYS.cyan,
-  insurance: SYS.blue,
   groceries: SYS.green,
-  transport: SYS.orange,
-  health: SYS.pink,
   rent: SYS.red,
+  utilities: SYS.cyan,
+  transport: SYS.orange, // Public Transport
+  private_transport: SYS.brown,
+  eating_out: SYS.teal,
+  shopping: SYS.yellow,
+  health: SYS.pink,
+  entertainment: SYS.purple,
+  education: SYS.mint,
   subscriptions: SYS.indigo,
+  personal_care: "#FF6482",
+  insurance: SYS.blue,
+  travel: "#8E6FF7", // Travel/Holidays
+  // "other" intentionally omitted — falls back to SYS.gray below.
 };
 
 function catColor(cat: string) {
   return CAT_COLORS[cat.toLowerCase()] ?? SYS.gray;
+}
+
+// "transport" and "travel" have display labels that differ from their wire
+// value (Public Transport / Travel/Holidays); everything else title-cases
+// straight from the raw category value, so new categories work for free.
+const CAT_LABEL_OVERRIDES: Record<string, string> = {
+  transport: "Public Transport",
+  travel: "Travel/Holidays",
+};
+
+function catLabel(raw: string) {
+  const key = String(raw ?? "").trim().toLowerCase();
+  if (!key) return "";
+  if (CAT_LABEL_OVERRIDES[key]) return CAT_LABEL_OVERRIDES[key];
+  return key
+    .replace(/[_-]+/g, " ")
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 }
 
 function monthKind(month: string): MonthKind {
@@ -376,7 +406,7 @@ function BillItem({ b, accent, ui }: { b: BillOccurrence; accent: string; ui: Ui
         <Text style={[styles.freqText, { color: ui.sub }]}>{b.frequency}</Text>
       </View>
       <View style={[styles.catBadge, { backgroundColor: cc + "28" }]}>
-        <Text style={[styles.catText, { color: cc }]}>{b.category}</Text>
+        <Text style={[styles.catText, { color: cc }]}>{catLabel(b.category)}</Text>
       </View>
       <Text style={[styles.billAmount, { color: ui.text }]}>{money2(b.amount)}</Text>
     </View>

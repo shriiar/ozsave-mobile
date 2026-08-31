@@ -52,11 +52,17 @@ const CATEGORY_OPTIONS = [
   { key: "groceries", label: "Groceries" },
   { key: "rent", label: "Rent" },
   { key: "utilities", label: "Utilities" },
-  { key: "transport", label: "Transport" },
+  { key: "transport", label: "Public Transport" },
+  { key: "private_transport", label: "Private Transport" },
   { key: "eating_out", label: "Eating out" },
   { key: "shopping", label: "Shopping" },
   { key: "health", label: "Health" },
   { key: "entertainment", label: "Entertainment" },
+  { key: "education", label: "Education" },
+  { key: "subscriptions", label: "Subscriptions" },
+  { key: "personal_care", label: "Personal Care" },
+  { key: "insurance", label: "Insurance" },
+  { key: "travel", label: "Travel/Holidays" },
   { key: "other", label: "Other" },
 ];
 

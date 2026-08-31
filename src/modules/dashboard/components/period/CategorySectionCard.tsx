@@ -7,6 +7,41 @@ import { useTheme } from "../../../../context/ThemeContext";
 
 const PIE_COLORS = ["#ef4444", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6"];
 
+// Stable per-category colors (matching BillingSavingsPlannerCard's palette)
+// so a category keeps the same color regardless of what else appears in a
+// given period's breakdown. Falls back to the old position-based PIE_COLORS
+// for any category not in this map — including ones the frontend doesn't
+// know about yet.
+const CATEGORY_COLORS: Record<string, string> = {
+  groceries: "#34C759",
+  rent: "#FF3B30",
+  utilities: "#32ADE6",
+  transport: "#FF9500",
+  private_transport: "#A2845E",
+  eating_out: "#30B0C7",
+  shopping: "#FFCC00",
+  health: "#FF2D55",
+  entertainment: "#AF52DE",
+  education: "#00C7BE",
+  subscriptions: "#5856D6",
+  personal_care: "#FF6482",
+  insurance: "#007AFF",
+  travel: "#8E6FF7",
+};
+
+function colorForCategory(raw: string, fallbackIndex: number) {
+  const key = String(raw ?? "").trim().toLowerCase();
+  return CATEGORY_COLORS[key] ?? PIE_COLORS[fallbackIndex % PIE_COLORS.length];
+}
+
+// "transport"/"travel" display labels differ from their wire value
+// (Public Transport / Travel/Holidays); everything else title-cases
+// straight from the raw value, so new categories work with no changes here.
+const CATEGORY_LABEL_OVERRIDES: Record<string, string> = {
+  transport: "Public Transport",
+  travel: "Travel/Holidays",
+};
+
 function money(n: number) {
   const v = Number(n ?? 0);
   if (!Number.isFinite(v)) return "$0";
@@ -16,10 +51,13 @@ function money(n: number) {
 function titleizeCategory(raw: string) {
     const s = String(raw ?? "").trim();
     if (!s) return "";
-  
+
+    const override = CATEGORY_LABEL_OVERRIDES[s.toLowerCase()];
+    if (override) return override;
+
     // turn underscores/hyphens into spaces, collapse multiple spaces
     const spaced = s.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
-  
+
     // Title Case each word
     return spaced
       .split(" ")
@@ -86,7 +124,7 @@ export function CategorySectionCard(props: Props) {
     return pie.map((p, i) => ({
       value: Number(p.amount ?? 0),
       text: `${Math.round(Number(p.percent ?? 0))}%`,
-      color: PIE_COLORS[i % PIE_COLORS.length],
+      color: colorForCategory(p.category, i),
       category: p.category,
       amount: Number(p.amount ?? 0),
       percent: Number(p.percent ?? 0),
@@ -169,7 +207,7 @@ export function CategorySectionCard(props: Props) {
               <View style={{ paddingHorizontal: 12, marginTop: 10 }}>
                 <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
                   {pie.map((c, i) => {
-                    const color = PIE_COLORS[i % PIE_COLORS.length];
+                    const color = colorForCategory(c.category, i);
                     const active = selectedIndex === i;
 
                     return (

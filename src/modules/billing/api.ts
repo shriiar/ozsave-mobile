@@ -9,10 +9,16 @@ export enum CostCategory {
   rent = "rent",
   utilities = "utilities",
   transport = "transport",
+  private_transport = "private_transport",
   eating_out = "eating_out",
   shopping = "shopping",
   health = "health",
   entertainment = "entertainment",
+  education = "education",
+  subscriptions = "subscriptions",
+  personal_care = "personal_care",
+  insurance = "insurance",
+  travel = "travel",
   other = "other",
 }
 

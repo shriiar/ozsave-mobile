@@ -6,9 +6,9 @@ import { PieChart } from "react-native-gifted-charts";
 import { useTheme } from "../../../../context/ThemeContext";
 
 const INCOME_TYPE_COLORS: Record<string, string> = {
-  tfn: "#22c55e",
-  abn: "#ef4444",
-  cash: "#eab308",
+  tfn: "#DB2777",
+  abn: "#7C3AED",
+  cash: "#FF9500",
 };
 const FALLBACK_PIE_COLORS = ["#3b82f6", "#8b5cf6", "#14b8a6", "#f59e0b", "#ec4899", "#10b981", "#ef4444"];
 

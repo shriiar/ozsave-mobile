@@ -1,8 +1,10 @@
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { GlassView } from "expo-glass-effect";
 import { useTheme } from "../../../../context/ThemeContext";
+import { useGlassStyle } from "../../../../context/GlassStyleContext";
 
 type Props = {
     rangeLabel: string;
@@ -22,21 +24,37 @@ function SummaryTile(props: {
     value: number;
     valueColor: string;
     ui: { text: string; sub: string; border: string; tileBg: string };
+    glassStyle: "clear" | "regular";
+    isDark: boolean;
 }) {
     return (
-        <View style={[styles.tile, { borderColor: props.ui.border, backgroundColor: props.ui.tileBg }]}>
-            <Text style={[styles.tileTitle, { color: props.ui.sub }]} numberOfLines={1}>
-                {props.title}
-            </Text>
-            <Text style={[styles.tileValue, { color: props.valueColor }]} numberOfLines={1}>
-                {money(props.value)}
-            </Text>
-        </View>
+        // Purely tactile — no navigation or state change, just the native
+        // iOS press bounce, as a bit of fun polish on the summary tiles.
+        <Pressable
+            style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.85 : 1 }]}
+            onPress={() => {}}
+        >
+            <GlassView
+                glassEffectStyle={props.glassStyle}
+                isInteractive
+                tintColor={props.ui.tileBg}
+                colorScheme={props.isDark ? "dark" : "light"}
+                style={styles.tile}
+            >
+                <Text style={[styles.tileTitle, { color: props.ui.sub }]} numberOfLines={1}>
+                    {props.title}
+                </Text>
+                <Text style={[styles.tileValue, { color: props.valueColor }]} numberOfLines={1}>
+                    {money(props.value)}
+                </Text>
+            </GlassView>
+        </Pressable>
     );
 }
 
 export function PeriodSummaryCards(props: Props) {
     const { resolvedTheme } = useTheme();
+    const { glassStyle } = useGlassStyle();
     const isDark = resolvedTheme === "dark";
 
     const ui = useMemo(() => {
@@ -66,9 +84,9 @@ export function PeriodSummaryCards(props: Props) {
                     <LinearGradient colors={ui.innerGrad as any} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
 
                     <View style={styles.grid}>
-                        <SummaryTile title="Cost" value={props.totalCost} valueColor={isDark ? "#ff6b6b" : "#dc2626"} ui={ui} />
-                        <SummaryTile title="Actual" value={props.manualIncome} valueColor={isDark ? "#34d399" : "#059669"} ui={ui} />
-                        <SummaryTile title="Estimate" value={props.estimatedIncome} valueColor={isDark ? "#fbbf24" : "#d97706"} ui={ui} />
+                        <SummaryTile title="Cost" value={props.totalCost} valueColor={isDark ? "#ff6b6b" : "#dc2626"} ui={ui} glassStyle={glassStyle} isDark={isDark} />
+                        <SummaryTile title="Actual" value={props.manualIncome} valueColor={isDark ? "#34d399" : "#059669"} ui={ui} glassStyle={glassStyle} isDark={isDark} />
+                        <SummaryTile title="Estimate" value={props.estimatedIncome} valueColor={isDark ? "#fbbf24" : "#d97706"} ui={ui} glassStyle={glassStyle} isDark={isDark} />
                     </View>
                 </View>
             </BlurView>
@@ -97,13 +115,13 @@ const styles = StyleSheet.create({
         gap: 10,
     },
     tile: {
-        flex: 1,
+        width: "100%",
         borderRadius: 14,
-        // borderWidth: StyleSheet.hairlineWidth,
         paddingVertical: 12,
         paddingHorizontal: 10,
         alignItems: "center",
         justifyContent: "center",
+        overflow: "hidden",
     },
     tileTitle: {
         fontSize: 13,

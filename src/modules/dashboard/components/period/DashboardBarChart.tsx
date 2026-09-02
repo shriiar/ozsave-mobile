@@ -138,23 +138,34 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
     const tooltipLeft = useMemo(() => {
         if (!selected) return 0;
 
-        const groupStartX = INITIAL_SPACING + selected.dayIdx * (BARS_W + GROUP_SPACING);
+        // Same boundary width as chartContentW — must include the
+        // INNER_SPACING gaps flanking each transparent group-spacer bar,
+        // or the tooltip drifts further off with each later day.
+        const boundaryW = GROUP_SPACING + INNER_SPACING * 2;
+        const groupStartX = INITIAL_SPACING + selected.dayIdx * (BARS_W + boundaryW);
         const anchorXInContent = groupStartX + BARS_W / 2;
         const anchorXInViewport = anchorXInContent - scrollX;
         const desiredLeft = anchorXInViewport - TOOLTIP_W / 2;
 
         const maxLeft = Math.max(0, viewportW - TOOLTIP_W);
         return clamp(desiredLeft, TOOLTIP_PAD, maxLeft - TOOLTIP_PAD);
-    }, [selected, scrollX, viewportW, INITIAL_SPACING, BARS_W, GROUP_SPACING]);
+    }, [selected, scrollX, viewportW, INITIAL_SPACING, BARS_W, GROUP_SPACING, INNER_SPACING]);
 
     // measure container width (same behavior you had)
     const [chartW, setChartW] = useState(0);
 
     const chartContentW = useMemo(() => {
         const n = safe.length;
-        const w = INITIAL_SPACING + n * BARS_W + Math.max(0, n - 1) * GROUP_SPACING + END_SPACING;
+        // Each day-group (BARS_W) already bundles its own 2 internal
+        // INNER_SPACING gaps. But the transparent GROUP_SPACING "spacer" bar
+        // inserted between groups is a real data point too, so the chart
+        // library adds an INNER_SPACING gap on *both* sides of it as well —
+        // without accounting for those, the calculated width undercounts
+        // the actual rendered chart, clipping the last day(s) off the end.
+        const boundaryW = GROUP_SPACING + INNER_SPACING * 2;
+        const w = INITIAL_SPACING + n * BARS_W + Math.max(0, n - 1) * boundaryW + END_SPACING;
         return Math.max(chartW, w);
-    }, [safe.length, chartW, INITIAL_SPACING, BARS_W, GROUP_SPACING, END_SPACING]);
+    }, [safe.length, chartW, INITIAL_SPACING, BARS_W, GROUP_SPACING, INNER_SPACING, END_SPACING]);
 
     // Default to showing the most recent days (the right edge) instead of
     // making people manually swipe all the way over from the oldest day.

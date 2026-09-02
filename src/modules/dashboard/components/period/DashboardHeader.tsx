@@ -126,13 +126,12 @@ export function DashboardHeader(props: {
       glassEffectStyle={glassStyle}
       colorScheme={isDark ? "dark" : "light"}
       onLayout={props.onLayout}
-      style={[styles.header, { paddingTop: insets.top + 14 }]}
+      style={[styles.header, { paddingTop: insets.top + 10 }]}
     >
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
-          <Text style={[typography.headline, { color: textPrimary }]}>{props.title}</Text>
           {!!props.subtitle && (
-            <Text style={[typography.footnote, styles.h2, { color: textMuted }]} numberOfLines={1}>
+            <Text style={[typography.subheadlineEmphasized, { color: textPrimary }]} numberOfLines={1}>
               {props.subtitle}
             </Text>
           )}
@@ -247,16 +246,15 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 20,
     paddingHorizontal: 18,
-    paddingBottom: 12,
+    paddingBottom: 10,
     borderRadius: 18,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginBottom: 10,
+    marginBottom: 8,
   },
-  h2: { marginTop: 1 },
   stepper: {
     flexDirection: "row",
     gap: 8,

@@ -17,6 +17,7 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler";
+import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Old pill nav bar shell — replaced by the native tab bar at app/(user)/_layout.tsx.
@@ -136,7 +137,9 @@ function IncomeCard({
                 <Animated.View style={[styles.deleteAction, { transform: [{ translateX }, { scale }] }]}>
                     <Pressable
                         onPress={() => {
-                            swipeRef.current?.close();
+                            // Deliberately not closing the swipe here — keeping the
+                            // card open makes it clear which item is being deleted
+                            // while the confirmation is up.
                             onDelete(item._id, item.name);
                         }}
                         style={({ pressed }) => [{ opacity: pressed ? 0.86 : 1 }]}
@@ -300,6 +303,7 @@ function IncomeCard({
 export default function IncomeScreen() {
     const listRef = useScrollToTop<FlatList>("/income");
     const remountKey = useRemountOnThemeRefocus();
+    const isFocused = useIsFocused();
     const { glassStyle } = useGlassStyle();
 
     const { resolvedTheme } = useTheme();
@@ -377,6 +381,12 @@ export default function IncomeScreen() {
         swipeRefs.current = {};
     }
 
+    // Leaving this tab (e.g. cancelling a delete and switching to another
+    // tab) shouldn't leave a card stuck swiped open when you come back.
+    useEffect(() => {
+        if (!isFocused) closeAllSwipes();
+    }, [isFocused]);
+
     function onSwipeStart(nextId: string) {
         if (openSwipe.current && openSwipe.current.id !== nextId) closeOpenSwipe();
     }
@@ -400,7 +410,9 @@ export default function IncomeScreen() {
         setEditingId(id);
     }
     function openDelete(id: string, name: string) {
-        closeOpenSwipe();
+        // Deliberately not closing the swipe here — keeping the card open
+        // makes it clear which item is being deleted while the
+        // confirmation is up.
         setDeleting({ id, name });
     }
 

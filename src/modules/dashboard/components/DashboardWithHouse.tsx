@@ -84,6 +84,14 @@ function shortLabel(ymd: string) {
   return mm && dd ? `${mm}/${dd}` : ymd;
 }
 
+function fmtMonthYear(ymd: string) {
+  if (!ymd || typeof ymd !== "string") return "";
+  const parts = ymd.split("-");
+  if (parts.length < 2) return ymd;
+  const mon = MONTHS[parseInt(parts[1], 10) - 1] ?? parts[1];
+  return `${mon} ${parts[0]}`;
+}
+
 function fmtDate(ymd: string) {
   if (!ymd || typeof ymd !== "string") return "";
   const parts = ymd.split("-");
@@ -210,9 +218,10 @@ export default function DashboardWithHouse({
   const rangeMeta = useMemo(() => rangeMetaOf(range), [range]);
 
   const subtitle = useMemo(() => {
-    if (period?.start && period?.end) return `${fmtDate(period.start)} → ${fmtDate(period.end)}`;
-    return " ";
-  }, [period?.start, period?.end]);
+    if (!period?.start || !period?.end) return " ";
+    if (range === "30d") return fmtMonthYear(period.start);
+    return `${fmtDate(period.start)} → ${fmtDate(period.end)}`;
+  }, [period?.start, period?.end, range]);
 
   const [pullRefreshing, setPullRefreshing] = useState(false);
 

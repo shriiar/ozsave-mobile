@@ -48,6 +48,7 @@ function weekdayShort(ymd: string) {
     return WEEKDAY_NAMES[date.getDay()];
 }
 
+
 function TooltipRow(props: { label: string; color: string; value: number; textColor: string }) {
     return (
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>

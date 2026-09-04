@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useCallback } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import React, { useMemo } from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { PieChart } from "react-native-gifted-charts";
@@ -81,9 +81,6 @@ export function IncomeTypeSectionCard(props: Props) {
   const top3 = props.incomeTypeInsights?.top3 ?? [];
   const hasTop3 = top3.length > 0;
 
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const closeTooltip = useCallback(() => setSelectedIndex(null), []);
-
   const pieData = useMemo(() => {
     return pie.map((p, i) => ({
       value: Number(p.amount ?? 0),
@@ -92,11 +89,8 @@ export function IncomeTypeSectionCard(props: Props) {
       incomeType: p.incomeType,
       amount: Number(p.amount ?? 0),
       percent: Number(p.percent ?? 0),
-      onPress: () => setSelectedIndex(i),
     }));
   }, [pie]);
-
-  const selected = selectedIndex == null ? null : pieData[selectedIndex];
 
   return (
     <View style={[styles.wrap, { borderColor: ui.border }]}>
@@ -105,9 +99,6 @@ export function IncomeTypeSectionCard(props: Props) {
 
         <View style={[styles.inner, { borderColor: ui.border }]}>
           <LinearGradient colors={ui.innerGrad as any} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
-
-          {/* tap anywhere closes tooltip */}
-          <Pressable style={StyleSheet.absoluteFill} onPress={closeTooltip} />
 
           <View style={{ paddingHorizontal: 12, paddingTop: 10 }}>
             <Text style={{ color: ui.text, fontWeight: "700", fontSize: 14 }}>{props.title}</Text>
@@ -120,14 +111,14 @@ export function IncomeTypeSectionCard(props: Props) {
 
           {hasData ? (
             <View style={{ marginTop: 10 }}>
-              {/* Donut + tooltip */}
-              <View style={styles.donutRow}>
+              {/* Donut (left) + income-type listing (right), side by side */}
+              <View style={styles.row}>
                 <View style={[styles.donutPanel, { borderColor: ui.border }]}>
                   <PieChart
                     data={pieData as any}
                     donut
-                    radius={78}
-                    innerRadius={50}
+                    radius={62}
+                    innerRadius={40}
                     strokeWidth={0}
                     innerCircleColor={"transparent"}
                     textColor={ui.text}
@@ -135,70 +126,36 @@ export function IncomeTypeSectionCard(props: Props) {
                   />
                 </View>
 
-                {selected ? (
-                  <View
-                    pointerEvents="none"
-                    style={[
-                      styles.tooltip,
-                      {
-                        borderColor: ui.border,
-                        backgroundColor: isDark ? "rgba(5,5,5,0.94)" : "rgba(255,255,255,0.98)",
-                      },
-                    ]}
-                  >
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                      <View style={{ height: 10, width: 10, borderRadius: 6, backgroundColor: selected.color }} />
-                      <Text style={{ color: ui.text, fontWeight: "700", fontSize: 12 }} numberOfLines={1}>
-                        {titleizeIncomeType(selected.incomeType)}
-                      </Text>
-                    </View>
+                <View style={styles.listCol}>
+                  <ScrollView style={{ maxHeight: 148 }} showsVerticalScrollIndicator={false} nestedScrollEnabled>
+                    {pie.map((c, i) => {
+                      const color = colorForIncomeType(c.incomeType, i);
 
-                    <View style={{ height: 8 }} />
+                      return (
+                        <View
+                          key={c.incomeType}
+                          style={[styles.tile, { borderColor: ui.border, backgroundColor: ui.tileBg }]}
+                        >
+                          <View style={{ height: 8, width: 8, borderRadius: 4, backgroundColor: color, marginTop: 3 }} />
 
-                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                      <Text style={{ color: ui.sub, fontWeight: "700", fontSize: 12 }}>Amount</Text>
-                      <Text style={{ color: ui.text, fontWeight: "700", fontSize: 12 }}>{money(selected.amount)}</Text>
-                    </View>
-
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 6 }}>
-                      <Text style={{ color: ui.sub, fontWeight: "700", fontSize: 12 }}>Share</Text>
-                      <Text style={{ color: ui.text, fontWeight: "700", fontSize: 12 }}>{selected.percent}%</Text>
-                    </View>
-                  </View>
-                ) : null}
-              </View>
-
-              {/* Legend list */}
-              <View style={{ paddingHorizontal: 12, marginTop: 10 }}>
-                <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
-                  {pie.map((c, i) => {
-                    const color = colorForIncomeType(c.incomeType, i);
-                    const active = selectedIndex === i;
-
-                    return (
-                      <Pressable
-                        key={c.incomeType}
-                        onPress={() => setSelectedIndex(i)}
-                        style={[
-                          styles.tile,
-                          { borderColor: ui.border, backgroundColor: ui.tileBg, opacity: active ? 1 : 0.92 },
-                        ]}
-                      >
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
-                          <View style={{ height: 10, width: 10, borderRadius: 6, backgroundColor: color }} />
-                          <Text style={{ color: ui.text, fontWeight: "700", fontSize: 13 }} numberOfLines={1}>
+                          <Text
+                            style={{ color: ui.text, fontWeight: "700", fontSize: 12, flex: 1, minWidth: 0 }}
+                            numberOfLines={2}
+                          >
                             {titleizeIncomeType(c.incomeType)}
                           </Text>
-                        </View>
 
-                        <View style={{ alignItems: "flex-end" }}>
-                          <Text style={{ color: ui.text, fontWeight: "700", fontSize: 13 }}>{money(c.amount)}</Text>
-                          <Text style={{ color: ui.sub, fontWeight: "700", fontSize: 12 }}>{c.percent}%</Text>
+                          <View style={{ alignItems: "flex-end" }}>
+                            <Text style={{ color: ui.text, fontWeight: "700", fontSize: 12 }} numberOfLines={1}>
+                              {money(c.amount)}
+                            </Text>
+                            <Text style={{ color: ui.sub, fontWeight: "700", fontSize: 11 }}>{c.percent}%</Text>
+                          </View>
                         </View>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
               </View>
 
               {/* Top 3 */}
@@ -271,36 +228,33 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     paddingBottom: 2,
   },
-  donutRow: {
+  row: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+    alignItems: "flex-start",
+    gap: 10,
     paddingHorizontal: 12,
   },
   donutPanel: {
-    height: 160,
-    width: 160,
+    height: 130,
+    width: 130,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
   },
-  tooltip: {
+  listCol: {
     flex: 1,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    maxWidth: 220,
+    minWidth: 0,
   },
   tile: {
     borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 8,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 8,
   },
   top3Box: {
     borderRadius: 14,

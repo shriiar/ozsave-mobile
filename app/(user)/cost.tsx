@@ -17,6 +17,7 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler";
+import { useIsFocused } from "@react-navigation/native";
 
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
@@ -130,8 +131,9 @@ function CostCard({
                 <Animated.View style={[styles.deleteAction, { transform: [{ translateX }, { scale }] }]}>
                     <Pressable
                         onPress={() => {
-                            // close swipe first so it doesn't look broken under modal
-                            swipeRef.current?.close();
+                            // Deliberately not closing the swipe here — keeping the
+                            // card open makes it clear which item is being deleted
+                            // while the confirmation is up.
                             onDelete(item._id, item.name);
                         }}
                         style={({ pressed }) => [{ opacity: pressed ? 0.86 : 1 }]}
@@ -267,6 +269,7 @@ export default function CostScreen() {
 
     const listRef = useScrollToTop<FlatList>("/cost");
     const remountKey = useRemountOnThemeRefocus();
+    const isFocused = useIsFocused();
     const { glassStyle } = useGlassStyle();
 
     const { user } = useAuth();
@@ -350,6 +353,12 @@ export default function CostScreen() {
         Object.values(swipeRefs.current).forEach((close) => close());
         swipeRefs.current = {};
     }
+
+    // Leaving this tab (e.g. cancelling a delete and switching to another
+    // tab) shouldn't leave a card stuck swiped open when you come back.
+    useEffect(() => {
+        if (!isFocused) closeAllSwipes();
+    }, [isFocused]);
 
     function onSwipeStart(nextId: string) {
         if (openSwipe.current && openSwipe.current.id !== nextId) closeOpenSwipe();

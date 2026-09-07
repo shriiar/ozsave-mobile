@@ -2,6 +2,7 @@ import React, { memo, useMemo, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { PieChart } from "react-native-gifted-charts";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../../context/ThemeContext";
 import { typography } from "../../../../theme/typography";
@@ -26,11 +27,18 @@ const SYS = {
   gray: "#8E8E93",
 };
 
+// Vibrant jewel-tone palette for the Income vs. costs pie — richer and more
+// saturated than the flat SYS colors so the chart reads as premium.
+const PIE = {
+  emerald: "#00D68F",
+  wine: "#FF3366",
+  gold: "#FFB020",
+};
+
 type Props = {
   data?: BillingSavingsPlanner;
 };
 
-type Sev = "good" | "warn" | "bad";
 type MonthKind = "past" | "current" | "future";
 
 type UiVars = {
@@ -57,18 +65,6 @@ function buildUi(isDark: boolean): UiVars {
     tileBg: isDark ? "rgba(22,22,22,0.60)" : "rgba(237,237,237,0.90)",
     barTrack: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
   };
-}
-
-function sevColor(sev: Sev): string {
-  if (sev === "good") return SYS.green;
-  if (sev === "warn") return SYS.orange;
-  return SYS.red;
-}
-
-function sevLabel(sev: Sev): string {
-  if (sev === "good") return "SAFE";
-  if (sev === "warn") return "NOTE";
-  return "ALERT";
 }
 
 const CAT_COLORS: Record<string, string> = {
@@ -152,7 +148,6 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
   }, [data?.month]);
 
   const [showPaid, setShowPaid] = useState(false);
-  const [showInsights, setShowInsights] = useState(false);
 
   const sortedUpcoming = useMemo(() => {
     const list = data?.bills?.upcoming ?? [];
@@ -161,15 +156,28 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
 
   if (!data || !derived) return null;
 
-  const { month, bills, totals, budget, suggestions } = data;
+  const { month, bills, totals, budget } = data;
   const { mtdIncome, mtdCosts, bufferAfterUpcoming } = budget;
   const { kindMeta, isFuture } = derived;
 
-  const barTotal = Math.max(mtdIncome, mtdCosts + totals.upcoming, 1);
-  const incomeFlex = Math.min(mtdIncome / barTotal, 1);
-  const costFlex = Math.min(mtdCosts / barTotal, 1);
-  const upcomingFlex = Math.min(totals.upcoming / barTotal, 1 - costFlex);
   const bufferPositive = bufferAfterUpcoming >= 0;
+
+  // Income vs. costs pie: Income gets its own slice alongside Paid and
+  // Upcoming, so income is directly visible in the chart rather than only
+  // implied as the leftover/buffer. Uses a deeper jewel-tone palette
+  // (emerald / wine / gold) instead of the flat Apple system colors used
+  // elsewhere in this card, for a more premium chart feel.
+  const allocSlices = [
+    { key: "income", label: "Income", value: Math.max(mtdIncome, 0), color: PIE.emerald },
+    { key: "paid", label: "Paid", value: Math.max(mtdCosts, 0), color: PIE.wine },
+    { key: "upcoming", label: "Upcoming", value: Math.max(totals.upcoming, 0), color: PIE.gold },
+  ].filter((s) => s.value > 0);
+  const allocTotal = Math.max(allocSlices.reduce((sum, s) => sum + s.value, 0), 1);
+  const pieData = allocSlices.map((s) => ({
+    value: s.value,
+    color: s.color,
+    label: s.label,
+  }));
 
   return (
     <View style={[styles.wrap, { borderColor: ui.border }]}>
@@ -203,49 +211,48 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
 
           {!isFuture ? (
             <View style={styles.barSection}>
-              <View style={styles.legendRow}>
-                <LegendDot color={SYS.green} label="Income" ui={ui} />
-                <LegendDot color={SYS.red} label="Paid" ui={ui} />
-                <LegendDot color={SYS.orange} label="Upcoming" ui={ui} />
-              </View>
+              <Text style={[styles.pieSectionLabel, { color: ui.sub }]}>Income vs costs</Text>
 
-              <BarRow label="Income" value={money2(mtdIncome)} ui={ui}>
-                <View style={[styles.barTrack, { backgroundColor: ui.barTrack }]}>
-                  <View style={{ flex: incomeFlex, height: 10, borderRadius: 5, backgroundColor: SYS.green }} />
-                  <View style={{ flex: Math.max(0, 1 - incomeFlex), height: 10 }} />
-                </View>
-              </BarRow>
-              <BarRow label="Costs" value={money2(mtdCosts + totals.upcoming)} ui={ui}>
-                <View style={[styles.barTrack, { backgroundColor: ui.barTrack, flexDirection: "row" }]}>
-                  {costFlex > 0 && (
-                    <View
-                      style={{
-                        flex: costFlex,
-                        height: 10,
-                        backgroundColor: SYS.red,
-                        borderTopLeftRadius: 5,
-                        borderBottomLeftRadius: 5,
-                        borderTopRightRadius: upcomingFlex > 0 ? 0 : 5,
-                        borderBottomRightRadius: upcomingFlex > 0 ? 0 : 5,
-                      }}
+              <View style={styles.pieRow}>
+                <View style={styles.pieDonutCol}>
+                  <View style={[styles.pieDonutPanel, { borderColor: ui.border }]}>
+                    <PieChart
+                      data={pieData as any}
+                      donut
+                      radius={62}
+                      innerRadius={40}
+                      strokeWidth={0}
+                      innerCircleColor={"transparent"}
+                      textColor={ui.text}
+                      textSize={10}
                     />
-                  )}
-                  {upcomingFlex > 0 && (
-                    <View
-                      style={{
-                        flex: upcomingFlex,
-                        height: 10,
-                        backgroundColor: SYS.orange,
-                        borderTopLeftRadius: costFlex > 0 ? 0 : 5,
-                        borderBottomLeftRadius: costFlex > 0 ? 0 : 5,
-                        borderTopRightRadius: 5,
-                        borderBottomRightRadius: 5,
-                      }}
-                    />
-                  )}
-                  <View style={{ flex: Math.max(0, 1 - costFlex - upcomingFlex), height: 10 }} />
+                  </View>
                 </View>
-              </BarRow>
+
+                <View style={styles.pieListCol}>
+                  {allocSlices.map((s) => (
+                    <View key={s.key} style={[styles.pieTile, { backgroundColor: ui.tileBg }]}>
+                      <View style={{ height: 8, width: 8, borderRadius: 4, backgroundColor: s.color, marginTop: 3 }} />
+
+                      <Text
+                        style={{ color: ui.text, fontWeight: "700", fontSize: 12, flex: 1, minWidth: 0 }}
+                        numberOfLines={2}
+                      >
+                        {s.label}
+                      </Text>
+
+                      <View style={{ alignItems: "flex-end" }}>
+                        <Text style={{ color: ui.text, fontWeight: "700", fontSize: 12 }} numberOfLines={1}>
+                          {money2(s.value)}
+                        </Text>
+                        <Text style={{ color: ui.sub, fontWeight: "700", fontSize: 11 }}>
+                          {Math.round((s.value / allocTotal) * 100)}%
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
 
               <View
                 style={[
@@ -308,64 +315,11 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
             </View>
           )}
 
-          {suggestions.length > 0 && (
-            <View style={styles.suggestionsSection}>
-              <TouchableOpacity style={styles.collapseHeader} onPress={() => setShowInsights(v => !v)} activeOpacity={0.7}>
-                <Text style={[styles.sectionTitle, { color: ui.sub, marginBottom: 0 }]}>Insights</Text>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <Text style={{ fontSize: 11, fontWeight: "600", color: ui.sub }}>{suggestions.length} notes</Text>
-                  <Text style={{ fontSize: 13, color: ui.sub }}>{showInsights ? "▾" : "›"}</Text>
-                </View>
-              </TouchableOpacity>
-              {showInsights && suggestions.map((s, i) => (
-                <View key={i} style={[styles.suggestionRow, { backgroundColor: ui.tileBg }]}>
-                  <View style={{ width: 3, borderRadius: 2, alignSelf: "stretch", backgroundColor: sevColor(s.severity) }} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontWeight: "800", color: sevColor(s.severity), marginBottom: 3, letterSpacing: 0.4 }}>
-                      {sevLabel(s.severity)}
-                    </Text>
-                    <Text style={[styles.suggestionText, { color: ui.text }]} numberOfLines={3}>
-                      {s.message}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
         </View>
       </BlurView>
     </View>
   );
 });
-
-function BarRow({
-  label,
-  value,
-  ui,
-  children,
-}: {
-  label: string;
-  value: string;
-  ui: UiVars;
-  children: React.ReactNode;
-}) {
-  return (
-    <View style={styles.barRow}>
-      <Text style={[styles.barRowLabel, { color: ui.sub }]}>{label}</Text>
-      <View style={{ flex: 1 }}>{children}</View>
-      <Text style={[styles.barRowValue, { color: ui.text }]}>{value}</Text>
-    </View>
-  );
-}
-
-function LegendDot({ color, label, ui }: { color: string; label: string; ui: UiVars }) {
-  return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-      <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: color }} />
-      <Text style={[typography.caption2, { color: ui.sub }]}>{label}</Text>
-    </View>
-  );
-}
 
 function Tile({
   label,
@@ -470,11 +424,28 @@ const styles = StyleSheet.create({
   tileValue: { marginTop: 5, fontSize: 15, fontWeight: "800" },
 
   barSection: { marginTop: 18, gap: 10 },
-  legendRow: { flexDirection: "row", gap: 14, marginBottom: 2 },
-  barTrack: { height: 10, borderRadius: 5, overflow: "hidden", flexDirection: "row" },
-  barRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  barRowLabel: { fontSize: 11, fontWeight: "600", width: 52 },
-  barRowValue: { fontSize: 12, fontWeight: "800", width: 64, textAlign: "right" },
+  pieSectionLabel: { fontSize: 11, fontWeight: "700", marginBottom: 2 },
+  pieRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  pieDonutCol: { alignItems: "center" },
+  pieDonutPanel: {
+    height: 130,
+    width: 130,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  pieListCol: { flex: 1, minWidth: 0 },
+  pieTile: {
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 8,
+  },
   bufferPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -516,17 +487,4 @@ const styles = StyleSheet.create({
   catBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
   catText: { fontSize: 11, fontWeight: "700" },
   billAmount: { fontSize: 13, fontWeight: "700" },
-
-  suggestionsSection: { marginTop: 18 },
-  suggestionRow: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    gap: 10,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 13,
-    marginBottom: 8,
-    overflow: "hidden",
-  },
-  suggestionText: { flex: 1, fontSize: 13, fontWeight: "600", lineHeight: 19 },
 });

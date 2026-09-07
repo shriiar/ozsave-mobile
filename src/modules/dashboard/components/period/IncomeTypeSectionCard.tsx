@@ -78,6 +78,13 @@ export function IncomeTypeSectionCard(props: Props) {
   const pie = useMemo(() => (props.pie ?? []).slice(0, 7), [props.pie]);
   const hasData = pie.length > 0;
 
+  // Sum every income type, not just the displayed top 7, so the total is
+  // always accurate even when there are more types than fit the list.
+  const totalAmount = useMemo(
+    () => (props.pie ?? []).reduce((sum, p) => sum + Number(p.amount ?? 0), 0),
+    [props.pie]
+  );
+
   const top3 = props.incomeTypeInsights?.top3 ?? [];
   const hasTop3 = top3.length > 0;
 
@@ -113,17 +120,30 @@ export function IncomeTypeSectionCard(props: Props) {
             <View style={{ marginTop: 10 }}>
               {/* Donut (left) + income-type listing (right), side by side */}
               <View style={styles.row}>
-                <View style={[styles.donutPanel, { borderColor: ui.border }]}>
-                  <PieChart
-                    data={pieData as any}
-                    donut
-                    radius={62}
-                    innerRadius={40}
-                    strokeWidth={0}
-                    innerCircleColor={"transparent"}
-                    textColor={ui.text}
-                    textSize={10}
-                  />
+                <View style={styles.donutCol}>
+                  <View style={[styles.donutPanel, { borderColor: ui.border }]}>
+                    <PieChart
+                      data={pieData as any}
+                      donut
+                      radius={62}
+                      innerRadius={40}
+                      strokeWidth={0}
+                      innerCircleColor={"transparent"}
+                      textColor={ui.text}
+                      textSize={10}
+                    />
+                  </View>
+
+                  <View style={{ alignItems: "center", marginTop: 8 }}>
+                    <Text
+                      style={{ color: ui.text, fontWeight: "800", fontSize: 14 }}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.7}
+                    >
+                      {money(totalAmount)}
+                    </Text>
+                  </View>
                 </View>
 
                 <View style={styles.listCol}>
@@ -233,6 +253,9 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 10,
     paddingHorizontal: 12,
+  },
+  donutCol: {
+    alignItems: "center",
   },
   donutPanel: {
     height: 130,

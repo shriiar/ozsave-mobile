@@ -168,16 +168,14 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
         return Math.max(chartW, w);
     }, [safe.length, chartW, INITIAL_SPACING, BARS_W, GROUP_SPACING, INNER_SPACING, END_SPACING]);
 
-    // Default to showing the most recent days (the right edge) instead of
-    // making people manually swipe all the way over from the oldest day.
-    // scrollToEnd (not a manually computed x) so it always matches the
-    // ScrollView's real rendered content width, even if that ends up
-    // slightly wider than our own chartContentW estimate.
+    // Default to showing the earliest days (the left edge / oldest day)
+    // instead of leaving a stale scroll position from a previous, differently
+    // sized range.
     const scrollRef = useRef<ScrollView>(null);
     useEffect(() => {
         if (chartContentW <= chartW) return;
         const t = setTimeout(() => {
-            scrollRef.current?.scrollToEnd({ animated: false });
+            scrollRef.current?.scrollTo({ x: 0, animated: false });
         }, 0);
         return () => clearTimeout(t);
     }, [safe.length, chartContentW, chartW]);

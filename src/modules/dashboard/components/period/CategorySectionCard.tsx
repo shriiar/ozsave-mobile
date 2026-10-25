@@ -1,9 +1,11 @@
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { PieChart } from "react-native-gifted-charts";
 import { useTheme } from "../../../../context/ThemeContext";
+import { DASHBOARD_ACCENT } from "./formatters";
 
 const PIE_COLORS = ["#ef4444", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6"];
 
@@ -87,11 +89,16 @@ export type CategoryInsights = {
 type Props = {
   pie: CategoryPieItem[];
   categoryInsights?: CategoryInsights;
+  // Dashboard's currently displayed period, so tapping a category row can
+  // jump to Cost pre-filtered to exactly what was tapped.
+  periodFrom?: string;
+  periodTo?: string;
 };
 
 export function CategorySectionCard(props: Props) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const router = useRouter();
 
   const ui = useMemo(() => {
     const text = isDark ? "rgba(226,232,240,0.92)" : "rgba(15,23,42,0.92)";
@@ -187,26 +194,42 @@ export function CategorySectionCard(props: Props) {
                       const color = colorForCategory(c.category, i);
 
                       return (
-                        <View
+                        <Pressable
                           key={c.category}
-                          style={[styles.tile, { borderColor: ui.border, backgroundColor: ui.tileBg }]}
+                          onPress={() =>
+                            router.push({
+                              pathname: "/cost",
+                              params: {
+                                category: c.category,
+                                ...(props.periodFrom ? { from: props.periodFrom } : {}),
+                                ...(props.periodTo ? { to: props.periodTo } : {}),
+                              },
+                            })
+                          }
+                          style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${titleizeCategory(c.category)}: ${money(c.amount)}`}
                         >
-                          <View style={{ height: 8, width: 8, borderRadius: 4, backgroundColor: color, marginTop: 3 }} />
-
-                          <Text
-                            style={{ color: ui.text, fontWeight: "700", fontSize: 12, flex: 1, minWidth: 0 }}
-                            numberOfLines={2}
+                          <View
+                            style={[styles.tile, { borderColor: ui.border, backgroundColor: ui.tileBg }]}
                           >
-                            {titleizeCategory(c.category)}
-                          </Text>
+                            <View style={{ height: 8, width: 8, borderRadius: 4, backgroundColor: color, marginTop: 3 }} />
 
-                          <View style={{ alignItems: "flex-end" }}>
-                            <Text style={{ color: ui.text, fontWeight: "700", fontSize: 12 }} numberOfLines={1}>
-                              {money(c.amount)}
+                            <Text
+                              style={{ color: ui.text, fontWeight: "700", fontSize: 12, flex: 1, minWidth: 0 }}
+                              numberOfLines={2}
+                            >
+                              {titleizeCategory(c.category)}
                             </Text>
-                            <Text style={{ color: ui.sub, fontWeight: "700", fontSize: 11 }}>{c.percent}%</Text>
+
+                            <View style={{ alignItems: "flex-end" }}>
+                              <Text style={{ color: ui.text, fontWeight: "700", fontSize: 12 }} numberOfLines={1}>
+                                {money(c.amount)}
+                              </Text>
+                              <Text style={{ color: ui.sub, fontWeight: "700", fontSize: 11 }}>{c.percent}%</Text>
+                            </View>
                           </View>
-                        </View>
+                        </Pressable>
                       );
                     })}
                   </ScrollView>
@@ -228,7 +251,7 @@ export function CategorySectionCard(props: Props) {
                         const down = delta < 0;
 
                         const deltaText = !up && !down ? "No change" : `${up ? "▲" : "▼"} ${money(Math.abs(delta))}`;
-                        const deltaColor = !up && !down ? ui.sub : up ? "#ef4444" : "#10b981";
+                        const deltaColor = !up && !down ? ui.sub : up ? DASHBOARD_ACCENT.cost : DASHBOARD_ACCENT.income;
 
                         return (
                           <View key={`${r.category}-${idx}`} style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 8 }}>

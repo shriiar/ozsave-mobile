@@ -18,6 +18,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler";
 import { useIsFocused } from "@react-navigation/native";
+import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Old pill nav bar shell — replaced by the native tab bar at app/(user)/_layout.tsx.
@@ -327,22 +328,35 @@ export default function IncomeScreen() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
 
+    // The dashboard's Actual/Estimate summary tiles and income-type breakdown
+    // rows link here with `source`/`incomeType`/`from`/`to` params so the
+    // list lands pre-filtered to what was tapped and the period being viewed.
+    const params = useLocalSearchParams<{ source?: string; incomeType?: string; from?: string; to?: string }>();
+    const initialSource: IncomeFiltersDraft["source"] =
+        params.source === "manual" || params.source === "estimate" ? params.source : "all";
+    const initialIncomeType: IncomeFiltersDraft["incomeType"] =
+        params.incomeType === "tfn" || params.incomeType === "abn" || params.incomeType === "cash"
+            ? params.incomeType
+            : "all";
+    const initialFrom = typeof params.from === "string" ? params.from : "";
+    const initialTo = typeof params.to === "string" ? params.to : "";
+
     const [draft, setDraft] = useState<IncomeFiltersDraft>({
         name: "",
-        source: "all",
-        incomeType: "all",
-        from: "",
-        to: "",
+        source: initialSource,
+        incomeType: initialIncomeType,
+        from: initialFrom,
+        to: initialTo,
         sortBy: "date",
         sortOrder: -1,
     });
 
     const [applied, setApplied] = useState<IncomeFiltersDraft>({
         name: "",
-        source: "all",
-        incomeType: "all",
-        from: "",
-        to: "",
+        source: initialSource,
+        incomeType: initialIncomeType,
+        from: initialFrom,
+        to: initialTo,
         sortBy: "date",
         sortOrder: -1,
     });
@@ -428,6 +442,31 @@ export default function IncomeScreen() {
         sortBy: applied.sortBy,
         sortOrder: applied.sortOrder,
     });
+
+    // Bottom-tab screens stay mounted, so re-tapping the Actual/Estimate
+    // dashboard tiles (or an income-type row) with new params doesn't
+    // remount this screen — the `useState` initializers above only ran
+    // once, on the very first mount. This re-applies the params every time
+    // they actually change, so a second visit with a different period or
+    // type isn't silently ignored.
+    useEffect(() => {
+        const hasIncoming = !!(params.source || params.incomeType || params.from || params.to);
+        if (!hasIncoming) return;
+
+        const next = (prev: IncomeFiltersDraft): IncomeFiltersDraft => ({
+            ...prev,
+            source: params.source === "manual" || params.source === "estimate" ? params.source : prev.source,
+            incomeType:
+                params.incomeType === "tfn" || params.incomeType === "abn" || params.incomeType === "cash"
+                    ? params.incomeType
+                    : prev.incomeType,
+            from: typeof params.from === "string" && params.from ? params.from : prev.from,
+            to: typeof params.to === "string" && params.to ? params.to : prev.to,
+        });
+
+        setDraft(next);
+        setApplied(next);
+    }, [params.source, params.incomeType, params.from, params.to]);
 
     useEffect(() => {
         const rawError = q.error as any;

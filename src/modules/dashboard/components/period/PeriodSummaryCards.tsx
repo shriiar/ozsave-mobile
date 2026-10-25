@@ -1,23 +1,23 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { GlassView } from "expo-glass-effect";
 import { useTheme } from "../../../../context/ThemeContext";
 import { useGlassStyle } from "../../../../context/GlassStyleContext";
+import { money0, DASHBOARD_ACCENT } from "./formatters";
 
 type Props = {
     rangeLabel: string;
     totalCost: number;
     manualIncome: number;
     estimatedIncome: number;
+    // Currently displayed dashboard period (YYYY-MM-DD), so tapping a tile
+    // lands on a pre-filtered list instead of showing every row ever.
+    periodFrom?: string;
+    periodTo?: string;
 };
-
-function money(n: number) {
-    const v = Number(n ?? 0);
-    if (!Number.isFinite(v)) return "$0";
-    return `$${v}`;
-}
 
 function SummaryTile(props: {
     title: string;
@@ -26,13 +26,16 @@ function SummaryTile(props: {
     ui: { text: string; sub: string; border: string; tileBg: string };
     glassStyle: "clear" | "regular";
     isDark: boolean;
+    onPress: () => void;
 }) {
     return (
-        // Purely tactile — no navigation or state change, just the native
-        // iOS press bounce, as a bit of fun polish on the summary tiles.
+        // Tapping jumps to the screen this number comes from — Cost tile to
+        // the Cost tab, Actual/Estimate tiles to Income pre-filtered by type.
         <Pressable
             style={({ pressed }) => [{ flex: 1 }, { opacity: pressed ? 0.85 : 1 }]}
-            onPress={() => {}}
+            onPress={props.onPress}
+            accessibilityRole="button"
+            accessibilityLabel={`${props.title}: ${money0(props.value)}`}
         >
             <GlassView
                 glassEffectStyle={props.glassStyle}
@@ -45,7 +48,7 @@ function SummaryTile(props: {
                     {props.title}
                 </Text>
                 <Text style={[styles.tileValue, { color: props.valueColor }]} numberOfLines={1}>
-                    {money(props.value)}
+                    {money0(props.value)}
                 </Text>
             </GlassView>
         </Pressable>
@@ -56,6 +59,14 @@ export function PeriodSummaryCards(props: Props) {
     const { resolvedTheme } = useTheme();
     const { glassStyle } = useGlassStyle();
     const isDark = resolvedTheme === "dark";
+    const router = useRouter();
+
+    const dateParams = useMemo(() => {
+        const p: Record<string, string> = {};
+        if (props.periodFrom) p.from = props.periodFrom;
+        if (props.periodTo) p.to = props.periodTo;
+        return p;
+    }, [props.periodFrom, props.periodTo]);
 
     const ui = useMemo(() => {
         const text = isDark ? "rgba(226,232,240,0.92)" : "rgba(15,23,42,0.92)";
@@ -84,9 +95,33 @@ export function PeriodSummaryCards(props: Props) {
                     <LinearGradient colors={ui.innerGrad as any} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
 
                     <View style={styles.grid}>
-                        <SummaryTile title="Cost" value={props.totalCost} valueColor={isDark ? "#ff6b6b" : "#dc2626"} ui={ui} glassStyle={glassStyle} isDark={isDark} />
-                        <SummaryTile title="Actual" value={props.manualIncome} valueColor={isDark ? "#34d399" : "#059669"} ui={ui} glassStyle={glassStyle} isDark={isDark} />
-                        <SummaryTile title="Estimate" value={props.estimatedIncome} valueColor={isDark ? "#fbbf24" : "#d97706"} ui={ui} glassStyle={glassStyle} isDark={isDark} />
+                        <SummaryTile
+                            title="Cost"
+                            value={props.totalCost}
+                            valueColor={DASHBOARD_ACCENT.cost}
+                            ui={ui}
+                            glassStyle={glassStyle}
+                            isDark={isDark}
+                            onPress={() => router.push({ pathname: "/cost", params: dateParams })}
+                        />
+                        <SummaryTile
+                            title="Actual"
+                            value={props.manualIncome}
+                            valueColor={isDark ? "#34d399" : "#059669"}
+                            ui={ui}
+                            glassStyle={glassStyle}
+                            isDark={isDark}
+                            onPress={() => router.push({ pathname: "/income", params: { source: "manual", ...dateParams } })}
+                        />
+                        <SummaryTile
+                            title="Estimate"
+                            value={props.estimatedIncome}
+                            valueColor={isDark ? "#fbbf24" : "#d97706"}
+                            ui={ui}
+                            glassStyle={glassStyle}
+                            isDark={isDark}
+                            onPress={() => router.push({ pathname: "/income", params: { source: "estimate", ...dateParams } })}
+                        />
                     </View>
                 </View>
             </BlurView>

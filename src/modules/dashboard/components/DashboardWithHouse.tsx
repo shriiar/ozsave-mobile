@@ -388,6 +388,8 @@ export default function DashboardWithHouse({
             totalCost={summary.totalCost}
             manualIncome={summary.manualIncome}
             estimatedIncome={summary.estimatedIncome}
+            periodFrom={period?.start}
+            periodTo={period?.end}
           />
         </AnimatedCard>
 
@@ -415,6 +417,8 @@ export default function DashboardWithHouse({
           <CategorySectionCard
             pie={categoryPie}
             categoryInsights={categoryInsights}
+            periodFrom={period?.start}
+            periodTo={period?.end}
           />
         </AnimatedCard>
 
@@ -424,6 +428,9 @@ export default function DashboardWithHouse({
             emptyMessage="No estimated income recorded for this period."
             pie={incomeTypePieEstimate}
             incomeTypeInsights={incomeTypeInsightsEstimate}
+            source="estimate"
+            periodFrom={period?.start}
+            periodTo={period?.end}
           />
         </AnimatedCard>
 
@@ -433,6 +440,9 @@ export default function DashboardWithHouse({
             emptyMessage="No received income recorded for this period."
             pie={incomeTypePieManual}
             incomeTypeInsights={incomeTypeInsightsManual}
+            source="manual"
+            periodFrom={period?.start}
+            periodTo={period?.end}
           />
         </AnimatedCard>
 

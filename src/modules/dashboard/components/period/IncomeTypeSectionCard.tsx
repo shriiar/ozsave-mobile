@@ -1,9 +1,11 @@
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { PieChart } from "react-native-gifted-charts";
 import { useTheme } from "../../../../context/ThemeContext";
+import { DASHBOARD_ACCENT } from "./formatters";
 
 const INCOME_TYPE_COLORS: Record<string, string> = {
   tfn: "#DB2777",
@@ -51,11 +53,18 @@ type Props = {
   emptyMessage: string;
   pie: IncomeTypePieItem[];
   incomeTypeInsights?: IncomeTypeInsights;
+  // Which income source this card is showing (manual = Actual, estimate =
+  // Estimate) and the dashboard's currently displayed period, so tapping a
+  // row can jump to Income pre-filtered to exactly what was tapped.
+  source: "manual" | "estimate";
+  periodFrom?: string;
+  periodTo?: string;
 };
 
 export function IncomeTypeSectionCard(props: Props) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const router = useRouter();
 
   const ui = useMemo(() => {
     const text = isDark ? "rgba(226,232,240,0.92)" : "rgba(15,23,42,0.92)";
@@ -152,26 +161,43 @@ export function IncomeTypeSectionCard(props: Props) {
                       const color = colorForIncomeType(c.incomeType, i);
 
                       return (
-                        <View
+                        <Pressable
                           key={c.incomeType}
-                          style={[styles.tile, { borderColor: ui.border, backgroundColor: ui.tileBg }]}
+                          onPress={() =>
+                            router.push({
+                              pathname: "/income",
+                              params: {
+                                source: props.source,
+                                incomeType: c.incomeType,
+                                ...(props.periodFrom ? { from: props.periodFrom } : {}),
+                                ...(props.periodTo ? { to: props.periodTo } : {}),
+                              },
+                            })
+                          }
+                          style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${titleizeIncomeType(c.incomeType)}: ${money(c.amount)}`}
                         >
-                          <View style={{ height: 8, width: 8, borderRadius: 4, backgroundColor: color, marginTop: 3 }} />
-
-                          <Text
-                            style={{ color: ui.text, fontWeight: "700", fontSize: 12, flex: 1, minWidth: 0 }}
-                            numberOfLines={2}
+                          <View
+                            style={[styles.tile, { borderColor: ui.border, backgroundColor: ui.tileBg }]}
                           >
-                            {titleizeIncomeType(c.incomeType)}
-                          </Text>
+                            <View style={{ height: 8, width: 8, borderRadius: 4, backgroundColor: color, marginTop: 3 }} />
 
-                          <View style={{ alignItems: "flex-end" }}>
-                            <Text style={{ color: ui.text, fontWeight: "700", fontSize: 12 }} numberOfLines={1}>
-                              {money(c.amount)}
+                            <Text
+                              style={{ color: ui.text, fontWeight: "700", fontSize: 12, flex: 1, minWidth: 0 }}
+                              numberOfLines={2}
+                            >
+                              {titleizeIncomeType(c.incomeType)}
                             </Text>
-                            <Text style={{ color: ui.sub, fontWeight: "700", fontSize: 11 }}>{c.percent}%</Text>
+
+                            <View style={{ alignItems: "flex-end" }}>
+                              <Text style={{ color: ui.text, fontWeight: "700", fontSize: 12 }} numberOfLines={1}>
+                                {money(c.amount)}
+                              </Text>
+                              <Text style={{ color: ui.sub, fontWeight: "700", fontSize: 11 }}>{c.percent}%</Text>
+                            </View>
                           </View>
-                        </View>
+                        </Pressable>
                       );
                     })}
                   </ScrollView>
@@ -194,7 +220,7 @@ export function IncomeTypeSectionCard(props: Props) {
 
                         const deltaText = !up && !down ? "No change" : `${up ? "▲" : "▼"} ${money(Math.abs(delta))}`;
                         // income semantics: more income is good (green), less is a caution (red)
-                        const deltaColor = !up && !down ? ui.sub : up ? "#10b981" : "#ef4444";
+                        const deltaColor = !up && !down ? ui.sub : up ? DASHBOARD_ACCENT.income : DASHBOARD_ACCENT.cost;
 
                         return (
                           <View key={`${r.incomeType}-${idx}`} style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 8 }}>

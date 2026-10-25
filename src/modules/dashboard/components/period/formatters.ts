@@ -11,6 +11,23 @@ export const PIE_COLORS = [
   "#ec4899",
 ];
 
+/**
+ * One cost/income/estimate color identity shared across the whole dashboard
+ * (summary tiles, bar chart, breakdown-card deltas, billing planner). Red and
+ * amber are picked to clear WCAG's 3:1 minimum for bold text against both a
+ * near-white and a near-black card background; Apple's own flat system green
+ * (#34C759) fails that on white, so `income` uses Apple's own Increased
+ * Contrast green variant instead — still "Apple green," just the one made to
+ * be read as text. `estimate` is deliberately not the app's primary orange
+ * (#FF9500) — reusing a brand/action color for a data category would mean
+ * one color meaning two different things.
+ */
+export const DASHBOARD_ACCENT = {
+  cost: "#FF3B30",
+  income: "#248A3D",
+  estimate: "#B45309",
+};
+
 export const RANGE_OPTIONS: RangeOption[] = [
   { key: "7d", label: "Last 7 days", days: 7 },
   { key: "14d", label: "Last 14 days", days: 14 },

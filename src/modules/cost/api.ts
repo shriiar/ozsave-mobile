@@ -60,6 +60,7 @@ export type AddCostPayload = {
 export type CostRow = {
   _id: string;
   name: string;
+  category: string;
   date: string; // ISO
   amount: number;
   amountCents: number;
@@ -84,6 +85,11 @@ export type GetCostsCursorParams = {
 
   paidBy?: string;
   isOnlyUserCost?: boolean;
+
+  // Full CostCategory value (e.g. "groceries"), or "all" to explicitly
+  // clear the filter — cursor mode needs the literal "all", not an
+  // omitted param, to clear an active category filter.
+  category?: string;
 
   from?: string; // YYYY-MM-DD
   to?: string; // YYYY-MM-DD

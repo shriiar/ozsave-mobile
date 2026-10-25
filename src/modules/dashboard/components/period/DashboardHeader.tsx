@@ -141,7 +141,12 @@ export function DashboardHeader(props: {
             native isInteractive press feedback, matching every other button
             in the app (Save/Close/Add/Filters). */}
         <View style={styles.stepper}>
-          <Pressable onPress={props.onPrev} style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}>
+          <Pressable
+            onPress={props.onPrev}
+            style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Previous period"
+          >
             <GlassView
               glassEffectStyle={glassStyle}
               isInteractive
@@ -157,6 +162,9 @@ export function DashboardHeader(props: {
             onPress={props.onNext}
             disabled={!props.canGoForward}
             style={({ pressed }) => [{ opacity: !props.canGoForward ? 0.3 : pressed ? 0.75 : 1 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Next period"
+            accessibilityState={{ disabled: !props.canGoForward }}
           >
             <GlassView
               glassEffectStyle={glassStyle}
@@ -219,7 +227,14 @@ export function DashboardHeader(props: {
           {RANGE_TABS.map((opt) => {
             const active = opt.key === props.range;
             return (
-              <View key={opt.key} style={styles.segmentTouch}>
+              <View
+                key={opt.key}
+                style={styles.segmentTouch}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={`Last ${opt.label.replace("D", "")} days`}
+                accessibilityState={{ selected: active }}
+              >
                 <Text
                   style={[
                     active ? typography.footnoteEmphasized : typography.footnote,

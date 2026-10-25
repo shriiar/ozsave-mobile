@@ -37,6 +37,7 @@ export function useInfiniteCosts(params: Omit<GetCostsCursorParams, "cursor">) {
       limit: params.limit ?? 10,
       paidBy: params.paidBy,
       isOnlyUserCost: params.isOnlyUserCost,
+      category: params.category,
       from: params.from,
       to: params.to,
 
@@ -49,6 +50,7 @@ export function useInfiniteCosts(params: Omit<GetCostsCursorParams, "cursor">) {
       params.limit,
       params.paidBy,
       params.isOnlyUserCost,
+      params.category,
       params.from,
       params.to,
       params.sortBy,

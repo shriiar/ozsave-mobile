@@ -113,6 +113,23 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
         return m <= 0 ? 10 : m;
     }, [safe]);
 
+    // The chart itself has no accessible per-bar elements (react-native-gifted-charts
+    // doesn't expose them), so VoiceOver would otherwise announce nothing at all for
+    // this whole card. A single summary label is a lightweight stand-in — not a full
+    // accessible-chart implementation, but far better than silence.
+    const chartSummaryLabel = useMemo(() => {
+        if (!safe.length) return "Bar chart. No data for this period.";
+        const totals = safe.reduce(
+            (acc, d) => ({
+                cost: acc.cost + Number(d.cost ?? 0),
+                manual: acc.manual + Number(d.manual ?? 0),
+                estimate: acc.estimate + Number(d.estimate ?? 0),
+            }),
+            { cost: 0, manual: 0, estimate: 0 }
+        );
+        return `Bar chart of cost, actual income, and estimated income over ${safe.length} days. Totals: cost $${Math.round(totals.cost)}, actual income $${Math.round(totals.manual)}, estimated income $${Math.round(totals.estimate)}.`;
+    }, [safe]);
+
     // ----- Layout constants (UNCHANGED) -----
     const BAR_W = 12;
     const INNER_SPACING = 2;
@@ -259,7 +276,12 @@ export function DashboardBarChart({ data }: { data: BarPoint[] }) {
     }, [safe, ui.cost, ui.manual, ui.estimate, labelStep, GROUP_SPACING, onBarPress, makeLabelComponent]);
 
     return (
-        <View style={[styles.wrap, { borderColor: ui.border }]}>
+        <View
+            style={[styles.wrap, { borderColor: ui.border }]}
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={chartSummaryLabel}
+        >
             <BlurView intensity={isDark ? 26 : 40} tint={isDark ? "dark" : "light"} style={styles.card}>
                 <LinearGradient colors={ui.cardGrad as any} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
 

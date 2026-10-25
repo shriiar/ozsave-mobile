@@ -18,6 +18,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler";
 import { useIsFocused } from "@react-navigation/native";
+import { useLocalSearchParams } from "expo-router";
 
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
@@ -50,6 +51,67 @@ function formatDate(iso: string) {
     }
 }
 
+// Apple iOS system colors, same palette used for bill category badges in
+// BillingSavingsPlannerCard — Cost and Billing share the same category
+// taxonomy, so a category should look the same everywhere in the app.
+const SYS = {
+    green: "#34C759",
+    red: "#FF3B30",
+    orange: "#FF9500",
+    yellow: "#FFCC00",
+    indigo: "#5856D6",
+    blue: "#007AFF",
+    cyan: "#32ADE6",
+    teal: "#30B0C7",
+    mint: "#00C7BE",
+    purple: "#AF52DE",
+    pink: "#FF2D55",
+    brown: "#A2845E",
+    gray: "#8E8E93",
+};
+
+const CAT_COLORS: Record<string, string> = {
+    groceries: SYS.green,
+    rent: SYS.red,
+    utilities: SYS.cyan,
+    transport: SYS.orange, // Public Transport
+    private_transport: SYS.brown,
+    eating_out: SYS.teal,
+    shopping: SYS.yellow,
+    health: SYS.pink,
+    entertainment: SYS.purple,
+    education: SYS.mint,
+    subscriptions: SYS.indigo,
+    personal_care: "#FF6482",
+    insurance: SYS.blue,
+    travel: "#8E6FF7", // Travel/Holidays
+    // "other" intentionally omitted — falls back to SYS.gray below.
+};
+
+function catColor(cat: string | null | undefined) {
+    if (!cat) return SYS.gray;
+    return CAT_COLORS[cat.toLowerCase()] ?? SYS.gray;
+}
+
+// "transport" and "travel" have display labels that differ from their wire
+// value (Public Transport / Travel/Holidays); everything else title-cases
+// straight from the raw category value, so new categories work for free.
+const CAT_LABEL_OVERRIDES: Record<string, string> = {
+    transport: "Public Transport",
+    travel: "Travel/Holidays",
+};
+
+function catLabel(raw: string) {
+    const key = String(raw ?? "").trim().toLowerCase();
+    if (!key) return "";
+    if (CAT_LABEL_OVERRIDES[key]) return CAT_LABEL_OVERRIDES[key];
+    return key
+        .replace(/[_-]+/g, " ")
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+}
+
 
 function CostCard({
     item,
@@ -69,6 +131,7 @@ function CostCard({
     onSwipeClose: (id: string) => void;
 }) {
     const { glassStyle } = useGlassStyle();
+    const cc = catColor(item.category);
     const swipeRef = useRef<Swipeable>(null);
     const closeSelf = () => swipeRef.current?.close();
     // Pressable only cancels its own tap when the touch leaves its bounds —
@@ -85,7 +148,6 @@ function CostCard({
         const ring = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
         const text = isDark ? "rgba(255,255,255,0.92)" : "#0F172A";
         const muted = isDark ? "rgba(148,163,184,0.95)" : "rgba(42,45,49,0.95)";
-        const chipBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(24,24,24,0.04)";
 
         // const shadow = isDark
         //     ? {
@@ -103,7 +165,7 @@ function CostCard({
         //         elevation: 9,
         //     };
 
-        return { cardGrad, ring, text, muted, chipBg };
+        return { cardGrad, ring, text, muted };
     }, [isDark]);
 
     function renderRightActions(
@@ -239,11 +301,13 @@ function CostCard({
                                 </Text>
 
                                 <View style={styles.miniStatsRow}>
-                                    <View style={[styles.miniPill, { backgroundColor: T.chipBg }]}>
-                                        <Text style={[styles.miniPillText, { color: T.muted }]} numberOfLines={1}>
-                                            Your share: {money(item.userShare)}
-                                        </Text>
-                                    </View>
+                                    {item.category ? (
+                                        <View style={[styles.catBadge, { backgroundColor: cc + "28" }]}>
+                                            <Text style={[styles.catBadgeText, { color: T.text }]} numberOfLines={1}>
+                                                {catLabel(item.category)}
+                                            </Text>
+                                        </View>
+                                    ) : null}
                                 </View>
                             </View>
 
@@ -254,8 +318,8 @@ function CostCard({
                                     { backgroundColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)" },
                                 ]}
                             >
-                                <Text style={[styles.badgeTop, { color: T.text }]}>Total</Text>
-                                <Text style={[styles.badgeBottom, { color: T.muted }]}>{money(item.amount)}</Text>
+                                <Text style={[styles.badgeTop, { color: T.text }]}>Amount</Text>
+                                <Text style={[styles.badgeBottom, { color: T.muted }]}>{money(item.userShare)}</Text>
                             </View>
                         </View>
                     </GlassView>
@@ -285,12 +349,22 @@ export default function CostScreen() {
     const topInset = headerHeight + headerGap;
 
     const swipeRefs = useRef<Record<string, () => void>>({});
+
+    // The dashboard's Cost summary tile and Expense breakdown rows link here
+    // with `category`/`from`/`to` params so the list lands pre-filtered to
+    // what was tapped and the period being viewed.
+    const params = useLocalSearchParams<{ category?: string; from?: string; to?: string }>();
+    const initialCategory = typeof params.category === "string" && params.category ? params.category : "all";
+    const initialFrom = typeof params.from === "string" ? params.from : "";
+    const initialTo = typeof params.to === "string" ? params.to : "";
+
     // draft filters (UI)
     const [draft, setDraft] = useState<CostFiltersDraft>({
         paidBy: "all",
         onlyMine: false,
-        from: "",
-        to: "",
+        category: initialCategory,
+        from: initialFrom,
+        to: initialTo,
         sortBy: "date",
         sortOrder: -1,
     });
@@ -299,8 +373,9 @@ export default function CostScreen() {
     const [applied, setApplied] = useState<CostFiltersDraft>({
         paidBy: "all",
         onlyMine: false,
-        from: "",
-        to: "",
+        category: initialCategory,
+        from: initialFrom,
+        to: initialTo,
         sortBy: "date",
         sortOrder: -1,
     });
@@ -308,6 +383,7 @@ export default function CostScreen() {
     const emptyFilters: CostFiltersDraft = {
         paidBy: "all",
         onlyMine: false,
+        category: "all",
         from: "",
         to: "",
         sortBy: "date",
@@ -318,6 +394,7 @@ export default function CostScreen() {
         return (
             a.paidBy === b.paidBy &&
             a.onlyMine === b.onlyMine &&
+            a.category === b.category &&
             a.from === b.from &&
             a.to === b.to &&
             a.sortBy === b.sortBy &&
@@ -397,11 +474,34 @@ export default function CostScreen() {
         limit,
         paidBy: applied.paidBy === "all" ? undefined : applied.paidBy,
         isOnlyUserCost: applied.onlyMine ? true : undefined,
+        // Cursor mode wants the literal "all" to clear the filter, not an
+        // omitted param — unlike paidBy above, always send this one.
+        category: applied.category,
         from: applied.from || undefined,
         to: applied.to || undefined,
         sortBy: applied.sortBy,
         sortOrder: applied.sortOrder,
     } as any);
+
+    // Bottom-tab screens stay mounted, so re-tapping the Cost dashboard tile
+    // or an Expense breakdown category row doesn't remount this screen — the
+    // `useState` initializer above only ran once, on the very first mount.
+    // This re-applies `category`/`from`/`to` every time they actually
+    // change, so a second visit with a different category or period isn't
+    // silently ignored.
+    useEffect(() => {
+        if (!params.category && !params.from && !params.to) return;
+
+        const next = (prev: CostFiltersDraft): CostFiltersDraft => ({
+            ...prev,
+            category: typeof params.category === "string" && params.category ? params.category : prev.category,
+            from: typeof params.from === "string" && params.from ? params.from : prev.from,
+            to: typeof params.to === "string" && params.to ? params.to : prev.to,
+        });
+
+        setDraft(next);
+        setApplied(next);
+    }, [params.category, params.from, params.to]);
 
     const shownErrorRef = useRef<string | null>(null);
 
@@ -555,8 +655,15 @@ export default function CostScreen() {
                         }}
                     >
                         <View style={styles.center}>
-                            <ActivityIndicator />
-                            <Text style={[typography.footnote, { marginTop: 10, opacity: 0.7 }]}>Loading costs...</Text>
+                            <ActivityIndicator color={spinner} />
+                            <Text
+                                style={[
+                                    typography.footnote,
+                                    { marginTop: 10, opacity: 0.7, color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A" },
+                                ]}
+                            >
+                                Loading costs...
+                            </Text>
                         </View>
                     </View>
                 ) : (
@@ -763,13 +870,13 @@ const styles = StyleSheet.create({
         flexWrap: "wrap",
     },
 
-    miniPill: {
+    catBadge: {
         paddingHorizontal: 10,
         paddingVertical: 6,
         borderRadius: 999,
     },
 
-    miniPillText: {
+    catBadgeText: {
         ...typography.caption1,
         fontWeight: "700",
     },
@@ -816,5 +923,5 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         overflow: "hidden",
     },
-    filterBtnText: { ...typography.footnoteEmphasized, color: "#fff" },
+    filterBtnText: { ...typography.footnoteEmphasized },
 });

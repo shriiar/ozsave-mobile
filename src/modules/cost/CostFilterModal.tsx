@@ -22,11 +22,32 @@ export type SortOrder = 1 | -1;
 export type CostFiltersDraft = {
     paidBy: string; // "all" or memberId
     onlyMine: boolean;
+    category: string; // "all" or a CostCategory value
     from: string; // YYYY-MM-DD
     to: string; // YYYY-MM-DD
     sortBy: SortBy;
     sortOrder: SortOrder;
 };
+
+// Same list (and transport/travel display-label overrides) as the Add/Edit
+// Expense category picker.
+const CATEGORY_OPTIONS = [
+    { key: "groceries", label: "Groceries" },
+    { key: "rent", label: "Rent" },
+    { key: "utilities", label: "Utilities" },
+    { key: "transport", label: "Public Transport" },
+    { key: "private_transport", label: "Private Transport" },
+    { key: "eating_out", label: "Eating out" },
+    { key: "shopping", label: "Shopping" },
+    { key: "health", label: "Health" },
+    { key: "entertainment", label: "Entertainment" },
+    { key: "education", label: "Education" },
+    { key: "subscriptions", label: "Subscriptions" },
+    { key: "personal_care", label: "Personal Care" },
+    { key: "insurance", label: "Insurance" },
+    { key: "travel", label: "Travel/Holidays" },
+    { key: "other", label: "Other" },
+];
 
 type HouseMember = { _id: string; name: string; email: string };
 
@@ -85,16 +106,18 @@ export default function CostFilterModal({
     const emptyFilters: CostFiltersDraft = {
         paidBy: "all",
         onlyMine: false,
+        category: "all",
         from: "",
         to: "",
         sortBy: "date",
         sortOrder: -1,
     };
-    
+
     function isSameFilters(a: CostFiltersDraft, b: CostFiltersDraft) {
         return (
             a.paidBy === b.paidBy &&
             a.onlyMine === b.onlyMine &&
+            a.category === b.category &&
             a.from === b.from &&
             a.to === b.to &&
             a.sortBy === b.sortBy &&
@@ -196,6 +219,30 @@ export default function CostFilterModal({
                                         <Picker.Item label="All" value="all" />
                                         {uniqueMembers.map((m) => (
                                             <Picker.Item key={m._id} label={m.name} value={m._id} />
+                                        ))}
+                                    </Picker>
+                                </View>
+                            </View>
+
+                            {/* Category */}
+                            <View>
+                                <Text style={[styles.label, { color: T.muted }]}>Category</Text>
+                                <View style={[styles.tile, { backgroundColor: T.tile, borderColor: T.ring }]}>
+                                    <Picker
+                                        selectedValue={draft.category}
+                                        onValueChange={(v) => setDraft({ ...draft, category: String(v) })}
+                                        dropdownIconColor={isDark ? "rgba(255,255,255,0.8)" : "rgba(15,23,42,0.7)"}
+                                        style={{
+                                            color: isDark ? "rgba(255,255,255,0.92)" : "#0F172A",
+                                        }}
+                                        itemStyle={{
+                                            color: isDark ? "#FFFFFF" : "#0F172A",
+                                            fontSize: 16,
+                                        }}
+                                    >
+                                        <Picker.Item label="All" value="all" />
+                                        {CATEGORY_OPTIONS.map((c) => (
+                                            <Picker.Item key={c.key} label={c.label} value={c.key} />
                                         ))}
                                     </Picker>
                                 </View>

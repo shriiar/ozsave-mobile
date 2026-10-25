@@ -27,14 +27,6 @@ const SYS = {
   gray: "#8E8E93",
 };
 
-// Vibrant jewel-tone palette for the Income vs. costs pie — richer and more
-// saturated than the flat SYS colors so the chart reads as premium.
-const PIE = {
-  emerald: "#00D68F",
-  wine: "#FF3366",
-  gold: "#FFB020",
-};
-
 type Props = {
   data?: BillingSavingsPlanner;
 };
@@ -162,15 +154,16 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
 
   const bufferPositive = bufferAfterUpcoming >= 0;
 
-  // Income vs. costs pie: Income gets its own slice alongside Paid and
-  // Upcoming, so income is directly visible in the chart rather than only
-  // implied as the leftover/buffer. Uses a deeper jewel-tone palette
-  // (emerald / wine / gold) instead of the flat Apple system colors used
-  // elsewhere in this card, for a more premium chart feel.
+  // Income vs. costs pie: Income gets its own slice alongside Monthly costs
+  // and Upcoming, so income is directly visible in the chart itself rather
+  // than only as a number below it. Colors match the tiles above 1:1
+  // (Income = green, Monthly costs = indigo, Upcoming = orange) so the pie
+  // doesn't introduce a second, conflicting color vocabulary for the same
+  // numbers.
   const allocSlices = [
-    { key: "income", label: "Income", value: Math.max(mtdIncome, 0), color: PIE.emerald },
-    { key: "paid", label: "Paid", value: Math.max(mtdCosts, 0), color: PIE.wine },
-    { key: "upcoming", label: "Upcoming", value: Math.max(totals.upcoming, 0), color: PIE.gold },
+    { key: "income", label: "Income", value: Math.max(mtdIncome, 0), color: SYS.green },
+    { key: "paid", label: "Monthly costs", value: Math.max(mtdCosts, 0), color: SYS.indigo },
+    { key: "upcoming", label: "Upcoming", value: Math.max(totals.upcoming, 0), color: SYS.orange },
   ].filter((s) => s.value > 0);
   const allocTotal = Math.max(allocSlices.reduce((sum, s) => sum + s.value, 0), 1);
   const pieData = allocSlices.map((s) => ({
@@ -223,8 +216,6 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
                       innerRadius={40}
                       strokeWidth={0}
                       innerCircleColor={"transparent"}
-                      textColor={ui.text}
-                      textSize={10}
                     />
                   </View>
                 </View>
@@ -232,20 +223,17 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
                 <View style={styles.pieListCol}>
                   {allocSlices.map((s) => (
                     <View key={s.key} style={[styles.pieTile, { backgroundColor: ui.tileBg }]}>
-                      <View style={{ height: 8, width: 8, borderRadius: 4, backgroundColor: s.color, marginTop: 3 }} />
+                      <View style={[styles.pieDot, { backgroundColor: s.color }]} />
 
-                      <Text
-                        style={{ color: ui.text, fontWeight: "700", fontSize: 12, flex: 1, minWidth: 0 }}
-                        numberOfLines={2}
-                      >
+                      <Text style={[styles.pieItemLabel, { color: ui.text }]} numberOfLines={2}>
                         {s.label}
                       </Text>
 
                       <View style={{ alignItems: "flex-end" }}>
-                        <Text style={{ color: ui.text, fontWeight: "700", fontSize: 12 }} numberOfLines={1}>
+                        <Text style={[styles.pieItemAmount, { color: ui.text }]} numberOfLines={1}>
                           {money2(s.value)}
                         </Text>
-                        <Text style={{ color: ui.sub, fontWeight: "700", fontSize: 11 }}>
+                        <Text style={[styles.pieItemPercent, { color: ui.sub }]}>
                           {Math.round((s.value / allocTotal) * 100)}%
                         </Text>
                       </View>
@@ -295,7 +283,12 @@ export const BillingSavingsPlannerCard = memo(function BillingSavingsPlannerCard
 
           {bills.ran.length > 0 && (
             <View style={styles.listSection}>
-              <TouchableOpacity style={styles.collapseHeader} onPress={() => setShowPaid(v => !v)} activeOpacity={0.7}>
+              <TouchableOpacity
+                style={styles.collapseHeader}
+                onPress={() => setShowPaid(v => !v)}
+                activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+              >
                 <Text style={[styles.sectionTitle, { color: ui.sub, marginBottom: 0 }]}>Paid this month</Text>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                   <Text style={{ fontSize: 11, fontWeight: "600", color: ui.sub }}>{bills.ran.length} bills</Text>
@@ -446,6 +439,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
   },
+  pieDot: { height: 8, width: 8, borderRadius: 4, marginTop: 3 },
+  pieItemLabel: { fontWeight: "700", fontSize: 12, flex: 1, minWidth: 0 },
+  pieItemAmount: { fontWeight: "700", fontSize: 12 },
+  pieItemPercent: { fontWeight: "700", fontSize: 11 },
   bufferPill: {
     flexDirection: "row",
     alignItems: "center",
